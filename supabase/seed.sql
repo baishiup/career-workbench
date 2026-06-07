@@ -1,0 +1,1 @@
+-- Demo seed data will be added after the first real schema migration.

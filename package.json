@@ -1,0 +1,15 @@
+{
+  "name": "career-workbench",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.5.1",
+  "scripts": {
+    "dev": "pnpm --filter @career-workbench/web dev",
+    "check": "pnpm -r check",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
+}

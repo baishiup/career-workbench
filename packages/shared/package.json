@@ -1,0 +1,10 @@
+{
+  "name": "@career-workbench/shared",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "check": "echo \"@career-workbench/shared scaffold placeholder: no source checks yet\"",
+    "test": "echo \"@career-workbench/shared scaffold placeholder: no tests yet\"",
+    "build": "echo \"@career-workbench/shared scaffold placeholder: no build output yet\""
+  }
+}

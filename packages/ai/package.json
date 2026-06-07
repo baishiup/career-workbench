@@ -1,0 +1,11 @@
+{
+  "name": "@career-workbench/ai",
+  "version": "0.1.0",
+  "description": "Dify orchestration client, mock provider, OpenAI-compatible fallback, and AI run contracts for Career Workbench.",
+  "private": true,
+  "scripts": {
+    "check": "echo \"@career-workbench/ai scaffold placeholder: no source checks yet\"",
+    "test": "echo \"@career-workbench/ai scaffold placeholder: no tests yet\"",
+    "build": "echo \"@career-workbench/ai scaffold placeholder: no build output yet\""
+  }
+}
