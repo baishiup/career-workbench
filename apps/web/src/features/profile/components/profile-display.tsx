@@ -49,7 +49,7 @@ function ProfileDisplay({
               {fullName || "未命名资料"}
             </h2>
             <p className="mt-1 text-sm font-medium text-muted-foreground">
-              {profile.personal.headline}
+              {profile.personal.headline || "还没有填写职业标题"}
             </p>
             <PersonalFieldGrid profile={profile} />
           </div>
@@ -62,29 +62,41 @@ function ProfileDisplay({
           onEdit={() => onEdit("education")}
           title={sectionMeta.education.label}
         >
-          <TimelineList>
-            {profile.education.map((item) => (
-              <TimelineItem
-                key={item.id}
-                date={`${item.startDate} -> ${item.endDate}`}
-              >
-                <h3 className="text-base font-semibold">{item.school}</h3>
-                <p className="text-sm font-medium text-muted-foreground">
-                  {[item.degree, item.major].filter(Boolean).join(" / ")}
-                </p>
-                {item.location ? (
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {item.location}
+          {profile.education.length > 0 ? (
+            <TimelineList>
+              {profile.education.map((item) => (
+                <TimelineItem
+                  key={item.id}
+                  date={formatDateRange(item.startDate, item.endDate)}
+                >
+                  <h3 className="text-base font-semibold">
+                    {item.school || "未填写学校"}
+                  </h3>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {[item.degree, item.major].filter(Boolean).join(" / ") ||
+                      "学历和专业未填写"}
                   </p>
-                ) : null}
-                {item.description ? (
-                  <p className="mt-2 text-sm leading-5 text-muted-foreground">
-                    {item.description}
-                  </p>
-                ) : null}
-              </TimelineItem>
-            ))}
-          </TimelineList>
+                  {item.location ? (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {item.location}
+                    </p>
+                  ) : null}
+                  {item.description ? (
+                    <p className="mt-2 text-sm leading-5 text-muted-foreground">
+                      {item.description}
+                    </p>
+                  ) : null}
+                </TimelineItem>
+              ))}
+            </TimelineList>
+          ) : (
+            <EmptySection
+              actionLabel="添加教育经历"
+              description="添加学校、学历、专业和时间范围后，简历生成会有更稳定的教育背景。"
+              onAction={() => onEdit("education")}
+              title="还没有教育经历"
+            />
+          )}
         </ProfileSectionBlock>
 
         <ProfileSectionBlock
@@ -94,27 +106,45 @@ function ProfileDisplay({
           onEdit={() => onEdit("work")}
           title={sectionMeta.work.label}
         >
-          <TimelineList>
-            {profile.work.map((item) => (
-              <TimelineItem
-                key={item.id}
-                date={`${item.startDate} -> ${item.current ? "至今" : item.endDate}`}
-              >
-                <h3 className="text-base font-semibold">{item.company}</h3>
-                <p className="text-sm font-medium text-muted-foreground">
-                  {item.title}
-                </p>
-                <p className="mt-2 max-w-4xl text-sm leading-5">
-                  {item.summary}
-                </p>
-                <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-sm leading-5 text-muted-foreground">
-                  {item.bullets.map((bullet) => (
-                    <li key={bullet}>{bullet}</li>
-                  ))}
-                </ul>
-              </TimelineItem>
-            ))}
-          </TimelineList>
+          {profile.work.length > 0 ? (
+            <TimelineList>
+              {profile.work.map((item) => (
+                <TimelineItem
+                  key={item.id}
+                  date={formatDateRange(
+                    item.startDate,
+                    item.current ? "至今" : item.endDate,
+                  )}
+                >
+                  <h3 className="text-base font-semibold">
+                    {item.company || "未填写公司"}
+                  </h3>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {item.title || "未填写职位"}
+                  </p>
+                  {item.summary ? (
+                    <p className="mt-2 max-w-4xl text-sm leading-5">
+                      {item.summary}
+                    </p>
+                  ) : null}
+                  {item.bullets.filter(Boolean).length > 0 ? (
+                    <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-sm leading-5 text-muted-foreground">
+                      {item.bullets.filter(Boolean).map((bullet) => (
+                        <li key={bullet}>{bullet}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </TimelineItem>
+              ))}
+            </TimelineList>
+          ) : (
+            <EmptySection
+              actionLabel="添加工作经历"
+              description="添加公司、职位、职责和可用于简历的成果要点后，匹配和改写会更准确。"
+              onAction={() => onEdit("work")}
+              title="还没有工作经历"
+            />
+          )}
         </ProfileSectionBlock>
 
         <ProfileSectionBlock
@@ -124,17 +154,26 @@ function ProfileDisplay({
           onEdit={() => onEdit("skills")}
           title={sectionMeta.skills.label}
         >
-          <div className="flex flex-wrap gap-2">
-            {profile.skills.map((skill) => (
-              <Badge
-                className="h-7 rounded-lg bg-muted px-2.5 text-sm text-secondary-foreground"
-                key={skill}
-                variant="secondary"
-              >
-                {skill}
-              </Badge>
-            ))}
-          </div>
+          {profile.skills.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {profile.skills.map((skill) => (
+                <Badge
+                  className="h-7 rounded-lg bg-muted px-2.5 text-sm text-secondary-foreground"
+                  key={skill}
+                  variant="secondary"
+                >
+                  {skill}
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <EmptySection
+              actionLabel="添加技能标签"
+              description="添加技术栈、工具和能力关键词，后续岗位匹配会优先引用这些标签。"
+              onAction={() => onEdit("skills")}
+              title="还没有技能标签"
+            />
+          )}
         </ProfileSectionBlock>
       </div>
     </div>
@@ -233,11 +272,17 @@ function PersonalFieldGrid({ profile }: { profile: ProfileDraft }) {
 }
 
 function PersonalField({ label, value }: { label: string; value: string }) {
+  const hasValue = value.trim().length > 0;
+
   return (
     <div className="min-w-0 rounded-lg bg-card px-3 py-2">
       <div className="text-xs font-semibold text-muted-foreground">{label}</div>
-      <div className="mt-1 truncate font-medium text-secondary-foreground">
-        {value || "未填写"}
+      <div
+        className={`mt-1 truncate font-medium ${
+          hasValue ? "text-secondary-foreground" : "text-muted-foreground"
+        }`}
+      >
+        {hasValue ? value : "未填写"}
       </div>
     </div>
   );
@@ -263,6 +308,51 @@ function TimelineItem({
       <div className="border-l border-accent pl-4">{children}</div>
     </article>
   );
+}
+
+function EmptySection({
+  actionLabel,
+  description,
+  onAction,
+  title,
+}: {
+  actionLabel: string;
+  description: string;
+  onAction: () => void;
+  title: string;
+}) {
+  return (
+    <div className="rounded-xl border border-dashed border-border bg-muted/35 px-4 py-5">
+      <p className="text-sm font-semibold text-foreground">{title}</p>
+      <p className="mt-1 max-w-2xl text-sm leading-5 text-muted-foreground">
+        {description}
+      </p>
+      <Button
+        className="mt-4"
+        htmlType="button"
+        onClick={onAction}
+        size="small"
+      >
+        {actionLabel}
+      </Button>
+    </div>
+  );
+}
+
+function formatDateRange(startDate: string, endDate: string) {
+  if (startDate && endDate) {
+    return `${startDate} -> ${endDate}`;
+  }
+
+  if (startDate) {
+    return `${startDate} -> 未填写`;
+  }
+
+  if (endDate) {
+    return `未填写 -> ${endDate}`;
+  }
+
+  return "时间未填写";
 }
 
 export { ProfileDisplay };

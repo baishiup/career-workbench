@@ -6,7 +6,7 @@
 
 - 页面文件只负责路由装配和布局组合。
 - 基础 UI、工作台 shell、业务 feature、跨 feature 工具边界清楚。
-- mock 数据、业务类型、业务组件跟随 feature 归属，避免散落在 `components/ui`、`lib` 或 route 私有目录。
+- 本地 fixture/mock 数据、业务类型、业务组件跟随 feature 归属，避免散落在 `components/ui`、`lib` 或 route 私有目录。
 - 后续 AI agent 可以根据路径规则做小步修改，不靠猜。
 
 ## 顶层边界
@@ -41,7 +41,7 @@ apps/web/src/
 
 - `App.tsx` 保持装配层定位；如果路由逻辑继续增长，应拆到 `src/lib/router.ts` 或专门的 route 配置。
 - 业务卡片、筛选器、表单步骤、详情面板迁到 `src/features/*/components`。
-- mock 数据放到对应 feature，不放在路由装配层。
+- 本地 fixture/mock 数据放到对应 feature，不放在路由装配层。
 - route 私有小组件只用于真正强绑定当前 route 的展示状态。
 
 ## `src/components/ui`
@@ -58,7 +58,7 @@ apps/web/src/
 
 - `job`、`resume`、`profile`、`match` 等业务命名。
 - 引入 `useWorkbenchStore` 或任何 feature store。
-- 引入 mock 数据。
+- 引入本地 fixture/mock 数据。
 - 引入路由装配逻辑或页面级状态。
 
 ## `src/components/workbench`
@@ -99,7 +99,7 @@ src/features/profile/
 放在 feature 内的代码：
 
 - 业务组件。
-- 业务 mock 数据。
+- 本地 fixture/mock 数据。
 - feature 类型。
 - feature hooks。
 - 只服务当前 feature 的格式化、筛选、映射函数。
@@ -120,10 +120,10 @@ src/features/profile/
 不放：
 
 - 页面组件。
-- Jobs/Profile/Resume 的 mock 数据。
+- Jobs/Profile/Resume 的本地 fixture/mock 数据。
 - 只服务单一 feature 的表单、筛选、卡片。
 
-当前 `workbench-store.ts` 暂时保留在 `src/lib`，因为它横跨 onboarding、profile、resumes、jobs。后续接 Supabase 后再拆成更明确的数据边界。
+当前 `workbench-store.ts` 暂时保留在 `src/lib`，因为它横跨 onboarding、profile、resumes、jobs。随着 Supabase 接入，按 feature 逐步拆成更明确的数据边界。
 
 ## `packages/*`
 
@@ -135,6 +135,12 @@ src/features/profile/
 - `packages/shared`：跨包共享类型和 schema。
 
 只有当类型或逻辑已经被多个 app/package 使用，或者明显属于稳定领域模型时，才放入 `packages/*`。
+
+## 类型文件注释规则
+
+领域类型文件顶部必须用简短注释说明文件核心作用和边界，例如这个文件负责什么、不负责什么。
+
+导出的 `type` 必须有类型级注释，说明它的业务含义或使用边界。字段级注释只在字段容易误用、存在兼容历史、格式约束或业务规则时添加；字段名已经自解释时不要重复注释。
 
 ## 抽组件原则
 
@@ -155,7 +161,7 @@ src/features/profile/
 
 - 组件文件使用 kebab-case：`job-card.tsx`。
 - 组件名使用 PascalCase：`JobCard`。
-- feature 内 mock 数据命名为 `mock-data.ts`。
+- feature 内本地 fixture/mock 数据暂命名为 `mock-data.ts`。
 - feature 内纯函数命名为 `utils.ts`，只有变多后再拆细。
 - 跨 feature 导入统一使用 `@/features/...`、`@/components/...`、`@/lib/...`。
 

@@ -18,19 +18,23 @@ import { createId } from "@/features/profile/utils";
 
 function ProfileDrawer({
   draft,
+  isSaving = false,
   onAfterOpenChange,
   onClose,
   onDraftChange,
   open,
   onSave,
+  saveError,
   section,
 }: {
   draft: ProfileDraft;
+  isSaving?: boolean;
   onAfterOpenChange?: (open: boolean) => void;
   onClose: () => void;
   onDraftChange: (draft: ProfileDraft) => void;
   open: boolean;
-  onSave: () => void;
+  onSave: () => Promise<void> | void;
+  saveError?: string | null;
   section: ProfileSection;
 }) {
   const meta = sectionMeta[section];
@@ -93,12 +97,13 @@ function ProfileDrawer({
       extra={
         <Button
           className="bg-success text-success-foreground hover:bg-success/90"
+          disabled={isSaving}
           htmlType="button"
           icon={<Save />}
           onClick={onSave}
           type="primary"
         >
-          保存
+          {isSaving ? "保存中..." : "保存"}
         </Button>
       }
       mask={{
@@ -119,6 +124,12 @@ function ProfileDrawer({
       size={760}
     >
       <div className="px-5 py-5">
+        {saveError ? (
+          <p className="mb-5 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
+            保存失败：{saveError}
+          </p>
+        ) : null}
+
         {section === "personal" ? (
           <PersonalForm
             jobTypes={draft.preferences.jobTypes}

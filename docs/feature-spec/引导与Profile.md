@@ -17,7 +17,7 @@
 
 降级流程：
 
-- 没有 Dify 配置时使用 mock parser。
+- 没有 Dify 配置时，本地开发可使用 parser fixture 验证 UI 和数据契约。
 - Dify 解析失败时标记 `parse_failed`，允许用户下载原文件、查看错误摘要并切到手动填写。
 - Dify 返回低置信度字段时必须进入待确认状态，不能直接写入事实库。
 
@@ -43,8 +43,8 @@
 - 每个模块右侧提供编辑入口，点击后打开右侧抽屉表单。
 - Education 和 Work Experience 支持多条记录，并可在抽屉内拖拽调整展示顺序。
 - Skills 表单支持标签添加、删除、建议下拉和回车创建新标签。
-- 当前保存仅更新本地页面状态，不写入 Supabase，不生成 ProfileVersion。
-- Demo seed 数据必须脱敏，不能把真实手机号、邮箱或私人简历内容写入仓库。
+- 当前 Profile 已开始接入 Supabase `public.profiles.profile_data` 持久化；完整 `ProfileVersion` 后续随版本历史表落地。
+- 本地 fixture 数据必须脱敏，不能把真实手机号、邮箱或私人简历内容写入仓库。
 
 ## Profile 字段
 

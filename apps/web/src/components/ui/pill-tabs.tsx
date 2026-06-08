@@ -51,7 +51,8 @@ function PillTab<TValue extends string>({
   const className = cn(
     "flex h-8 shrink-0 items-center gap-2 rounded-[12px] px-3 text-sm font-semibold leading-5 text-muted-foreground transition cursor-pointer",
     "hover:bg-muted/70 hover:text-foreground",
-    isActive && "bg-card text-primary shadow-[0_4px_14px_rgba(15,23,42,0.08)]",
+    isActive &&
+      "bg-card text-primary shadow-[0_4px_14px_rgba(15,23,42,0.08)] hover:bg-card hover:text-primary",
   );
 
   const content = (

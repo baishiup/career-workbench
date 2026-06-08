@@ -77,9 +77,12 @@ function PersonalForm({
           <span className="text-sm font-semibold">工作类型</span>
           <select
             className={fieldClassName}
-            onChange={(event) => onJobTypesChange([event.target.value])}
-            value={jobTypes[0] ?? jobTypeOptions[0]}
+            onChange={(event) =>
+              onJobTypesChange(event.target.value ? [event.target.value] : [])
+            }
+            value={jobTypes[0] ?? ""}
           >
+            <option value="">未选择</option>
             {jobTypeOptions.map((jobType) => (
               <option key={jobType} value={jobType}>
                 {jobType}

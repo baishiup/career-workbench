@@ -1,12 +1,21 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { useState } from "react";
+import type { User } from "@supabase/supabase-js";
+import { ChevronDown, LogOut } from "lucide-react";
 
 import { PillTabs, type PillTabItem } from "@/components/ui/pill-tabs";
+import type { AuthProfile } from "@/lib/auth-store";
+import { useAuthStore } from "@/lib/auth-store";
 import { usePathname } from "@/lib/router";
+import { cn } from "@/lib/utils";
 
 function TopNav({ items }: { items: Array<PillTabItem<string>> }) {
   const pathname = usePathname();
+  const profile = useAuthStore((state) => state.profile);
+  const signOut = useAuthStore((state) => state.signOut);
+  const user = useAuthStore((state) => state.user);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const fallbackItem = items[0];
   const activeValue =
     items.find((item) => {
@@ -31,16 +40,113 @@ function TopNav({ items }: { items: Array<PillTabItem<string>> }) {
         </nav>
 
         <div className="flex items-center justify-start gap-2 lg:justify-end">
-          <div className="flex h-8 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-[13px] font-medium leading-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-            <span className="flex size-6 items-center justify-center rounded-full bg-accent text-xs font-semibold text-primary">
-              洪
-            </span>
-            <span className="hidden text-sm font-medium sm:inline">洪远麒</span>
-            <ChevronDown aria-hidden="true" />
+          <div className="relative">
+            <button
+              aria-expanded={isUserMenuOpen}
+              className="flex h-8 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-[13px] font-medium leading-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/35"
+              onClick={() => setIsUserMenuOpen((open) => !open)}
+              type="button"
+            >
+              <UserAvatar profile={profile} user={user} />
+              <span className="hidden max-w-32 truncate text-sm font-medium sm:inline">
+                {getUserDisplayName(user, profile)}
+              </span>
+              <ChevronDown
+                aria-hidden="true"
+                className={cn(
+                  "size-4 transition-transform",
+                  isUserMenuOpen ? "rotate-180" : "",
+                )}
+              />
+            </button>
+
+            {isUserMenuOpen ? (
+              <div className="absolute right-0 top-10 z-30 w-48 rounded-lg border border-border bg-card p-1 shadow-[0_12px_28px_rgba(15,23,42,0.14)]">
+                <button
+                  className="flex h-9 w-full items-center gap-2 rounded-md px-2.5 text-left text-sm font-medium text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+                  onClick={() => {
+                    setIsUserMenuOpen(false);
+                    void signOut();
+                  }}
+                  type="button"
+                >
+                  <LogOut className="size-4" />
+                  退出登录
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function getUserDisplayName(user: User | null, profile: AuthProfile | null) {
+  if (profile?.fullName) {
+    return profile.fullName;
+  }
+
+  if (profile?.email) {
+    return profile.email.split("@")[0] ?? profile.email;
+  }
+
+  if (!user) {
+    return "未登录";
+  }
+
+  const metadata = user.user_metadata;
+  const name = metadata.full_name ?? metadata.name;
+
+  if (typeof name === "string" && name.trim().length > 0) {
+    return name;
+  }
+
+  if (user.email) {
+    return user.email.split("@")[0] ?? user.email;
+  }
+
+  return "用户";
+}
+
+function getUserAvatarUrl(user: User | null) {
+  if (!user) {
+    return null;
+  }
+
+  const metadata = user.user_metadata;
+  const avatarUrl = metadata.avatar_url ?? metadata.picture;
+
+  return typeof avatarUrl === "string" && avatarUrl.trim().length > 0
+    ? avatarUrl
+    : null;
+}
+
+function UserAvatar({
+  profile,
+  user,
+}: {
+  profile: AuthProfile | null;
+  user: User | null;
+}) {
+  const avatarUrl = profile?.avatarUrl ?? getUserAvatarUrl(user);
+  const displayName = getUserDisplayName(user, profile);
+
+  if (avatarUrl) {
+    return (
+      <img
+        alt=""
+        className="size-6 rounded-full object-cover"
+        referrerPolicy="no-referrer"
+        src={avatarUrl}
+      />
+    );
+  }
+
+  return (
+    <span className="flex size-6 items-center justify-center rounded-full bg-accent text-xs font-semibold text-primary">
+      {displayName.slice(0, 1).toUpperCase()}
+    </span>
   );
 }
 

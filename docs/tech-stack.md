@@ -12,9 +12,9 @@
 ## 选型原则
 
 - 优先 JavaScript/TypeScript。
-- MVP 必须能本地开发、可演示、可部署。
+- MVP 必须能本地开发、可验证、可部署。
 - 技术点服务产品闭环，不做孤立 demo。
-- 默认保留 mock/demo 模式，避免无密钥环境不可运行。
+- mock/fixture 只服务本地开发和 provider 契约测试，不作为产品主路径。
 - Supabase 是 MVP 持久化目标；Dify 是优先 AI 编排层；OpenAI-compatible adapter 是 fallback。
 
 ## 当前技术栈
@@ -39,7 +39,7 @@
 apps/web
   Vite React SPA
   React UI
-  local mock/demo workflow
+  local dev fixture workflow
 
 packages/ai
   Dify client
@@ -82,8 +82,8 @@ AI_ORCHESTRATOR=openai-compatible
 
 要求：
 
-- 无 Supabase 配置时仍能跑 mock/demo。
-- 无 Dify 或模型 key 时仍能跑 mock provider。
+- 无 Supabase 配置时只保证本地开发 fixture 可用。
+- 无 Dify 或模型 key 时可用 mock provider 做契约测试；集成环境应明确提示配置缺失。
 - UI 要能显示当前是 mock/local/supabase 中哪种模式。
 
 ## 前端边界
@@ -98,10 +98,10 @@ AI_ORCHESTRATOR=openai-compatible
 
 第一阶段不创建独立 `apps/api`。
 
-当前 `apps/web` 是 Vite 静态前端，不承载服务端 API 路由。轻量 demo 能力先放在前端 mock/provider 层：
+当前 `apps/web` 是 Vite 静态前端，不承载服务端 API 路由。轻量本地开发能力先放在前端 mock/provider 层：
 
 - 本地 mock AI run。
-- demo trace 回放。
+- 开发 trace fixture 回放。
 - 非敏感 fixture 读取。
 
 需要保密 key、高权限写入或持久化事务时，优先放到 Supabase Edge Functions：

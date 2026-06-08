@@ -2,7 +2,7 @@
 
 ## 目标
 
-AI Trace 是 Career Workbench 的 AI 协作证据链，不是普通 debug log。它要让用户和面试官都能看清楚：
+AI Trace 是 Career Workbench 的 AI 协作证据链，不是普通 debug log。它要让用户和开发调试视图都能看清楚：
 
 - 这次 AI 任务为什么开始。
 - 输入了哪些业务上下文。
@@ -11,7 +11,7 @@ AI Trace 是 Career Workbench 的 AI 协作证据链，不是普通 debug log。
 - 最终生成了什么业务对象。
 - 用户采纳、拒绝或手动修改了哪些内容。
 
-第一版先把流程、数据模型和事件协议规划清楚。真实 Dify API、Supabase migration、前端 Trace 面板和 mock runner 可以在后续实现阶段分开落地。
+第一版先把流程、数据模型和事件协议规划清楚。真实 Dify API、Supabase migration、前端 Trace 面板和开发 mock runner 可以在后续实现阶段分开落地。
 
 ## 范围
 
@@ -36,7 +36,7 @@ AI Trace 是 Career Workbench 的 AI 协作证据链，不是普通 debug log。
 - 所有业务对象都必须能反查 `ai_run_id`。
 - Dify 的 `workflow_run_id`、`conversation_id`、`message_id` 只作为外部引用保存，不作为本系统主键。
 - mock provider、Dify provider、OpenAI-compatible provider 必须共享同一套事件协议。
-- 普通用户看到业务化时间线；开发/面试模式可以看到完整 trace、外部 ID、输入输出摘要和错误。
+- 普通用户看到业务化时间线；开发调试模式可以看到完整 trace、外部 ID、输入输出摘要和错误。
 
 ## 总体流程
 
@@ -75,16 +75,15 @@ sequenceDiagram
 - 展示 AI run 进度、对话、patch、修改日志和 Trace 面板。
 - 不直接调用 Dify。
 - 不持有 Dify key、模型 key 或 service role key。
-- 普通模式显示业务摘要，开发/面试模式显示完整 trace。
+- 普通模式显示业务摘要，开发调试模式显示完整 trace。
 
-### 前端 mock / demo runner
+### 前端开发 mock runner
 
-当前 `apps/web` 是 Vite 静态前端，不承载服务端 API 路由。轻量、本地 demo 或 mock provider 适合先放在前端 mock 层：
+当前 `apps/web` 是 Vite 静态前端，不承载服务端 API 路由。轻量、本地开发或 mock provider 适合先放在前端 mock 层：
 
 - 本地 mock AI run。
-- demo trace 回放。
+- 开发 trace fixture 回放。
 - 非敏感 fixture 读取。
-- 面试 demo 模式下的 trace 回放。
 
 前端 mock 层不保存长期敏感数据，不持有 Dify key、模型 key 或生产 service role key。
 
@@ -563,7 +562,7 @@ mock provider 必须模拟真实 provider 的关键边界：
 3. Supabase schema：创建 `ai_runs`、`ai_run_events`、`external_ai_runs`、`resume_conversations`、`resume_patches`、`resume_change_logs`、`match_reports`。
 4. Dify adapter：接入 Workflow / Chatflow，转换为统一事件。
 5. API / SSE endpoint：把 run 事件推给前端并持久化。
-6. 前端 Trace 面板：展示普通用户时间线和 Debug/面试视图。
+6. 前端 Trace 面板：展示普通用户时间线和 Debug 视图。
 7. Resume patch 采纳/拒绝流程：连接 patch、section、change log 和 trace。
 
 ## 验收标准

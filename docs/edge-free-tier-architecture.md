@@ -2,7 +2,7 @@
 
 ## 目标
 
-让演示项目尽量不依赖自建后台服务，并尽可能控制在常见第三方服务的免费额度内。
+让 MVP 尽量不依赖自建后台服务，并尽可能控制在常见第三方服务的免费额度内。
 
 本文只定义部署方式和代码边界，不定义完整数据表结构。
 
@@ -36,7 +36,7 @@ career-workbench/
 | 文件存储 | Supabase Storage | 保存上传的简历和生成的导出文件。 |
 | 后端逻辑 | Supabase Edge Functions | 负责 signed upload URL、上传完成确认、调用 Dify、写入业务结果。 |
 | AI 编排 | Dify Workflow / Chatflow | 负责简历解析、匹配分析、生成和简历级对话。 |
-| AI fallback | 默认 mock / OpenAI-compatible | 无 Dify 配置时保持 demo 可跑；真实模型调用必须加 allowlist 和 rate limit。 |
+| AI fallback | 本地 mock / OpenAI-compatible | 无 Dify 配置时用于开发和契约测试；真实模型调用必须加 allowlist 和 rate limit。 |
 
 ## 为什么一开始不做 `apps/api`
 
@@ -85,7 +85,7 @@ Edge Function 调 Dify 时遵守：
 
 隐私取舍：
 
-- GitHub/demo 默认走 mock，不发送真实简历。
+- 本地开发 fixture 默认走 mock，不发送真实简历。
 - 小范围 MVP 可以用 Dify Cloud 验证流程。
 - 真实私有用户数据规模化前，需要评估自托管 Dify 或切回自建 AI adapter。
 
@@ -104,16 +104,16 @@ Edge Function 调 Dify 时遵守：
 - 执行高权限操作前必须校验 Supabase Auth 和 admin role。
 - Storage bucket 默认保持私有。
 - 所有对外暴露的表都必须开启 RLS。
-- 公开演示默认使用 mock AI。
+- 本地开发默认使用 mock AI。
 - 接入 Dify 或真实 AI 前先加用户级和 admin 级 rate limit。
 
 ## 免费额度风险控制
 
 - 默认使用 `AI_ORCHESTRATOR=mock`。
-- Dify 配置缺失时自动降级到 mock。
-- 上传文件限制保持较小，例如演示简历限制在 5-10 MB。
+- Dify 配置缺失时，本地开发可降级到 mock；集成环境应提示配置缺失。
+- 上传文件限制保持较小，例如简历限制在 5-10 MB。
 - Dify/真实 AI 只对 allowlist 账号开放，直到隐私和计费边界稳定。
-- 只保存 sample/demo 数据，不保存私有真实简历。
+- 本地 fixture 只保存 sample 数据，不保存私有真实简历。
 - 没有真实必要前，不做 OCR、服务端浏览器渲染和批处理任务。
 
 ## 部署说明
