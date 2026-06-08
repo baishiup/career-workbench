@@ -1,47 +1,80 @@
 import { getSupabaseClient } from "@/lib/supabase";
+import type { JobPreferences } from "@career-workbench/resume";
 import type {
-  ParseResumeErrorDetails,
-  ParseResumeResponse,
+  ApplyResumeToProfileResponse,
+  CompleteOnboardingWithResumeResponse,
+  ResumeFunctionErrorDetails,
+  UploadResumeResponse,
 } from "@/features/resumes/types";
 
-export class ParseResumeError extends Error {
-  status?: number;
+class ResumeFunctionError extends Error {
   details?: unknown;
+  status?: number;
 
-  constructor(message: string, options: ParseResumeErrorDetails = {}) {
+  constructor(message: string, options: ResumeFunctionErrorDetails = {}) {
     super(message);
-    this.name = "ParseResumeError";
-    this.status = options.status;
+    this.name = "ResumeFunctionError";
     this.details = options.details;
+    this.status = options.status;
   }
 }
 
-export async function parseResume(file: File) {
-  const supabase = getSupabaseClient();
-
-  if (!supabase) {
-    throw new ParseResumeError(
-      "Supabase 未配置，无法调用 parse-resume Edge Function。",
-    );
-  }
-
+async function uploadResume(file: File) {
   const formData = new FormData();
   formData.append("resume_file", file);
 
-  const { data, error } = await supabase.functions.invoke<ParseResumeResponse>(
-    "parse-resume",
+  return invokeResumeFunction<UploadResumeResponse>("upload-resume", formData);
+}
+
+async function completeOnboardingWithResume(
+  file: File,
+  preferences: JobPreferences,
+) {
+  const formData = new FormData();
+  formData.append("resume_file", file);
+  formData.append("preferences_json", JSON.stringify(preferences));
+
+  return invokeResumeFunction<CompleteOnboardingWithResumeResponse>(
+    "complete-onboarding-with-resume",
+    formData,
+  );
+}
+
+async function applyResumeToProfile(resumeId: string) {
+  return invokeResumeFunction<ApplyResumeToProfileResponse>(
+    "apply-resume-to-profile",
     {
-      body: formData,
+      resume_id: resumeId,
+    },
+  );
+}
+
+async function invokeResumeFunction<TResponse>(
+  functionName: string,
+  body: BodyInit | Record<string, unknown>,
+) {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    throw new ResumeFunctionError(
+      `Supabase 未配置，无法调用 ${functionName} Edge Function。`,
+    );
+  }
+
+  const { data, error } = await supabase.functions.invoke<TResponse>(
+    functionName,
+    {
+      body,
     },
   );
 
   if (error) {
     const details = await readFunctionErrorDetails(error);
-    throw new ParseResumeError(error.message, details);
+    throw new ResumeFunctionError(error.message, details);
   }
 
   if (!data) {
-    throw new ParseResumeError("parse-resume Edge Function 返回为空。");
+    throw new ResumeFunctionError(`${functionName} Edge Function 返回为空。`);
   }
 
   return data;
@@ -49,7 +82,7 @@ export async function parseResume(file: File) {
 
 async function readFunctionErrorDetails(
   error: unknown,
-): Promise<ParseResumeErrorDetails> {
+): Promise<ResumeFunctionErrorDetails> {
   const context = (error as { context?: unknown }).context;
 
   if (!(context instanceof Response)) {
@@ -57,8 +90,8 @@ async function readFunctionErrorDetails(
   }
 
   return {
-    status: context.status,
     details: await readResponseBody(context),
+    status: context.status,
   };
 }
 
@@ -75,3 +108,10 @@ async function readResponseBody(response: Response) {
     return text;
   }
 }
+
+export {
+  applyResumeToProfile,
+  completeOnboardingWithResume,
+  ResumeFunctionError,
+  uploadResume,
+};

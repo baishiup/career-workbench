@@ -8,7 +8,7 @@ import { ArrowRight, Check, FileText, Loader2, Upload } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { OnboardingAside } from "@/features/onboarding/components/onboarding-aside";
 import { emptyProfile, jobTypeOptions } from "@/features/profile/data";
-import { parseResume } from "@/features/resumes/api";
+import { completeOnboardingWithResume } from "@/features/resumes/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { navigateTo } from "@/lib/router";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,7 @@ export function OnboardingFlow() {
   const completeProfileOnboarding = useAuthStore(
     (state) => state.completeProfileOnboarding,
   );
+  const refreshUser = useAuthStore((state) => state.refreshUser);
   const [step, setStep] = useState<1 | 2>(1);
   const [preferences, setPreferences] =
     useState<JobPreferences>(defaultPreferences);
@@ -98,10 +99,16 @@ export function OnboardingFlow() {
     setCompletionError(null);
 
     try {
-      const result = await parseResume(resumeFile);
-      console.log("[parse-resume result]", result);
+      const result = await completeOnboardingWithResume(
+        resumeFile,
+        preferences,
+      );
+      completeOnboarding();
+      addUploadedResume(result.file.name, preferences.jobFunction);
+      await refreshUser();
+      navigateTo("/jobs", { replace: true });
     } catch (error) {
-      console.error("[parse-resume error]", error);
+      console.error("[complete-onboarding-with-resume error]", error);
       setCompletionError(getErrorMessage(error));
     } finally {
       setIsParsing(false);

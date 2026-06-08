@@ -33,8 +33,8 @@ career-workbench/
 | Admin 应用 | 后续再定 | 现在保持 `apps/admin` 为空；只有内部流程需要独立应用时再实现。 |
 | 数据库 | Supabase Free | 用 Postgres 保存用户、Profile、简历、职位、匹配结果、AI trace。 |
 | Auth | Supabase Free | 负责用户登录和 admin 权限控制。 |
-| 文件存储 | Supabase Storage | 保存上传的简历和生成的导出文件。 |
-| 后端逻辑 | Supabase Edge Functions | 负责 signed upload URL、上传完成确认、调用 Dify、写入业务结果。 |
+| 文件存储 | Supabase Storage | 后续保存生成的导出文件；上传原始简历文件第一阶段不长期保存。 |
+| 后端逻辑 | Supabase Edge Functions | 负责接收上传文件、调用 Dify、写入业务结果。 |
 | AI 编排 | Dify Workflow / Chatflow | 负责简历解析、匹配分析、生成和简历级对话。 |
 | AI fallback | 本地 mock / OpenAI-compatible | 无 Dify 配置时用于开发和契约测试；真实模型调用必须加 allowlist 和 rate limit。 |
 
@@ -55,19 +55,16 @@ career-workbench/
 - 需要更复杂编排的 provider webhook。
 - 需要和前端独立扩缩容。
 
-## 后续 Admin 简历上传流程
+## 后续简历上传流程
 
 ```txt
-apps/admin or apps/web/admin
-  -> create-upload-url Edge Function
-  -> 浏览器直传 Supabase Storage
-  -> complete-resume-upload Edge Function
-  -> 创建或更新 Postgres resume_file / resume 记录
-  -> 调用 Dify resume-parse Workflow，或标记为 parsing_pending
-  -> 用户确认 profile draft 后写入 ProfileVersion 和 base ResumeVersion
+apps/web
+  -> upload-resume / complete-onboarding-with-resume Edge Function
+  -> Edge Function 中转 PDF 给 Dify resume-parse Workflow
+  -> 写入 profiles / resumes，或返回 profile candidate 等待用户确认
 ```
 
-MVP 里文件不要经过前端托管层的 serverless function。浏览器直传 Supabase Storage 可以避开 request payload 限制，也能让架构更简单。
+MVP 里先不做 signed upload URL 和 resume_files 表。只有文件需要长期保存、支持大文件或异步解析时，再重新设计 Storage 直传流程。
 
 当前脚手架状态：`apps/admin` 故意保持为空。本文只保留未来边界。
 
@@ -78,7 +75,7 @@ Dify 是 AI 编排层，不是 Career Workbench 的业务主库。
 Edge Function 调 Dify 时遵守：
 
 - 只从 Supabase 读取本次任务需要的最小输入。
-- 优先传结构化文本；必须传文件时使用短期有效的 signed URL 或受控中转。
+- 优先传结构化文本；必须传文件时使用 Edge Function 受控中转。
 - Dify 返回的结果必须落回 Supabase：profile draft、match report、resume patch、conversation message、run event。
 - 保存 `workflow_run_id`、`conversation_id`、输入摘要、输出摘要、错误、耗时和版本信息。
 - UI 不直接调用 Dify API，不暴露 Dify API key。
@@ -91,12 +88,23 @@ Edge Function 调 Dify 时遵守：
 
 ## Supabase Edge Functions
 
-当前占位函数：
+当前实现函数：
 
-- `create-upload-url`
-- `complete-resume-upload`
-- `run-match-analysis`
-- `generate-resume-version`
+- `upload-resume`：简历列表上传入口，接收 PDF、调用 Dify、创建 `resumes`，返回 `profile_candidate`，不覆盖 Profile。
+- `complete-onboarding-with-resume`：Onboarding 上传入口，接收 PDF 和 preferences，调用 Dify，覆盖 `profiles.profile_data`，创建 base resume，并完成 onboarding。
+- `apply-resume-to-profile`：用户确认后，把某份 resume 保存的 `ai_parsed_draft_json` 重新归一化并覆盖 Profile。
+
+当前共享代码：
+
+- `_shared/cors.ts`：CORS 与 JSON response helper。
+- `_shared/auth.ts`：认证 helper 占位，后续要替换为真实 Supabase Auth 校验。
+- `_shared/resume-normalize.ts`：Edge Function 到 `packages/resume` 归一化逻辑的桥接。
+- `_shared/dify-resume-parse.ts`：Dify 文件上传、Workflow 调用和 `AIParsedResumeDraft` 提取。
+
+已删除未实现的空壳函数。后续只有在对应业务真正开始实施时，再新增函数：
+
+- JD 匹配分析。
+- 定向简历生成。
 
 实现规则：
 
@@ -128,10 +136,9 @@ Supabase 负责后端资产：
 
 ```bash
 supabase db push
-supabase functions deploy create-upload-url
-supabase functions deploy complete-resume-upload
-supabase functions deploy run-match-analysis
-supabase functions deploy generate-resume-version
+supabase functions deploy upload-resume
+supabase functions deploy complete-onboarding-with-resume
+supabase functions deploy apply-resume-to-profile
 ```
 
-这些是后续部署目标，不是当前脚手架必须执行的命令。
+后续新增 Edge Function 后，再补充对应部署命令。

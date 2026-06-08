@@ -5,6 +5,12 @@
  */
 
 export { aiParsedResumeDraftJsonSchema } from "./parse";
+export {
+  aiParsedResumeDraftToProfileDraft,
+  buildBaseResumeFromAIParsedDraft,
+  createDefaultResumeStyleConfig,
+  profileDraftToBaseResumeDocument,
+} from "./normalize";
 export type {
   AIParsedEducation,
   AIParsedProject,
@@ -14,6 +20,13 @@ export type {
   AIParsedResumeSchemaVersion,
   AIParsedWorkExperience,
 } from "./parse";
+export type {
+  AIParsedResumeDraftToProfileOptions,
+  BaseResumeBuildResult,
+  BuildBaseResumeFromAIParsedDraftOptions,
+  DefaultResumeStyleConfigOptions,
+  ProfileDraftToResumeDocumentOptions,
+} from "./normalize";
 export type {
   EducationItem,
   JobPreferences,

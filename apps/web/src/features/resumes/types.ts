@@ -1,19 +1,60 @@
-export type ParseResumeResponse = {
-  status: "ok";
-  provider: "dify";
-  file: {
-    name: string;
-    size: number;
-    type: string;
-  };
-  dify: {
-    upload: unknown;
-    workflow: unknown;
-    outputs: unknown;
-  };
+import type {
+  ProfileDraft,
+  ResumeDocument,
+  ResumeStyleConfig,
+} from "@career-workbench/resume";
+
+type ResumeFunctionFile = {
+  name: string;
+  size: number;
+  type: string;
 };
 
-export type ParseResumeErrorDetails = {
+type ResumeFunctionRow = {
+  created_at: string;
+  document_json: ResumeDocument;
+  id: string;
+  source_type: string;
+  status: string;
+  style_json: ResumeStyleConfig;
+  title: string;
+  updated_at: string;
+};
+
+type UploadResumeResponse = {
+  status: "ok";
+  provider: "dify";
+  file: ResumeFunctionFile;
+  profile_candidate: ProfileDraft;
+  resume: ResumeFunctionRow;
+  parse_warnings: string[];
+};
+
+type CompleteOnboardingWithResumeResponse = {
+  status: "ok";
+  provider: "dify";
+  file: ResumeFunctionFile;
+  profile: ProfileDraft;
+  resume: ResumeFunctionRow;
+  parse_warnings: string[];
+};
+
+type ApplyResumeToProfileResponse = {
+  status: "ok";
+  profile: ProfileDraft;
+  resume_id: string;
+};
+
+type ResumeFunctionErrorDetails = {
   status?: number;
   details?: unknown;
+};
+
+export type {
+  ApplyResumeToProfileResponse,
+  CompleteOnboardingWithResumeResponse,
+  ResumeFunctionErrorDetails,
+  ResumeFunctionFile,
+  ResumeFunctionRow,
+  UploadResumeResponse,
 };

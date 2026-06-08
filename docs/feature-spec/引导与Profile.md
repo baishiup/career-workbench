@@ -9,24 +9,23 @@
 流程：
 
 1. 用户上传 PDF/Word 简历。
-2. 文件先保存到 Supabase Storage，并创建 `resume_file` 上传记录。
-3. `complete-resume-upload` Edge Function 调用 Dify 简历解析 Workflow，提取文本和结构化信息。
-4. 系统写入待确认 profile draft，并保存 Dify 外部运行引用。
-5. 用户检查并修正解析结果。
-6. 保存为 profile v1，同时生成一份 base resume。
+2. 第一阶段由 `complete-onboarding-with-resume` Edge Function 受控中转 PDF 给 Dify 简历解析 Workflow，不长期保存文件。
+3. Dify 返回 `AIParsedResumeDraft` 后，系统执行 `AIParsedResumeDraft -> ProfileDraft -> ResumeDocument` 归一化。
+4. Onboarding 场景解析成功后直接写入 `profiles.profile_data`，并创建一份 base resume。
+5. 简历列表上传场景使用 `upload-resume`，只创建 resume 和 profile candidate；用户确认后再调用 `apply-resume-to-profile` 覆盖 Profile。
 
 降级流程：
 
 - 没有 Dify 配置时，本地开发可使用 parser fixture 验证 UI 和数据契约。
-- Dify 解析失败时标记 `parse_failed`，允许用户下载原文件、查看错误摘要并切到手动填写。
-- Dify 返回低置信度字段时必须进入待确认状态，不能直接写入事实库。
+- Dify 解析失败时保留错误摘要，允许用户切到手动填写。
+- 简历列表上传场景中，Dify 返回低置信度字段时必须由用户确认后才覆盖 Profile。
 
 要求：
 
 - 上传简历只用于 profile 建立、匹配和简历生成。
-- 解析结果必须允许用户确认，不直接当成最终事实。
+- Onboarding 上传解析结果可以直接覆盖 Profile；简历列表上传必须允许用户确认。
 - 解析失败时允许切到手动填写。
-- 如果 Dify 需要读取文件，只传短期 signed URL 或由 Edge Function 中转，不把永久文件 URL 暴露给第三方。
+- 如果 Dify 需要读取文件，第一阶段由 Edge Function 中转，不把永久文件 URL 暴露给第三方。
 - 解析运行必须保存 `workflow_run_id`、workflow key、耗时、输入摘要、输出摘要和错误信息。
 
 ## 路径 B：手动填写 Profile

@@ -106,8 +106,7 @@ AI_ORCHESTRATOR=openai-compatible
 
 需要保密 key、高权限写入或持久化事务时，优先放到 Supabase Edge Functions：
 
-- signed upload URL。
-- 完成简历上传确认。
+- 接收上传文件并受控中转给 AI provider。
 - 调用 Dify Workflow / Chatflow。
 - 写入 AI run、event、外部运行引用、业务结果。
 
