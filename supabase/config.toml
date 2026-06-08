@@ -385,6 +385,15 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+[functions.upload-resume]
+verify_jwt = false
+
+[functions.complete-onboarding-with-resume]
+verify_jwt = false
+
+[functions.apply-resume-to-profile]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

@@ -21,6 +21,11 @@ type ResumeFunctionRow = {
   updated_at: string;
 };
 
+type ResumeListRow = Pick<
+  ResumeFunctionRow,
+  "created_at" | "id" | "source_type" | "status" | "title" | "updated_at"
+>;
+
 type UploadResumeResponse = {
   status: "ok";
   provider: "dify";
@@ -56,5 +61,6 @@ export type {
   ResumeFunctionErrorDetails,
   ResumeFunctionFile,
   ResumeFunctionRow,
+  ResumeListRow,
   UploadResumeResponse,
 };

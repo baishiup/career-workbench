@@ -4,6 +4,7 @@ import type {
   ApplyResumeToProfileResponse,
   CompleteOnboardingWithResumeResponse,
   ResumeFunctionErrorDetails,
+  ResumeListRow,
   UploadResumeResponse,
 } from "@/features/resumes/types";
 
@@ -24,6 +25,25 @@ async function uploadResume(file: File) {
   formData.append("resume_file", file);
 
   return invokeResumeFunction<UploadResumeResponse>("upload-resume", formData);
+}
+
+async function listResumes() {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    throw new ResumeFunctionError("Supabase 未配置，无法读取简历列表。");
+  }
+
+  const { data, error } = await supabase
+    .from("resumes")
+    .select("id,title,source_type,status,created_at,updated_at")
+    .order("updated_at", { ascending: false });
+
+  if (error) {
+    throw new ResumeFunctionError(error.message, { details: error });
+  }
+
+  return (data ?? []) as ResumeListRow[];
 }
 
 async function completeOnboardingWithResume(
@@ -112,6 +132,7 @@ async function readResponseBody(response: Response) {
 export {
   applyResumeToProfile,
   completeOnboardingWithResume,
+  listResumes,
   ResumeFunctionError,
   uploadResume,
 };
