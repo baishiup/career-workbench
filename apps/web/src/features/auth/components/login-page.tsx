@@ -1,17 +1,61 @@
-import { Loader2 } from "lucide-react";
-import { Button } from "@heroui/react";
+import { type FormEvent, useState } from "react";
+import { Loader2, LogIn, UserPlus, UserRoundCheck } from "lucide-react";
+import { Button, Input } from "@heroui/react";
 
 import { OnboardingAside } from "@/features/onboarding/components/onboarding-aside";
 import { useAuthStore } from "@/lib/auth-store";
 
 function LoginPage() {
+  const clearError = useAuthStore((state) => state.clearError);
   const error = useAuthStore((state) => state.error);
   const isConfigured = useAuthStore((state) => state.isConfigured);
   const isLoading = useAuthStore((state) => state.isLoading);
+  const signInLocalTestUser = useAuthStore(
+    (state) => state.signInLocalTestUser,
+  );
   const signInWithGoogle = useAuthStore((state) => state.signInWithGoogle);
+  const signInWithPassword = useAuthStore(
+    (state) => state.signInWithPassword,
+  );
+  const signUpWithPassword = useAuthStore(
+    (state) => state.signUpWithPassword,
+  );
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
+  const isLocalSupabase =
+    import.meta.env.DEV &&
+    import.meta.env.VITE_SUPABASE_URL?.startsWith("http://127.0.0.1:54321");
+
+  async function handleSignIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage(null);
+    await signInWithPassword(email.trim(), password);
+  }
+
+  async function handleSignUp() {
+    setMessage(null);
+    const result = await signUpWithPassword(email.trim(), password);
+
+    if (result.needsEmailConfirmation) {
+      setMessage("注册成功，请先确认邮箱后再登录。");
+    }
+  }
+
+  function updateEmail(value: string) {
+    clearError();
+    setMessage(null);
+    setEmail(value);
+  }
+
+  function updatePassword(value: string) {
+    clearError();
+    setMessage(null);
+    setPassword(value);
+  }
 
   return (
-    <main className="grid min-h-screen bg-card text-foreground lg:grid-cols-[minmax(360px,1fr)_minmax(520px,1fr)]">
+    <main className="grid min-h-screen bg-white text-slate-900 lg:grid-cols-[minmax(360px,1fr)_minmax(520px,1fr)]">
       <OnboardingAside title="登录后继续使用 AI 求职工作台。" />
 
       <section className="flex min-h-screen items-center justify-center px-4 py-8 lg:px-8">
@@ -25,7 +69,7 @@ function LoginPage() {
             variant="outline"
           >
             {isLoading ? (
-              <Loader2 className="size-7 animate-spin text-muted-foreground" />
+              <Loader2 className="size-7 animate-spin text-slate-500" />
             ) : (
               <GoogleMark />
             )}
@@ -34,14 +78,100 @@ function LoginPage() {
             </span>
           </Button>
 
+          <div className="my-6 flex w-full items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs font-semibold uppercase tracking-normal text-slate-500">
+              账号密码
+            </span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          <form className="flex w-full flex-col gap-3" onSubmit={handleSignIn}>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold text-slate-500">
+                邮箱
+              </span>
+              <Input
+                autoComplete="email"
+                disabled={!isConfigured || isLoading}
+                fullWidth
+                onChange={(event) => updateEmail(event.target.value)}
+                type="email"
+                value={email}
+                variant="secondary"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold text-slate-500">
+                密码
+              </span>
+              <Input
+                autoComplete="current-password"
+                disabled={!isConfigured || isLoading}
+                fullWidth
+                minLength={6}
+                onChange={(event) => updatePassword(event.target.value)}
+                type="password"
+                value={password}
+                variant="secondary"
+              />
+            </label>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button
+                fullWidth
+                isDisabled={!isConfigured || isLoading || !email || !password}
+                type="submit"
+                variant="primary"
+              >
+                {isLoading ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <LogIn className="size-4" />
+                )}
+                登录
+              </Button>
+              <Button
+                fullWidth
+                isDisabled={!isConfigured || isLoading || !email || !password}
+                onPress={() => void handleSignUp()}
+                type="button"
+                variant="outline"
+              >
+                <UserPlus className="size-4" />
+                注册
+              </Button>
+            </div>
+          </form>
+
+          {isLocalSupabase ? (
+            <Button
+              className="mt-3"
+              fullWidth
+              isDisabled={!isConfigured || isLoading}
+              onPress={() => void signInLocalTestUser()}
+              type="button"
+              variant="tertiary"
+            >
+              <UserRoundCheck className="size-4" />
+              使用测试账号 admin / 123456
+            </Button>
+          ) : null}
+
           {!isConfigured ? (
-            <p className="mt-4 text-center text-sm font-medium text-muted-foreground">
+            <p className="mt-4 text-center text-sm font-medium text-slate-500">
               Supabase 环境变量未配置，当前只能使用 mock/demo 模式。
             </p>
           ) : null}
 
+          {message ? (
+            <p className="mt-4 text-center text-sm font-medium text-emerald-600">
+              {message}
+            </p>
+          ) : null}
+
           {error ? (
-            <p className="mt-4 text-center text-sm font-medium text-destructive">
+            <p className="mt-4 text-center text-sm font-medium text-red-600">
               {error}
             </p>
           ) : null}

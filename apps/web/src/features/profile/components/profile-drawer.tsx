@@ -109,13 +109,13 @@ function ProfileDrawer({
     <Drawer state={drawerState}>
       <Drawer.Backdrop isDismissable>
         <Drawer.Content className="justify-end" placement="right">
-          <Drawer.Dialog className="h-dvh w-[min(760px,100vw)] max-w-[100vw] border-l border-border bg-card p-0 shadow-2xl sm:w-[min(760px,92vw)]">
-            <Drawer.Header className="shrink-0 flex-row items-start justify-between gap-4 border-b border-border px-5 py-4">
+          <Drawer.Dialog className="h-dvh w-[min(760px,100vw)] max-w-[100vw] border-l border-slate-200 bg-white p-0 shadow-2xl sm:w-[min(760px,92vw)]">
+            <Drawer.Header className="shrink-0 flex-row items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
               <div className="min-w-0">
                 <Drawer.Heading className="text-lg font-semibold">
                   {meta.label}
                 </Drawer.Heading>
-                <p className="text-sm font-normal text-muted-foreground">
+                <p className="text-sm font-normal text-slate-500">
                   {meta.description}
                 </p>
               </div>
@@ -140,7 +140,7 @@ function ProfileDrawer({
                 </Button>
               </div>
             </Drawer.Header>
-            <Drawer.Body className="min-h-0 flex-1 overflow-y-auto px-5 py-5 text-foreground">
+            <Drawer.Body className="min-h-0 flex-1 overflow-y-auto px-5 py-5 text-slate-900">
               {saveError ? (
                 <Alert className="mb-5" status="danger">
                   <Alert.Content>

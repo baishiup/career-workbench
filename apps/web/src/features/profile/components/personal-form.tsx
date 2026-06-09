@@ -74,7 +74,7 @@ function PersonalForm({
           onChange={(value) => onPersonalChange("city", value)}
         />
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-semibold text-muted-foreground">
+          <span className="text-sm font-semibold text-slate-500">
             工作类型
           </span>
           <select
@@ -106,9 +106,9 @@ function PersonalForm({
         />
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-border pt-5">
+      <div className="flex flex-col gap-3 border-t border-slate-200 pt-5">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="text-sm font-semibold text-foreground">自定义字段</h3>
+          <h3 className="text-sm font-semibold text-slate-900">自定义字段</h3>
           <Button
             onPress={() =>
               onPersonalChange("customFields", [

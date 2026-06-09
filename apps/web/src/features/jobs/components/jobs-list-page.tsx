@@ -134,16 +134,16 @@ function FilterBar({
         >
           <Search
             aria-hidden="true"
-            className="size-5 shrink-0 text-muted-foreground"
+            className="size-5 shrink-0 text-slate-500"
           />
           <input
             aria-label="搜索职位、公司或关键词"
-            className="min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
+            className="min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-slate-500"
             onChange={(event) => setQuery(event.target.value)}
             placeholder="搜索职位、公司或关键词"
             value={query}
           />
-          <span className="hidden rounded-md border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground sm:inline">
+          <span className="hidden rounded-md border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500 sm:inline">
             Cmd K
           </span>
         </label>
@@ -197,8 +197,8 @@ function FilterBar({
       </div>
 
       {openPanel ? (
-        <div className="flex min-h-10 flex-wrap items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-          <span className="mr-1 text-xs font-medium text-muted-foreground">
+        <div className="flex min-h-10 flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <span className="mr-1 text-xs font-medium text-slate-500">
             {filterPanelLabel(openPanel)}
           </span>
           {filterPanelOptions(openPanel).map((filter) => (
@@ -213,7 +213,7 @@ function FilterBar({
               {filter}
             </Button>
           ))}
-          <span className="ml-auto text-xs text-muted-foreground">
+          <span className="ml-auto text-xs text-slate-500">
             当前显示 {filteredCount} / {jobsCount}
           </span>
         </div>
@@ -259,7 +259,7 @@ function JobsTable({
 }) {
   return (
     <div className={cn(panelClassName, "min-w-0 overflow-hidden")}>
-      <div className="grid min-h-11 grid-cols-[minmax(220px,1.1fr)_minmax(260px,1fr)_104px] items-center border-b border-border bg-muted/35 px-5 text-sm font-medium text-muted-foreground max-lg:hidden">
+      <div className="grid min-h-11 grid-cols-[minmax(220px,1.1fr)_minmax(260px,1fr)_104px] items-center border-b border-slate-200 bg-slate-100/35 px-5 text-sm font-medium text-slate-500 max-lg:hidden">
         <span>职位信息</span>
         <span>关键信息</span>
         <span className="text-right">匹配度</span>
@@ -277,10 +277,10 @@ function JobsTable({
           ))
         ) : (
           <div className="flex min-h-56 flex-col items-center justify-center gap-3 p-6 text-center">
-            <Search aria-hidden="true" className="size-8 text-muted-foreground" />
+            <Search aria-hidden="true" className="size-8 text-slate-500" />
             <div>
               <p className="text-sm font-medium">没有匹配的职位</p>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-sm text-slate-500">
                 调整关键词或筛选条件后再试。
               </p>
             </div>
@@ -309,8 +309,8 @@ function JobTableRow({
   return (
     <button
       className={cn(
-        "grid min-w-0 grid-cols-1 gap-3 border-b border-border px-5 py-4 text-left transition last:border-b-0 hover:bg-accent/30 lg:grid-cols-[minmax(220px,1.1fr)_minmax(260px,1fr)_104px] lg:items-center",
-        isSelected ? "bg-accent/45 shadow-[inset_3px_0_0_var(--cw-primary)]" : "",
+        "grid min-w-0 grid-cols-1 gap-3 border-b border-slate-200 px-5 py-4 text-left transition last:border-b-0 hover:bg-sky-100/30 lg:grid-cols-[minmax(220px,1.1fr)_minmax(260px,1fr)_104px] lg:items-center",
+        isSelected ? "bg-sky-100/45 shadow-[inset_3px_0_0_rgb(37_99_235)]" : "",
       )}
       onClick={onSelect}
       type="button"
@@ -326,7 +326,7 @@ function JobTableRow({
         </div>
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <h2 className="truncate text-base font-semibold leading-6 text-foreground">
+            <h2 className="truncate text-base font-semibold leading-6 text-slate-900">
               {job.title}
             </h2>
             {job.match.score >= 95 ? (
@@ -336,18 +336,18 @@ function JobTableRow({
               </Chip>
             ) : null}
           </div>
-          <p className="mt-1 truncate text-[15px] text-muted-foreground">
+          <p className="mt-1 truncate text-[15px] text-slate-500">
             {job.company} · {compactStage(job.companyStage)}
           </p>
         </div>
       </div>
 
       <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[15px] leading-5 text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[15px] leading-5 text-slate-500">
           <InfoPill icon={remoteIcon(job.remoteStatus)} label={job.remoteStatus} />
-          <span className="hidden text-muted-foreground/60 sm:inline">·</span>
+          <span className="hidden text-slate-500/60 sm:inline">·</span>
           <InfoPill icon={BriefcaseBusiness} label={job.jobType} />
-          <span className="hidden text-muted-foreground/60 sm:inline">·</span>
+          <span className="hidden text-slate-500/60 sm:inline">·</span>
           <span className="truncate">{compactLocation(job)}</span>
         </div>
         <div className="mt-2 flex min-w-0 flex-wrap gap-1.5">
@@ -370,7 +370,7 @@ function JobTableRow({
         </span>
         <ChevronRight
           aria-hidden="true"
-          className="size-5 shrink-0 text-muted-foreground"
+          className="size-5 shrink-0 text-slate-500"
         />
       </div>
     </button>
@@ -382,7 +382,7 @@ function InfoPill({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
     <div className="flex min-w-0 items-center gap-1.5">
       <Icon
         aria-hidden="true"
-        className="size-4 shrink-0 text-muted-foreground"
+        className="size-4 shrink-0 text-slate-500"
       />
       <span className="truncate">{label}</span>
     </div>
@@ -394,12 +394,12 @@ function PriorityPanel({ job }: { job: JobRecord }) {
     <aside className={cn(panelClassName, "min-w-0 overflow-hidden xl:sticky xl:top-4 xl:h-fit")}>
       <div className="flex items-center justify-between gap-3 px-5 py-4">
         <div className="flex min-w-0 items-center gap-2">
-          <h2 className="truncate text-lg font-semibold text-foreground">
+          <h2 className="truncate text-lg font-semibold text-slate-900">
             优先处理职位
           </h2>
-          <Crown aria-hidden="true" className="size-5 shrink-0 text-warning" />
+          <Crown aria-hidden="true" className="size-5 shrink-0 text-amber-600" />
         </div>
-        <div className="flex shrink-0 items-center gap-2 text-muted-foreground">
+        <div className="flex shrink-0 items-center gap-2 text-slate-500">
           <Pin aria-hidden="true" className="size-5" />
           <MoreHorizontal aria-hidden="true" className="size-5" />
         </div>
@@ -408,53 +408,53 @@ function PriorityPanel({ job }: { job: JobRecord }) {
       <div className="px-5 pb-5">
         <div className="flex min-w-0 items-start justify-between gap-4">
           <div className="min-w-0">
-            <h3 className="text-xl font-semibold leading-7 text-foreground">
+            <h3 className="text-xl font-semibold leading-7 text-slate-900">
               {job.title}
             </h3>
-            <p className="mt-1.5 truncate text-[15px] text-muted-foreground">
+            <p className="mt-1.5 truncate text-[15px] text-slate-500">
               {job.company} · {compactStage(job.companyStage)} · {job.remoteStatus}
             </p>
           </div>
           <div className="shrink-0 text-right">
-            <p className="text-4xl font-semibold leading-none text-primary">
+            <p className="text-4xl font-semibold leading-none text-blue-600">
               {job.match.score}%
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">匹配度</p>
+            <p className="mt-1 text-sm text-slate-500">匹配度</p>
           </div>
         </div>
 
         <ProgressBar className="mt-5" size="sm" value={job.match.score} />
-        <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
+        <div className="mt-3 flex items-center justify-between text-sm text-slate-500">
           <span>综合匹配度</span>
           <span>{job.match.score} / 100</span>
         </div>
 
-        <div className="mt-5 border-t border-border pt-5">
+        <div className="mt-5 border-t border-slate-200 pt-5">
           <SectionTitle icon={SlidersHorizontal} label="AI 评估摘要" />
-          <p className="mt-3 text-[15px] leading-7 text-muted-foreground">
+          <p className="mt-3 text-[15px] leading-7 text-slate-500">
             {job.match.aiNote}
           </p>
         </div>
 
         <EvidenceList
-          iconClassName="text-success"
+          iconClassName="text-emerald-600"
           items={job.match.evidence}
           title="关键证据"
         />
         <EvidenceList
-          iconClassName="text-warning"
+          iconClassName="text-amber-600"
           items={job.match.gaps}
           title="潜在差距"
         />
 
-        <div className="mt-5 grid gap-2 rounded-lg border border-border bg-muted/35 p-3 text-sm text-muted-foreground">
+        <div className="mt-5 grid gap-2 rounded-lg border border-slate-200 bg-slate-100/35 p-3 text-sm text-slate-500">
           <MetaLine label="导入状态" value={job.importStatus} />
           <MetaLine label="发布时间" value={job.postedAt} />
           <MetaLine label="薪资范围" value={job.salaryRange} />
         </div>
 
         <Link
-          className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/35"
+          className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-600/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-400/35"
           href={`/jobs/${job.id}`}
         >
           查看详情
@@ -475,11 +475,11 @@ function EvidenceList({
 }) {
   return (
     <div className="mt-5">
-      <h4 className="text-base font-semibold text-foreground">{title}</h4>
+      <h4 className="text-base font-semibold text-slate-900">{title}</h4>
       <div className="mt-2 flex flex-col gap-2">
         {items.slice(0, 3).map((item) => (
           <div
-            className="flex min-w-0 items-center gap-2 rounded-lg bg-muted/45 px-3 py-2 text-[15px] text-muted-foreground"
+            className="flex min-w-0 items-center gap-2 rounded-lg bg-slate-100/45 px-3 py-2 text-[15px] text-slate-500"
             key={item}
           >
             <CheckCircle2
@@ -489,7 +489,7 @@ function EvidenceList({
             <span className="min-w-0 flex-1 truncate">{item}</span>
             <ExternalLink
               aria-hidden="true"
-              className="size-4 shrink-0 text-primary"
+              className="size-4 shrink-0 text-blue-600"
             />
           </div>
         ))}
@@ -506,8 +506,8 @@ function SectionTitle({
   label: string;
 }) {
   return (
-    <div className="flex items-center gap-2 text-base font-semibold text-foreground">
-      <Icon aria-hidden="true" className="size-5 text-primary" />
+    <div className="flex items-center gap-2 text-base font-semibold text-slate-900">
+      <Icon aria-hidden="true" className="size-5 text-blue-600" />
       <span>{label}</span>
     </div>
   );
@@ -517,7 +517,7 @@ function MetaLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span>{label}</span>
-      <span className="truncate text-foreground">{value}</span>
+      <span className="truncate text-slate-900">{value}</span>
     </div>
   );
 }
@@ -633,12 +633,12 @@ function remoteIcon(remoteStatus: JobRecord["remoteStatus"]) {
 
 function matchPillClassName(score: number) {
   if (score >= 95) {
-    return "bg-primary/10 text-primary";
+    return "bg-blue-600/10 text-blue-600";
   }
 
   if (score >= 85) {
-    return "bg-success/10 text-success";
+    return "bg-emerald-600/10 text-emerald-600";
   }
 
-  return "bg-muted text-muted-foreground";
+  return "bg-slate-100 text-slate-500";
 }

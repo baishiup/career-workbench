@@ -106,7 +106,7 @@ export function ResumesPage() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">简历</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-slate-500">
             管理已上传的基础简历和解析状态。
           </p>
         </div>
@@ -144,9 +144,9 @@ export function ResumesPage() {
         </Alert>
       ) : null}
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div>
         {isLoading ? (
-          <div className="flex min-h-40 items-center px-5 py-6 text-sm font-medium text-muted-foreground">
+          <div className="flex min-h-40 items-center px-5 py-6 text-sm font-medium text-slate-500">
             正在读取简历列表...
           </div>
         ) : null}
@@ -166,7 +166,7 @@ export function ResumesPage() {
                     <Table.Row id={row.id}>
                       <Table.Cell>
                         <div className="flex min-w-0 items-center gap-2">
-                          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
+                          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
                             <FileText aria-hidden="true" className="size-4" />
                           </span>
                           <span className="truncate font-medium">
@@ -191,12 +191,12 @@ export function ResumesPage() {
 
         {!isLoading && rows.length === 0 ? (
           <div className="flex min-h-56 flex-col items-center justify-center gap-3 px-5 py-10 text-center">
-            <span className="flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+            <span className="flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
               <FileText aria-hidden="true" className="size-6" />
             </span>
             <div>
               <p className="text-sm font-semibold">还没有简历记录</p>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-sm text-slate-500">
                 上传一份基础简历后，这里会显示解析状态、来源和更新时间。
               </p>
             </div>

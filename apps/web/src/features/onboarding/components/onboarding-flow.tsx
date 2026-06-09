@@ -115,7 +115,7 @@ export function OnboardingFlow() {
   }
 
   return (
-    <main className="grid min-h-screen bg-card text-foreground lg:grid-cols-[minmax(360px,1fr)_minmax(520px,1fr)]">
+    <main className="grid min-h-screen bg-white text-slate-900 lg:grid-cols-[minmax(360px,1fr)_minmax(520px,1fr)]">
       <OnboardingAside
         title={
           step === 1
@@ -128,7 +128,7 @@ export function OnboardingFlow() {
         <div className="w-full max-w-[620px]">
           <div className="mb-8 flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-primary">
+              <p className="text-sm font-semibold text-blue-600">
                 第 {step} / 2 步
               </p>
               <ProgressBar
@@ -148,7 +148,7 @@ export function OnboardingFlow() {
           </div>
 
           {completionError ? (
-            <p className="mb-5 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
+            <p className="mb-5 rounded-lg bg-red-600/10 px-3 py-2 text-sm font-medium text-red-600">
               {completionError}
             </p>
           ) : null}
@@ -214,7 +214,7 @@ function PreferenceStep({
     >
       <FieldGroup label="求职方向" required>
         <input
-          className="h-11 w-full rounded-lg border border-transparent bg-muted/55 px-3 text-sm font-medium outline-none transition placeholder:text-muted-foreground/70 focus:border-ring focus:bg-card focus:ring-3 focus:ring-ring/20"
+          className="h-11 w-full rounded-lg border border-transparent bg-slate-100/55 px-3 text-sm font-medium outline-none transition placeholder:text-slate-500/70 focus:border-blue-400 focus:bg-white focus:ring-3 focus:ring-blue-400/20"
           onChange={(event) =>
             setPreferences({
               ...preferences,
@@ -270,7 +270,7 @@ function ResumeStep({
 }) {
   return (
     <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
-      <div className="flex size-28 items-center justify-center rounded-full bg-muted/70">
+      <div className="flex size-28 items-center justify-center rounded-full bg-slate-100/70">
         <FileText className="size-14" />
       </div>
 
@@ -292,15 +292,15 @@ function ResumeStep({
           {resumeFile ? resumeFile.name : "上传简历"}
         </Button>
       </div>
-      <p className="mt-5 text-sm font-medium text-muted-foreground">
+      <p className="mt-5 text-sm font-medium text-slate-500">
         支持 PDF 格式，文件大小不超过 15MB。
       </p>
-      <p className="mt-5 max-w-sm rounded-lg bg-success/10 px-4 py-3 text-xs font-medium leading-5 text-muted-foreground">
+      <p className="mt-5 max-w-sm rounded-lg bg-emerald-600/10 px-4 py-3 text-xs font-medium leading-5 text-slate-500">
         当前调试模式只会调用简历解析接口，结果输出到浏览器控制台。
       </p>
 
       {isParsing ? (
-        <div className="mt-8 flex items-center gap-2 text-sm font-semibold text-primary">
+        <div className="mt-8 flex items-center gap-2 text-sm font-semibold text-blue-600">
           <Loader2 className="size-4 animate-spin" />
           正在识别简历信息...
         </div>
@@ -348,7 +348,7 @@ function FieldGroup({
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm font-semibold">
-        {required ? <span className="text-destructive">*</span> : null} {label}
+        {required ? <span className="text-red-600">*</span> : null} {label}
       </p>
       {children}
     </div>
@@ -372,8 +372,8 @@ function CheckOption({
     >
       <span
         className={cn(
-          "flex size-5 shrink-0 items-center justify-center rounded border border-border bg-card",
-          checked ? "border-success bg-success text-success-foreground" : "",
+          "flex size-5 shrink-0 items-center justify-center rounded border border-slate-200 bg-white",
+          checked ? "border-emerald-600 bg-emerald-600 text-white" : "",
         )}
       >
         {checked ? <Check className="size-3.5" /> : null}

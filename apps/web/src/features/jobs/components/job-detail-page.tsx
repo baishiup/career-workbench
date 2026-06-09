@@ -38,7 +38,7 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
     return (
       <section className="mx-auto flex min-h-[calc(100vh-56px)] w-full max-w-[960px] flex-col justify-center px-4 py-8">
         <Link
-          className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900"
           href="/jobs"
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
@@ -47,7 +47,7 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
         <h1 className="mt-6 text-2xl font-semibold tracking-tight">
           职位不存在
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm text-slate-500">
           当前 mock 数据里没有这个职位。
         </p>
       </section>
@@ -57,7 +57,7 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
   return (
     <section className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-4 py-5 lg:px-6">
       <Link
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900"
         href="/jobs"
       >
         <ArrowLeft aria-hidden="true" className="size-4" />
@@ -90,18 +90,18 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
             <h1 className="mt-2 text-2xl font-semibold leading-tight tracking-tight">
               {job.title}
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-sm text-slate-500">
               {job.company} / {job.companyStage}
             </p>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
               {job.summary}
             </p>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 rounded-xl bg-primary p-4 text-primary-foreground">
+        <div className="flex flex-col gap-3 rounded-xl bg-blue-600 p-4 text-white">
           <div>
-            <p className="text-sm text-primary-foreground/75">Mock 匹配分</p>
+            <p className="text-sm text-white/75">Mock 匹配分</p>
             <p className="mt-2 text-4xl font-semibold">{job.match.score}%</p>
             <p className="mt-1 text-sm font-medium">{job.match.label}</p>
           </div>
@@ -129,7 +129,7 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
               </Card.Description>
               <div className="ml-auto">
                 <a
-                  className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-sm font-semibold text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/35"
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-400/35"
                   href={job.sourceUrl}
                   rel="noreferrer"
                   target="_blank"
@@ -198,7 +198,7 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
               </div>
             </Card.Header>
             <Card.Content className="flex flex-col gap-4">
-              <p className="text-sm leading-6 text-muted-foreground">
+              <p className="text-sm leading-6 text-slate-500">
                 {job.match.aiNote}
               </p>
               <div className="h-px bg-border" />
@@ -233,13 +233,13 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
                 <div className="flex items-start gap-2">
                   <CheckCircle2
                     aria-hidden="true"
-                    className="mt-0.5 size-4 shrink-0 text-success"
+                    className="mt-0.5 size-4 shrink-0 text-emerald-600"
                   />
                   <div>
                     <p className="text-sm font-medium">
                       target job resume draft
                     </p>
-                    <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                    <p className="mt-1 text-sm leading-5 text-slate-500">
                       当前仅展示 mock 状态。后续接 Dify 后，该动作应写入
                       ResumeVersion、AiRun 和 Dify 外部运行引用。
                     </p>
@@ -281,9 +281,9 @@ function Fact({
 }) {
   return (
     <div className={cn(softPanelClassName, "flex min-w-0 gap-3 p-3")}>
-      <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" />
+      <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-blue-600" />
       <div className="min-w-0">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="text-xs font-medium text-slate-500">{label}</p>
         <p className="mt-1 truncate text-sm font-medium">{value}</p>
       </div>
     </div>
@@ -303,15 +303,15 @@ function TextListCard({
     <Card className={panelClassName}>
       <Card.Header>
         <Card.Title className="flex items-center gap-2">
-          <Icon aria-hidden="true" className="size-4 text-primary" />
+          <Icon aria-hidden="true" className="size-4 text-blue-600" />
           {title}
         </Card.Title>
       </Card.Header>
       <Card.Content>
-        <ul className="space-y-3 text-sm leading-6 text-muted-foreground">
+        <ul className="space-y-3 text-sm leading-6 text-slate-500">
           {items.map((item) => (
             <li className="flex gap-2" key={item}>
-              <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
+              <span className="mt-2 size-1.5 shrink-0 rounded-full bg-blue-600" />
               <span>{item}</span>
             </li>
           ))}
@@ -362,10 +362,10 @@ function MatchSection({
 }) {
   const iconClassName =
     tone === "success"
-      ? "text-success"
+      ? "text-emerald-600"
       : tone === "warning"
-        ? "text-warning"
-        : "text-muted-foreground";
+        ? "text-amber-600"
+        : "text-slate-500";
 
   return (
     <div>
@@ -373,7 +373,7 @@ function MatchSection({
         <Icon aria-hidden="true" className={cn("size-4", iconClassName)} />
         <p className="text-sm font-medium">{title}</p>
       </div>
-      <ul className="mt-2 space-y-2 text-sm leading-5 text-muted-foreground">
+      <ul className="mt-2 space-y-2 text-sm leading-5 text-slate-500">
         {items.map((item) => (
           <li className="flex gap-2" key={item}>
             <span className="mt-2 size-1 shrink-0 rounded-full bg-border" />
@@ -387,8 +387,8 @@ function MatchSection({
 
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-border pb-2 last:border-0 last:pb-0">
-      <span className="text-muted-foreground">{label}</span>
+    <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-2 last:border-0 last:pb-0">
+      <span className="text-slate-500">{label}</span>
       <span className="text-right font-medium">{value}</span>
     </div>
   );

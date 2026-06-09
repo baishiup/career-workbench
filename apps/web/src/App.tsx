@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { workbenchNavItems } from "@/components/workbench/nav-items";
 import { TopNav } from "@/components/workbench/top-nav";
+import { AiChatDemoPage } from "@/features/ai-chat/components/ai-chat-demo-page";
 import { LoginPage } from "@/features/auth/components/login-page";
 import { JobsListPage } from "@/features/jobs/components/jobs-list-page";
 import { JobDetailPage } from "@/features/jobs/components/job-detail-page";
@@ -23,6 +24,7 @@ import type { ProfileDraft } from "@career-workbench/resume";
 
 function App() {
   const pathname = usePathname();
+  const canUseAiChatDemo = import.meta.env.DEV && pathname === "/ai-chat";
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
   const isAuthConfigured = useAuthStore((state) => state.isConfigured);
   const isAuthLoading = useAuthStore((state) => state.isLoading);
@@ -40,6 +42,7 @@ function App() {
 
   useEffect(() => {
     if (
+      canUseAiChatDemo ||
       !hasHydrated ||
       (isAuthConfigured && (isAuthLoading || (user && isProfileLoading)))
     ) {
@@ -85,11 +88,13 @@ function App() {
     pathname,
     profile,
     user,
+    canUseAiChatDemo,
   ]);
 
   if (
-    !hasHydrated ||
-    (isAuthConfigured && (isAuthLoading || (user && isProfileLoading)))
+    !canUseAiChatDemo &&
+    (!hasHydrated ||
+      (isAuthConfigured && (isAuthLoading || (user && isProfileLoading))))
   ) {
     return <LoadingScreen text="Loading Career Workbench..." />;
   }
@@ -108,9 +113,10 @@ function App() {
     : hasCompletedOnboarding;
 
   if (
-    pathname === "/" ||
-    requiresLogin ||
-    (pathname !== "/onboarding" && !hasPassedOnboarding)
+    !canUseAiChatDemo &&
+    (pathname === "/" ||
+      requiresLogin ||
+      (pathname !== "/onboarding" && !hasPassedOnboarding))
   ) {
     return <LoadingScreen text="正在准备工作台..." />;
   }
@@ -124,7 +130,7 @@ function App() {
 
 function WorkbenchShell({ children }: { children: ReactNode }) {
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main className="min-h-screen bg-slate-100 text-slate-900">
       <TopNav items={workbenchNavItems} />
       {children}
     </main>
@@ -150,12 +156,16 @@ function renderWorkbenchRoute(pathname: string) {
     return <ProfilePage />;
   }
 
+  if (pathname === "/ai-chat") {
+    return <AiChatDemoPage />;
+  }
+
   return <NotFoundPage />;
 }
 
 function LoadingScreen({ text }: { text: string }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background text-sm font-medium text-muted-foreground">
+    <main className="flex min-h-screen items-center justify-center bg-slate-100 text-sm font-medium text-slate-500">
       {text}
     </main>
   );
@@ -164,10 +174,10 @@ function LoadingScreen({ text }: { text: string }) {
 function NotFoundPage() {
   return (
     <section className="mx-auto flex min-h-[calc(100vh-56px)] w-full max-w-[960px] flex-col justify-center px-4 py-8">
-      <p className="text-sm font-medium text-muted-foreground">404</p>
+      <p className="text-sm font-medium text-slate-500">404</p>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight">页面不存在</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        当前 Vite 版本只保留职位、简历、资料和 onboarding 页面。
+      <p className="mt-2 text-sm text-slate-500">
+        当前 Vite 版本只保留职位、简历、资料、AI 和 onboarding 页面。
       </p>
     </section>
   );
@@ -190,7 +200,9 @@ function ProfilePage() {
       setProfile(emptyProfile);
       setDraft(emptyProfile);
       setLoadError(
-        isAuthConfigured ? "请先登录后再查看资料。" : "Supabase 环境变量未配置完整。",
+        isAuthConfigured
+          ? "请先登录后再查看资料。"
+          : "Supabase 环境变量未配置完整。",
       );
       return;
     }
@@ -270,13 +282,13 @@ function ProfilePage() {
   return (
     <section className="mx-auto grid w-full max-w-[1320px] gap-4 px-4 py-5">
       {isLoadingProfile ? (
-        <p className="rounded-lg bg-muted px-3 py-2 text-sm font-medium text-muted-foreground">
+        <p className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-500">
           正在从 Supabase 读取资料...
         </p>
       ) : null}
 
       {loadError && !isDrawerOpen ? (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
+        <p className="rounded-lg bg-red-600/10 px-3 py-2 text-sm font-medium text-red-600">
           资料读取失败：{loadError}
         </p>
       ) : null}

@@ -48,10 +48,10 @@ function PillTab<TValue extends string>({
   const isActive = activeValue === item.value;
   const Icon = isActive && item.activeIcon ? item.activeIcon : item.icon;
   const className = cn(
-    "flex h-8 shrink-0 cursor-pointer items-center gap-2 rounded-[12px] px-3 text-sm font-semibold leading-5 text-muted-foreground transition",
-    "hover:bg-muted/70 hover:text-foreground",
+    "flex h-8 shrink-0 cursor-pointer items-center gap-2 rounded-[12px] px-3 text-sm font-semibold leading-5 text-slate-500 transition",
+    "hover:bg-slate-100/70 hover:text-slate-900",
     isActive &&
-      "bg-card text-primary shadow-[0_4px_14px_rgba(15,23,42,0.08)] hover:bg-card hover:text-primary",
+      "bg-white text-blue-600 shadow-[0_4px_14px_rgba(15,23,42,0.08)] hover:bg-white hover:text-blue-600",
   );
 
   const content = (

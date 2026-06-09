@@ -35,7 +35,7 @@ function ProfileDisplay({
         onSectionChange={setActiveSection}
       />
 
-      <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <div className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
         <ProfileSectionBlock
           description={sectionMeta.personal.description}
           icon={UserRound}
@@ -47,7 +47,7 @@ function ProfileDisplay({
             <h2 className="text-3xl font-semibold tracking-tight">
               {fullName || "未命名资料"}
             </h2>
-            <p className="mt-1 text-sm font-medium text-muted-foreground">
+            <p className="mt-1 text-sm font-medium text-slate-500">
               {profile.personal.headline || "还没有填写职业标题"}
             </p>
             <PersonalFieldGrid profile={profile} />
@@ -71,17 +71,17 @@ function ProfileDisplay({
                   <h3 className="text-base font-semibold">
                     {item.school || "未填写学校"}
                   </h3>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-sm font-medium text-slate-500">
                     {[item.degree, item.major].filter(Boolean).join(" / ") ||
                       "学历和专业未填写"}
                   </p>
                   {item.location ? (
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="mt-1 text-sm text-slate-500">
                       {item.location}
                     </p>
                   ) : null}
                   {item.description ? (
-                    <p className="mt-2 text-sm leading-5 text-muted-foreground">
+                    <p className="mt-2 text-sm leading-5 text-slate-500">
                       {item.description}
                     </p>
                   ) : null}
@@ -118,7 +118,7 @@ function ProfileDisplay({
                   <h3 className="text-base font-semibold">
                     {item.company || "未填写公司"}
                   </h3>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-sm font-medium text-slate-500">
                     {item.title || "未填写职位"}
                   </p>
                   {item.summary ? (
@@ -127,7 +127,7 @@ function ProfileDisplay({
                     </p>
                   ) : null}
                   {item.bullets.filter(Boolean).length > 0 ? (
-                    <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-sm leading-5 text-muted-foreground">
+                    <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-sm leading-5 text-slate-500">
                       {item.bullets.filter(Boolean).map((bullet) => (
                         <li key={bullet}>{bullet}</li>
                       ))}
@@ -183,7 +183,7 @@ function ProfileSectionTabs({
   onSectionChange: (section: ProfileSection) => void;
 }) {
   return (
-    <nav className="sticky top-14 z-10 bg-background py-2">
+    <nav className="sticky top-14 z-10 bg-slate-100 py-2">
       <PillTabs
         activeValue={activeSection}
         items={drawerOrder.map((section) => ({
@@ -217,12 +217,12 @@ function ProfileSectionBlock({
     <section className="px-5 py-7" id={id}>
       <div className="mb-5 flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-start gap-3">
-          <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-primary">
+          <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-blue-600">
             <Icon aria-hidden="true" className="size-5" />
           </div>
           <div className="min-w-0">
             <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+            <p className="mt-1 text-sm text-slate-500">{description}</p>
           </div>
         </div>
         <Button
@@ -261,7 +261,7 @@ function PersonalFieldGrid({ profile }: { profile: ProfileDraft }) {
   ];
 
   return (
-    <div className="mt-5 grid gap-3 rounded-xl bg-muted/50 p-4 text-sm md:grid-cols-2 xl:grid-cols-3">
+    <div className="mt-5 grid gap-3 rounded-xl bg-slate-100/50 p-4 text-sm md:grid-cols-2 xl:grid-cols-3">
       {fields.map((field) => (
         <PersonalField key={field.label} label={field.label} value={field.value} />
       ))}
@@ -273,11 +273,11 @@ function PersonalField({ label, value }: { label: string; value: string }) {
   const hasValue = value.trim().length > 0;
 
   return (
-    <div className="min-w-0 rounded-lg bg-card px-3 py-2">
-      <div className="text-xs font-semibold text-muted-foreground">{label}</div>
+    <div className="min-w-0 rounded-lg bg-white px-3 py-2">
+      <div className="text-xs font-semibold text-slate-500">{label}</div>
       <div
         className={`mt-1 truncate font-medium ${
-          hasValue ? "text-secondary-foreground" : "text-muted-foreground"
+          hasValue ? "text-slate-700" : "text-slate-500"
         }`}
       >
         {hasValue ? value : "未填写"}
@@ -299,11 +299,11 @@ function TimelineItem({
 }) {
   return (
     <article className="grid gap-3 sm:grid-cols-[136px_minmax(0,1fr)]">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground sm:items-start">
-        <span className="mt-1 size-3 shrink-0 rounded-full border-2 border-foreground bg-card" />
+      <div className="flex items-center gap-2 text-sm font-medium text-slate-500 sm:items-start">
+        <span className="mt-1 size-3 shrink-0 rounded-full border-2 border-slate-900 bg-white" />
         <span>{date}</span>
       </div>
-      <div className="border-l border-accent pl-4">{children}</div>
+      <div className="border-l border-sky-200 pl-4">{children}</div>
     </article>
   );
 }
@@ -320,9 +320,9 @@ function EmptySection({
   title: string;
 }) {
   return (
-    <div className="rounded-xl border border-dashed border-border bg-muted/35 px-4 py-5">
-      <p className="text-sm font-semibold text-foreground">{title}</p>
-      <p className="mt-1 max-w-2xl text-sm leading-5 text-muted-foreground">
+    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-100/35 px-4 py-5">
+      <p className="text-sm font-semibold text-slate-900">{title}</p>
+      <p className="mt-1 max-w-2xl text-sm leading-5 text-slate-500">
         {description}
       </p>
       <div className="mt-4">

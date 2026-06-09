@@ -20,6 +20,10 @@ type UserRow = {
   id: string;
 };
 
+type PasswordSignUpResult = {
+  needsEmailConfirmation: boolean;
+};
+
 type AuthState = {
   error: string | null;
   isConfigured: boolean;
@@ -34,11 +38,19 @@ type AuthState = {
   initializeAuth: () => void;
   refreshProfile: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  signInLocalTestUser: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithPassword: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signUpWithPassword: (
+    email: string,
+    password: string,
+  ) => Promise<PasswordSignUpResult>;
 };
 
 let hasInitializedAuth = false;
+const localTestUserEmail = "admin@career-workbench.dev";
+const localTestUserPassword = "123456";
 
 function getProfileName(user: User) {
   const metadata = user.user_metadata;
@@ -344,7 +356,9 @@ export const useAuthStore = create<AuthState>()((set) => ({
     const supabase = getSupabaseClient();
 
     if (!supabase) {
-      set({ error: "请先配置 VITE_SUPABASE_URL 和 VITE_SUPABASE_PUBLISHABLE_KEY。" });
+      set({
+        error: "请先配置 VITE_SUPABASE_URL 和 VITE_SUPABASE_PUBLISHABLE_KEY。",
+      });
       return;
     }
 
@@ -360,6 +374,74 @@ export const useAuthStore = create<AuthState>()((set) => ({
     if (error) {
       set({ error: error.message, isLoading: false });
     }
+  },
+  signInWithPassword: async (email, password) => {
+    const supabase = getSupabaseClient();
+
+    if (!supabase) {
+      set({
+        error: "请先配置 VITE_SUPABASE_URL 和 VITE_SUPABASE_PUBLISHABLE_KEY。",
+      });
+      return;
+    }
+
+    set({ error: null, isLoading: true });
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      set({ error: error.message, isLoading: false });
+      return;
+    }
+
+    await useAuthStore.getState().refreshUser();
+  },
+  signInLocalTestUser: async () => {
+    const supabase = getSupabaseClient();
+
+    if (!supabase) {
+      set({
+        error: "请先配置 VITE_SUPABASE_URL 和 VITE_SUPABASE_PUBLISHABLE_KEY。",
+      });
+      return;
+    }
+
+    set({ error: null, isLoading: true });
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: localTestUserEmail,
+      password: localTestUserPassword,
+    });
+
+    if (!signInError) {
+      await useAuthStore.getState().refreshUser();
+      return;
+    }
+
+    const { error: signUpError } = await supabase.auth.signUp({
+      email: localTestUserEmail,
+      password: localTestUserPassword,
+    });
+
+    if (signUpError) {
+      set({ error: signUpError.message, isLoading: false });
+      return;
+    }
+
+    const { error: retryError } = await supabase.auth.signInWithPassword({
+      email: localTestUserEmail,
+      password: localTestUserPassword,
+    });
+
+    if (retryError) {
+      set({ error: retryError.message, isLoading: false });
+      return;
+    }
+
+    await useAuthStore.getState().refreshUser();
   },
   signOut: async () => {
     const supabase = getSupabaseClient();
@@ -379,6 +461,36 @@ export const useAuthStore = create<AuthState>()((set) => ({
       session: null,
       user: null,
     });
+  },
+  signUpWithPassword: async (email, password) => {
+    const supabase = getSupabaseClient();
+
+    if (!supabase) {
+      set({
+        error: "请先配置 VITE_SUPABASE_URL 和 VITE_SUPABASE_PUBLISHABLE_KEY。",
+      });
+      return { needsEmailConfirmation: false };
+    }
+
+    set({ error: null, isLoading: true });
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      set({ error: error.message, isLoading: false });
+      return { needsEmailConfirmation: false };
+    }
+
+    if (!data.session) {
+      set({ isLoading: false });
+      return { needsEmailConfirmation: true };
+    }
+
+    await useAuthStore.getState().refreshUser();
+    return { needsEmailConfirmation: false };
   },
 }));
 

@@ -3,10 +3,10 @@ import { Input, TextArea } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
 const fieldClassName =
-  "h-9 w-full rounded-lg border border-transparent bg-muted/60 px-3 text-sm font-medium text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-ring focus:bg-card focus:ring-3 focus:ring-ring/20";
+  "h-9 w-full rounded-lg border border-transparent bg-slate-100/60 px-3 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-500/70 focus:border-blue-400 focus:bg-white focus:ring-3 focus:ring-blue-400/20";
 
 const textareaClassName =
-  "min-h-20 w-full rounded-lg border border-transparent bg-muted/60 px-3 py-2 text-sm font-medium leading-5 text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-ring focus:bg-card focus:ring-3 focus:ring-ring/20";
+  "min-h-20 w-full rounded-lg border border-transparent bg-slate-100/60 px-3 py-2 text-sm font-medium leading-5 text-slate-900 outline-none transition placeholder:text-slate-500/70 focus:border-blue-400 focus:bg-white focus:ring-3 focus:ring-blue-400/20";
 
 function TextField({
   className,
@@ -23,8 +23,8 @@ function TextField({
 }) {
   return (
     <label className={cn("flex flex-col gap-1.5", className)}>
-      <span className="text-sm font-semibold text-muted-foreground">
-        {required ? <span className="text-destructive">*</span> : null} {label}
+      <span className="text-sm font-semibold text-slate-500">
+        {required ? <span className="text-red-600">*</span> : null} {label}
       </span>
       <Input
         fullWidth
@@ -61,7 +61,7 @@ function TextAreaField({
 }) {
   return (
     <label className={cn("flex flex-col gap-1.5", className)}>
-      <span className="text-sm font-semibold text-muted-foreground">
+      <span className="text-sm font-semibold text-slate-500">
         {label}
       </span>
       <TextArea

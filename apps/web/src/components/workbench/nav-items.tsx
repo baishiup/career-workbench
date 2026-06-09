@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, FileText, UserRound } from "lucide-react";
+import { Bot, BriefcaseBusiness, FileText, UserRound } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 
 import type { PillTabItem } from "@/components/workbench/pill-tabs";
@@ -32,6 +32,13 @@ const workbenchNavItems: WorkbenchNavItem[] = [
     icon: UserRound,
     label: "资料",
     value: "/profile",
+  },
+  {
+    activeIcon: AiSolidIcon,
+    href: "/ai-chat",
+    icon: Bot,
+    label: "AI",
+    value: "/ai-chat",
   },
 ];
 
@@ -75,6 +82,26 @@ function UserSolidIcon(props: SVGProps<SVGSVGElement>) {
       <path
         d="M4 19.05c0-3.28 3.58-5.8 8-5.8s8 2.52 8 5.8c0 1.21-.98 2.2-2.2 2.2H6.2A2.2 2.2 0 0 1 4 19.05Z"
         fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function AiSolidIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...props}>
+      <path
+        d="M8.5 4.5A3.5 3.5 0 0 1 12 1a3.5 3.5 0 0 1 3.5 3.5V6h1.75A3.75 3.75 0 0 1 21 9.75v6A3.75 3.75 0 0 1 17.25 19.5H6.75A3.75 3.75 0 0 1 3 15.75v-6A3.75 3.75 0 0 1 6.75 6H8.5V4.5Zm1.75 0V6h3.5V4.5a1.75 1.75 0 1 0-3.5 0Z"
+        fill="currentColor"
+      />
+      <path
+        d="M7.25 21.25h9.5a.75.75 0 0 0 0-1.5h-9.5a.75.75 0 0 0 0 1.5Z"
+        fill="currentColor"
+      />
+      <path
+        d="M8.25 11.5a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm7.5 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm-4.5 3.25a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 0-1.5h-1.5Z"
+        fill="white"
+        opacity=".82"
       />
     </svg>
   );

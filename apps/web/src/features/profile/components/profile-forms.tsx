@@ -203,10 +203,10 @@ function WorkCoreFields({
         value={item.endDate}
         onChange={(value) => onUpdate(item.id, { endDate: value })}
       />
-      <label className="flex items-center gap-2 text-sm font-medium text-foreground md:col-span-2">
+      <label className="flex items-center gap-2 text-sm font-medium text-slate-900 md:col-span-2">
         <input
           checked={item.current}
-          className="size-4 rounded border-border accent-primary"
+          className="size-4 rounded border-slate-200 accent-blue-600"
           onChange={(event) =>
             onUpdate(item.id, { current: event.target.checked })
           }
@@ -230,7 +230,7 @@ function WorkBulletList({
   return (
     <div className="md:col-span-2">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-foreground">工作描述</p>
+        <p className="text-sm font-semibold text-slate-900">工作描述</p>
         <Button
           onPress={() => onUpdate(item.id, { bullets: [...item.bullets, ""] })}
           size="sm"
@@ -244,7 +244,7 @@ function WorkBulletList({
       <div className="flex flex-col gap-2">
         {item.bullets.map((bullet, bulletIndex) => (
           <div className="flex items-start gap-2" key={bulletIndex}>
-            <span className="pt-2 text-sm font-semibold text-muted-foreground">
+            <span className="pt-2 text-sm font-semibold text-slate-500">
               •
             </span>
             <textarea
@@ -386,7 +386,7 @@ function SkillInput({
         value={query}
       />
       {isFocused && (query || filteredSuggestions.length > 0) ? (
-        <div className="absolute left-0 top-11 z-10 w-full overflow-hidden rounded-lg border border-border bg-card shadow-[0_10px_28px_rgba(15,23,42,0.14)]">
+        <div className="absolute left-0 top-11 z-10 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.14)]">
           {filteredSuggestions.map((suggestion) => (
             <Button
               fullWidth

@@ -64,7 +64,7 @@ function SortableEditorCard({
 
   return (
     <div
-      className="rounded-xl border border-border bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+      className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
       data-testid={`sortable-card-${index}`}
       draggable
       onDragOver={(event) => event.preventDefault()}
@@ -79,7 +79,7 @@ function SortableEditorCard({
         <div className="flex min-w-0 items-center gap-2">
           <button
             aria-label={`Drag ${title}`}
-            className="flex size-8 cursor-grab items-center justify-center rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground active:cursor-grabbing"
+            className="flex size-8 cursor-grab items-center justify-center rounded-md p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 active:cursor-grabbing"
             draggable
             onMouseDown={() => onDragStartIndex(index)}
             onDragStart={handleDragStart}

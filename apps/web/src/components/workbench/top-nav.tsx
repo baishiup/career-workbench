@@ -27,7 +27,7 @@ function TopNav({ items }: { items: Array<PillTabItem<string>> }) {
     })?.value ?? fallbackItem?.value;
 
   return (
-    <div className="sticky top-0 z-20 bg-background">
+    <div className="sticky top-0 z-20 bg-slate-100">
       <div className="grid min-h-14 grid-cols-1 items-center gap-3 px-3 py-2 lg:grid-cols-[1fr_auto_1fr] lg:px-3">
         <div className="flex min-w-0 items-center gap-2">
           <BrandMark />
@@ -43,7 +43,7 @@ function TopNav({ items }: { items: Array<PillTabItem<string>> }) {
           <div className="relative">
             <button
               aria-expanded={isUserMenuOpen}
-              className="flex h-8 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-[13px] font-medium leading-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/35"
+              className="flex h-8 items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] font-medium leading-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-400/35"
               onClick={() => setIsUserMenuOpen((open) => !open)}
               type="button"
             >
@@ -61,9 +61,9 @@ function TopNav({ items }: { items: Array<PillTabItem<string>> }) {
             </button>
 
             {isUserMenuOpen ? (
-              <div className="absolute right-0 top-10 z-30 w-48 rounded-lg border border-border bg-card p-1 shadow-[0_12px_28px_rgba(15,23,42,0.14)]">
+              <div className="absolute right-0 top-10 z-30 w-48 rounded-lg border border-slate-200 bg-white p-1 shadow-[0_12px_28px_rgba(15,23,42,0.14)]">
                 <button
-                  className="flex h-9 w-full items-center gap-2 rounded-md px-2.5 text-left text-sm font-medium text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+                  className="flex h-9 w-full items-center gap-2 rounded-md px-2.5 text-left text-sm font-medium text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/30"
                   onClick={() => {
                     setIsUserMenuOpen(false);
                     void signOut();
@@ -144,7 +144,7 @@ function UserAvatar({
   }
 
   return (
-    <span className="flex size-6 items-center justify-center rounded-full bg-accent text-xs font-semibold text-primary">
+    <span className="flex size-6 items-center justify-center rounded-full bg-sky-100 text-xs font-semibold text-blue-600">
       {displayName.slice(0, 1).toUpperCase()}
     </span>
   );
@@ -158,7 +158,7 @@ function BrandMark() {
         className="hidden items-center text-lg font-bold tracking-tight sm:flex"
       >
         <span>Career</span>
-        <span className="text-primary">.</span>
+        <span className="text-blue-600">.</span>
       </div>
     </div>
   );

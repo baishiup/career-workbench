@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
+    "dev:local": "vite --host 0.0.0.0",
+    "dev:remote": "vite --host 0.0.0.0 --mode remote",
     "check": "pnpm typecheck",
     "typecheck": "tsc --noEmit",
     "test": "node ./scripts/no-tests.mjs",

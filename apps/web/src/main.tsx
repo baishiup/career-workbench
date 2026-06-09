@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Toast } from "@heroui/react";
+import "streamdown/styles.css";
 import "./globals.css";
 import { App } from "./App";
 

@@ -61,7 +61,7 @@ export const useWorkbenchStore = create<WorkbenchState>()(
               score: 78,
               status: "已解析",
               iconKey: "file",
-              tone: "bg-success/10 text-success",
+              tone: "bg-emerald-600/10 text-emerald-600",
             },
             ...state.resumes,
           ],
