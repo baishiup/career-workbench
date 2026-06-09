@@ -5,7 +5,7 @@
  * 不存用户长期资料；长期资料归 profile.ts。
  */
 
-import type { ResumeStyleConfig } from "./style";
+import type { ResumeStyleConfig } from "./style.ts";
 
 /** 简历第一阶段支持的 section 类型。 */
 type ResumeSectionKind =

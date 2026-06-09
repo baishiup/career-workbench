@@ -23,15 +23,22 @@
 - Vite + React SPA。
 - React 19 + TypeScript strict。
 - Tailwind CSS v4。
-- shadcn/ui 风格基础组件。
+- HeroUI v3 组件体系。
 - lucide-react 图标。
 - Zustand 本地状态。
+- `streamdown` 与 `@streamdown/*` 当前是预留依赖，源码尚未接入。
 
 计划引入但当前未实现：
 
 - Dify Workflow / Chatflow。
 - Supabase Auth、Postgres、Storage、Edge Functions。
 - TipTap / ProseMirror 简历编辑器。
+
+Streamdown 预留用途：
+
+- 后续用于 AI streaming response 的 Markdown 渲染。
+- 使用场景包括 AI 对话、AI Rewrite、Trace 输出、代码块、Mermaid、公式和 CJK 文本。
+- UI 框架迁移或清理依赖时，不把 `streamdown` 归类为 HeroUI、Antd、Base UI 或 shadcn 的替代对象，也不要随 UI 框架清理误删。
 
 ## 目标结构
 
@@ -91,7 +98,8 @@ AI_ORCHESTRATOR=openai-compatible
 - 页面只访问本项目 API、mock 数据或 Supabase client。
 - 组件不直接调用 Dify 或模型 API。
 - prompt 不写散在 UI 组件里。
-- 业务组件放在 `src/features/*`，基础组件放在 `src/components/ui`。
+- 业务组件放在 `src/features/*`；HeroUI 基础组件优先从 `@heroui/react` 直接导入。
+- 跨 feature 的工作台外壳和少量共享样式 helper 放在 `src/components/workbench`。
 - Vite 路由装配层只做页面组合，具体规则见 `docs/code-organization.md`。
 
 ## 后端与 API 边界

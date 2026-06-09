@@ -4,7 +4,7 @@
  * 这里负责文件上传、Workflow 调用和输出提取；业务函数只消费
  * AIParsedResumeDraft，不直接关心 Dify 的响应形状。
  */
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import "@supabase/functions-js/edge-runtime.d.ts";
 import type { AIParsedResumeDraft } from "./resume-normalize.ts";
 
 const DEFAULT_DIFY_BASE_URL = "https://api.dify.ai/v1";
@@ -96,10 +96,15 @@ async function parseResumeWithDify(file: File): Promise<DifyResumeParseResult> {
   const uploadBody = await readResponseBody(uploadResponse);
 
   if (!uploadResponse.ok) {
-    throw new DifyResumeParseError("Dify file upload failed", 502, "file_upload", {
-      body: uploadBody,
-      status: uploadResponse.status,
-    });
+    throw new DifyResumeParseError(
+      "Dify file upload failed",
+      502,
+      "file_upload",
+      {
+        body: uploadBody,
+        status: uploadResponse.status,
+      },
+    );
   }
 
   const uploadFileId = getUploadFileId(uploadBody);
@@ -137,10 +142,15 @@ async function parseResumeWithDify(file: File): Promise<DifyResumeParseResult> {
   const workflowBody = await readResponseBody(workflowResponse);
 
   if (!workflowResponse.ok) {
-    throw new DifyResumeParseError("Dify workflow failed", 502, "workflow_run", {
-      body: workflowBody,
-      status: workflowResponse.status,
-    });
+    throw new DifyResumeParseError(
+      "Dify workflow failed",
+      502,
+      "workflow_run",
+      {
+        body: workflowBody,
+        status: workflowResponse.status,
+      },
+    );
   }
 
   const outputs = getWorkflowOutputs(workflowBody);
@@ -164,10 +174,15 @@ async function parseResumeWithDify(file: File): Promise<DifyResumeParseResult> {
 
 function validateResumeFile(file: File) {
   if (!isPdf(file)) {
-    throw new DifyResumeParseError("Only PDF files are supported", 415, "request", {
-      name: file.name,
-      type: file.type,
-    });
+    throw new DifyResumeParseError(
+      "Only PDF files are supported",
+      415,
+      "request",
+      {
+        name: file.name,
+        type: file.type,
+      },
+    );
   }
 
   if (file.size > MAX_FILE_BYTES) {
@@ -186,6 +201,12 @@ function extractAIParsedResumeDraft(outputs: unknown): AIParsedResumeDraft {
 
     if (isAIParsedResumeDraft(value)) {
       return value;
+    }
+
+    const coerced = coerceAIParsedResumeDraft(value);
+
+    if (coerced) {
+      return coerced;
     }
   }
 
@@ -242,6 +263,104 @@ function isAIParsedResumeDraft(value: unknown): value is AIParsedResumeDraft {
     Array.isArray(value.skills) &&
     Array.isArray(value.parse_warnings) &&
     Array.isArray(value.unmapped_text);
+}
+
+function coerceAIParsedResumeDraft(value: unknown): AIParsedResumeDraft | null {
+  if (!isRecord(value) || !isRecord(value.candidate)) {
+    return null;
+  }
+
+  if (
+    !Array.isArray(value.work_experiences) ||
+    !Array.isArray(value.projects) ||
+    !Array.isArray(value.education) ||
+    !Array.isArray(value.skills)
+  ) {
+    return null;
+  }
+
+  return {
+    schema_version: "resume.parse.v1",
+    candidate: {
+      full_name: getNullableString(value.candidate.full_name),
+      email: getNullableString(value.candidate.email),
+      phone: getNullableString(value.candidate.phone),
+      city: getNullableString(value.candidate.city),
+      headline: getNullableString(value.candidate.headline),
+      links: toLinkArray(value.candidate.links),
+    },
+    work_experiences: value.work_experiences
+      .filter(isRecord)
+      .map((item) => ({
+        company: getNullableString(item.company),
+        title: getNullableString(item.title),
+        location: getNullableString(item.location),
+        start_date: getNullableString(item.start_date),
+        end_date: getNullableString(item.end_date),
+        current: typeof item.current === "boolean" ? item.current : null,
+        raw_date: getNullableString(item.raw_date),
+        summary: getNullableString(item.summary),
+        bullets: toStringArray(item.bullets),
+        technologies: toStringArray(item.technologies),
+      })),
+    projects: value.projects
+      .filter(isRecord)
+      .map((item) => ({
+        name: getNullableString(item.name),
+        role: getNullableString(item.role),
+        start_date: getNullableString(item.start_date),
+        end_date: getNullableString(item.end_date),
+        raw_date: getNullableString(item.raw_date),
+        summary: getNullableString(item.summary),
+        bullets: toStringArray(item.bullets),
+        links: toLinkArray(item.links),
+        technologies: toStringArray(item.technologies),
+      })),
+    education: value.education
+      .filter(isRecord)
+      .map((item) => ({
+        school: getNullableString(item.school),
+        degree: getNullableString(item.degree),
+        major: getNullableString(item.major ?? item.field),
+        location: getNullableString(item.location),
+        start_date: getNullableString(item.start_date),
+        end_date: getNullableString(item.end_date),
+        raw_date: getNullableString(item.raw_date),
+        description: getNullableString(item.description),
+      })),
+    skills: toStringArray(value.skills),
+    parse_warnings: toStringArray(value.parse_warnings),
+    unmapped_text: toStringArray(value.unmapped_text),
+  };
+}
+
+function getNullableString(value: unknown) {
+  return typeof value === "string" ? value : null;
+}
+
+function toStringArray(value: unknown) {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+
+function toLinkArray(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(isRecord).flatMap((item) => {
+    const url = getNullableString(item.url);
+
+    if (!url) {
+      return [];
+    }
+
+    return [{
+      label: getNullableString(item.label),
+      url,
+    }];
+  });
 }
 
 function getUploadFileId(body: unknown) {

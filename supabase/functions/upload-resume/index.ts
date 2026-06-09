@@ -4,10 +4,13 @@
  * 这个函数只创建 resumes 记录并返回 profile_candidate，不覆盖
  * profiles.profile_data；用户确认覆盖 Profile 需要走 apply-resume-to-profile。
  */
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import "@supabase/functions-js/edge-runtime.d.ts";
 import { requireAuthenticatedClient } from "../_shared/auth.ts";
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
-import { DifyResumeParseError, parseResumeWithDify } from "../_shared/dify-resume-parse.ts";
+import {
+  DifyResumeParseError,
+  parseResumeWithDify,
+} from "../_shared/dify-resume-parse.ts";
 import { buildBaseResumeFromAIParsedDraft } from "../_shared/resume-normalize.ts";
 
 /** 用于前端和日志定位失败发生在哪一层。 */
@@ -65,7 +68,9 @@ Deno.serve(async (request) => {
         updated_at: new Date().toISOString(),
         user_id: auth.user.id,
       })
-      .select("id,title,source_type,status,document_json,style_json,created_at,updated_at")
+      .select(
+        "id,title,source_type,status,document_json,style_json,created_at,updated_at",
+      )
       .single();
 
     if (error) {
@@ -99,13 +104,25 @@ function getResumeTitle(fileName: string, fullName: string | null) {
 
 function parseErrorResponse(error: unknown) {
   if (error instanceof DifyResumeParseError) {
+    console.error("[upload-resume:dify-error]", {
+      details: error.details,
+      message: error.message,
+      stage: error.stage,
+      status: error.status,
+    });
+
     return errorResponse(error.message, error.status, getErrorStage(error), {
       details: error.details,
       stage: error.stage,
     });
   }
 
-  return errorResponse("Upload resume failed", 500, "request", serializeDetails(error));
+  return errorResponse(
+    "Upload resume failed",
+    500,
+    "request",
+    serializeDetails(error),
+  );
 }
 
 function getErrorStage(error: DifyResumeParseError): Stage {

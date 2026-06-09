@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Button } from "antd";
+import { Button, Chip } from "@heroui/react";
 import {
   Code2,
   GraduationCap,
@@ -8,8 +8,7 @@ import {
   UserRound,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { PillTabs } from "@/components/ui/pill-tabs";
+import { PillTabs } from "@/components/workbench/pill-tabs";
 import { drawerOrder, sectionMeta } from "@/features/profile/data";
 import type { ProfileIcon, ProfileSection } from "@/features/profile/types";
 import type { ProfileDraft } from "@career-workbench/resume";
@@ -157,13 +156,9 @@ function ProfileDisplay({
           {profile.skills.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {profile.skills.map((skill) => (
-                <Badge
-                  className="h-7 rounded-lg bg-muted px-2.5 text-sm text-secondary-foreground"
-                  key={skill}
-                  variant="secondary"
-                >
+                <Chip key={skill} size="sm" variant="secondary">
                   {skill}
-                </Badge>
+                </Chip>
               ))}
             </div>
           ) : (
@@ -232,11 +227,14 @@ function ProfileSectionBlock({
         </div>
         <Button
           aria-label={`编辑${title}`}
-          icon={<Pencil />}
-          onClick={onEdit}
-          size="small"
-          type="text"
-        />
+          isIconOnly
+          onPress={onEdit}
+          size="sm"
+          type="button"
+          variant="tertiary"
+        >
+          <Pencil className="size-4" />
+        </Button>
       </div>
       {children}
     </section>
@@ -327,14 +325,11 @@ function EmptySection({
       <p className="mt-1 max-w-2xl text-sm leading-5 text-muted-foreground">
         {description}
       </p>
-      <Button
-        className="mt-4"
-        htmlType="button"
-        onClick={onAction}
-        size="small"
-      >
-        {actionLabel}
-      </Button>
+      <div className="mt-4">
+        <Button onPress={onAction} size="sm" type="button" variant="outline">
+          {actionLabel}
+        </Button>
+      </div>
     </div>
   );
 }

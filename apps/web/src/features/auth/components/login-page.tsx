@@ -1,4 +1,5 @@
 import { Loader2 } from "lucide-react";
+import { Button } from "@heroui/react";
 
 import { OnboardingAside } from "@/features/onboarding/components/onboarding-aside";
 import { useAuthStore } from "@/lib/auth-store";
@@ -15,11 +16,13 @@ function LoginPage() {
 
       <section className="flex min-h-screen items-center justify-center px-4 py-8 lg:px-8">
         <div className="flex w-full max-w-[560px] flex-col items-center">
-          <button
-            className="flex h-16 w-full items-center justify-center gap-4 rounded-2xl border border-[#dadce0] bg-white px-6 text-xl font-semibold text-[#1f1f1f] shadow-[0_1px_2px_rgba(60,64,67,0.12)] transition hover:bg-[#f8fafd] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/35 disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={!isConfigured || isLoading}
-            onClick={() => void signInWithGoogle()}
+          <Button
+            fullWidth
+            isDisabled={!isConfigured || isLoading}
+            onPress={() => void signInWithGoogle()}
+            size="lg"
             type="button"
+            variant="outline"
           >
             {isLoading ? (
               <Loader2 className="size-7 animate-spin text-muted-foreground" />
@@ -29,7 +32,7 @@ function LoginPage() {
             <span>
               {isLoading ? "Connecting..." : "Continue with Google"}
             </span>
-          </button>
+          </Button>
 
           {!isConfigured ? (
             <p className="mt-4 text-center text-sm font-medium text-muted-foreground">

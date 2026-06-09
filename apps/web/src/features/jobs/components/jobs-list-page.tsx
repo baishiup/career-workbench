@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button } from "antd";
+import { Button, Chip, ProgressBar } from "@heroui/react";
 import type { LucideIcon } from "lucide-react";
 import {
   BriefcaseBusiness,
@@ -22,9 +22,6 @@ import {
 } from "lucide-react";
 
 import Link from "@/components/router-link";
-import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { panelClassName } from "@/components/workbench/surface-classes";
 import { cn } from "@/lib/utils";
 import { useWorkbenchStore } from "@/lib/workbench-store";
@@ -190,11 +187,10 @@ function FilterBar({
           onClick={() => setOpenPanel(openPanel === "more" ? null : "more")}
         />
         <Button
-          className="h-11 px-3 text-primary"
-          disabled={!hasActiveFilter}
-          htmlType="button"
-          onClick={clearFilters}
-          type="text"
+          isDisabled={!hasActiveFilter}
+          onPress={clearFilters}
+          type="button"
+          variant="tertiary"
         >
           重置
         </Button>
@@ -208,15 +204,11 @@ function FilterBar({
           {filterPanelOptions(openPanel).map((filter) => (
             <Button
               aria-pressed={activeFilters.includes(filter)}
-              className={cn(
-                "h-8 rounded-lg px-3",
-                activeFilters.includes(filter)
-                  ? "border-primary/30 bg-accent text-primary"
-                  : "bg-muted/70 text-secondary-foreground hover:border-primary/20",
-              )}
-              htmlType="button"
               key={filter}
-              onClick={() => toggleFilter(filter)}
+              onPress={() => toggleFilter(filter)}
+              size="sm"
+              type="button"
+              variant={activeFilters.includes(filter) ? "secondary" : "tertiary"}
             >
               {filter}
             </Button>
@@ -243,12 +235,9 @@ function ToolbarButton({
 }) {
   return (
     <Button
-      className={cn(
-        "h-11 rounded-lg border-border bg-card px-3 text-[15px] text-foreground shadow-[0_1px_2px_rgba(15,23,42,0.04)]",
-        isActive ? "border-primary/30 bg-accent text-primary" : "",
-      )}
-      htmlType="button"
-      onClick={onClick}
+      onPress={onClick}
+      type="button"
+      variant={isActive ? "secondary" : "outline"}
     >
       {Icon ? <Icon data-icon="inline-start" /> : null}
       <span className="max-w-32 truncate">{label}</span>
@@ -295,7 +284,7 @@ function JobsTable({
                 调整关键词或筛选条件后再试。
               </p>
             </div>
-            <Button htmlType="button" onClick={onClear}>
+            <Button onPress={onClear} type="button" variant="outline">
               <RotateCcw data-icon="inline-start" />
               重置列表
             </Button>
@@ -321,7 +310,7 @@ function JobTableRow({
     <button
       className={cn(
         "grid min-w-0 grid-cols-1 gap-3 border-b border-border px-5 py-4 text-left transition last:border-b-0 hover:bg-accent/30 lg:grid-cols-[minmax(220px,1.1fr)_minmax(260px,1fr)_104px] lg:items-center",
-        isSelected ? "bg-accent/45 shadow-[inset_3px_0_0_hsl(var(--primary))]" : "",
+        isSelected ? "bg-accent/45 shadow-[inset_3px_0_0_var(--cw-primary)]" : "",
       )}
       onClick={onSelect}
       type="button"
@@ -341,10 +330,10 @@ function JobTableRow({
               {job.title}
             </h2>
             {job.match.score >= 95 ? (
-              <Badge className="border-primary/20 bg-accent text-primary">
+              <Chip color="accent" size="sm" variant="soft">
                 <CheckCircle2 aria-hidden="true" className="mr-1 size-3" />
                 优先
-              </Badge>
+              </Chip>
             ) : null}
           </div>
           <p className="mt-1 truncate text-[15px] text-muted-foreground">
@@ -363,13 +352,9 @@ function JobTableRow({
         </div>
         <div className="mt-2 flex min-w-0 flex-wrap gap-1.5">
           {visibleSkills.map((skill) => (
-            <Badge
-              className="border-primary/10 bg-accent text-primary"
-              key={skill}
-              variant="outline"
-            >
+            <Chip color="accent" key={skill} size="sm" variant="soft">
               {skill}
-            </Badge>
+            </Chip>
           ))}
         </div>
       </div>
@@ -438,7 +423,7 @@ function PriorityPanel({ job }: { job: JobRecord }) {
           </div>
         </div>
 
-        <Progress className="mt-5 h-2" value={job.match.score} />
+        <ProgressBar className="mt-5" size="sm" value={job.match.score} />
         <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
           <span>综合匹配度</span>
           <span>{job.match.score} / 100</span>
@@ -469,7 +454,7 @@ function PriorityPanel({ job }: { job: JobRecord }) {
         </div>
 
         <Link
-          className={cn(buttonVariants({ size: "lg" }), "mt-4 w-full")}
+          className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/35"
           href={`/jobs/${job.id}`}
         >
           查看详情

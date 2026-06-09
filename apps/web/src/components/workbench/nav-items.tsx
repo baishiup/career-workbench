@@ -1,7 +1,7 @@
 import { BriefcaseBusiness, FileText, UserRound } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 
-import type { PillTabItem } from "@/components/ui/pill-tabs";
+import type { PillTabItem } from "@/components/workbench/pill-tabs";
 
 type NavIcon = ComponentType<SVGProps<SVGSVGElement>>;
 

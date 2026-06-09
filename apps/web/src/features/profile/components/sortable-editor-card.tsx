@@ -1,5 +1,5 @@
 import type { DragEvent, MouseEvent, MutableRefObject, ReactNode } from "react";
-import { Button } from "antd";
+import { Button } from "@heroui/react";
 import { GripVertical, Trash2 } from "lucide-react";
 
 function SortableEditorCard({
@@ -77,28 +77,28 @@ function SortableEditorCard({
     >
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <Button
+          <button
             aria-label={`Drag ${title}`}
-            className="cursor-grab rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground active:cursor-grabbing"
+            className="flex size-8 cursor-grab items-center justify-center rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground active:cursor-grabbing"
             draggable
-            htmlType="button"
-            icon={<GripVertical className="size-4" />}
             onMouseDown={() => onDragStartIndex(index)}
             onDragStart={handleDragStart}
-            size="small"
-            type="text"
-          />
+            type="button"
+          >
+            <GripVertical className="size-4" />
+          </button>
           <h3 className="truncate text-lg font-semibold">{title}</h3>
         </div>
         <Button
           aria-label={`Delete ${title}`}
-          danger
-          htmlType="button"
-          icon={<Trash2 />}
-          onClick={onDelete}
-          size="small"
-          type="text"
-        />
+          isIconOnly
+          onPress={onDelete}
+          size="sm"
+          type="button"
+          variant="danger-soft"
+        >
+          <Trash2 className="size-4" />
+        </Button>
       </div>
       {children}
     </div>

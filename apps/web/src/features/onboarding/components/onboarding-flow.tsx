@@ -2,10 +2,9 @@
 
 import type { ChangeEvent, ReactNode, RefObject } from "react";
 import { useRef, useState } from "react";
-import { Button } from "antd";
+import { Button, ProgressBar } from "@heroui/react";
 import { ArrowRight, Check, FileText, Loader2, Upload } from "lucide-react";
 
-import { Progress } from "@/components/ui/progress";
 import { OnboardingAside } from "@/features/onboarding/components/onboarding-aside";
 import { emptyProfile, jobTypeOptions } from "@/features/profile/data";
 import { completeOnboardingWithResume } from "@/features/resumes/api";
@@ -132,12 +131,17 @@ export function OnboardingFlow() {
               <p className="text-sm font-semibold text-primary">
                 第 {step} / 2 步
               </p>
-              <Progress className="mt-2 w-48" value={step === 1 ? 50 : 100} />
+              <ProgressBar
+                className="mt-2 w-48"
+                size="sm"
+                value={step === 1 ? 50 : 100}
+              />
             </div>
             <Button
-              disabled={isCompleting}
-              htmlType="button"
-              onClick={finishWithoutResume}
+              isDisabled={isCompleting}
+              onPress={finishWithoutResume}
+              type="button"
+              variant="outline"
             >
               {isCompleting ? "保存中..." : "跳过设置"}
             </Button>
@@ -236,12 +240,7 @@ function PreferenceStep({
       </FieldGroup>
 
       <div className="flex justify-end">
-        <Button
-          className="h-10 min-w-32 rounded-full"
-          disabled={!canContinue}
-          htmlType="submit"
-          type="primary"
-        >
+        <Button isDisabled={!canContinue} type="submit" variant="primary">
           下一步
           <ArrowRight data-icon="inline-end" />
         </Button>
@@ -282,14 +281,17 @@ function ResumeStep({
         ref={fileInputRef}
         type="file"
       />
-      <Button
-        className="mt-7 h-10 w-full max-w-sm rounded-full"
-        htmlType="button"
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <Upload data-icon="inline-start" />
-        {resumeFile ? resumeFile.name : "上传简历"}
-      </Button>
+      <div className="mt-7 w-full max-w-sm">
+        <Button
+          fullWidth
+          onPress={() => fileInputRef.current?.click()}
+          type="button"
+          variant="outline"
+        >
+          <Upload data-icon="inline-start" />
+          {resumeFile ? resumeFile.name : "上传简历"}
+        </Button>
+      </div>
       <p className="mt-5 text-sm font-medium text-muted-foreground">
         支持 PDF 格式，文件大小不超过 15MB。
       </p>
@@ -305,19 +307,18 @@ function ResumeStep({
       ) : null}
 
       <div className="mt-auto flex w-full items-center justify-between gap-3 pt-10">
-        <Button htmlType="button" onClick={onBack}>
+        <Button onPress={onBack} type="button" variant="outline">
           返回
         </Button>
         <div className="flex items-center gap-2">
-          <Button htmlType="button" onClick={onSkip} type="text">
+          <Button onPress={onSkip} type="button" variant="tertiary">
             跳过
           </Button>
           <Button
-            className="h-10 min-w-36 rounded-full bg-success text-success-foreground hover:bg-success/90"
-            disabled={!resumeFile || isParsing || isCompleting}
-            htmlType="button"
-            onClick={onConfirm}
-            type="primary"
+            isDisabled={!resumeFile || isParsing || isCompleting}
+            onPress={onConfirm}
+            type="button"
+            variant="primary"
           >
             {isParsing || isCompleting ? "处理中..." : "解析简历"}
           </Button>
@@ -365,13 +366,9 @@ function CheckOption({
 }) {
   return (
     <Button
-      className={cn(
-        "flex h-11 items-center gap-2 rounded-lg bg-muted/55 px-3 text-left text-sm font-semibold transition hover:bg-muted",
-        checked ? "text-foreground" : "text-secondary-foreground",
-      )}
-      htmlType="button"
-      onClick={onClick}
-      type="text"
+      onPress={onClick}
+      type="button"
+      variant={checked ? "secondary" : "tertiary"}
     >
       <span
         className={cn(

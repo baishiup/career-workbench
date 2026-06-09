@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "pnpm --filter @career-workbench/web dev",
     "check": "pnpm -r check",
+    "functions:check": "deno check --no-lock --config supabase/functions/deno.json supabase/functions/upload-resume/index.ts supabase/functions/complete-onboarding-with-resume/index.ts supabase/functions/apply-resume-to-profile/index.ts",
+    "functions:fmt:check": "deno fmt --check --config supabase/functions/deno.json supabase/functions",
+    "functions:lint": "deno lint --config supabase/functions/deno.json supabase/functions",
     "test": "pnpm -r test",
     "build": "pnpm -r build"
   },

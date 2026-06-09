@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-
-import type { TableProps, UploadProps } from "antd";
-import { Alert, Button, message, Table, Tag, Upload } from "antd";
+import { useEffect, useRef, useState } from "react";
+import { Alert, Button, Chip, Table, Toast } from "@heroui/react";
 import { FileText, Upload as UploadIcon } from "lucide-react";
 
 import { listResumes, uploadResume } from "@/features/resumes/api";
@@ -20,16 +18,19 @@ const sourceTypeLabels: Record<string, string> = {
   target_job: "定向简历",
 };
 
-const statusMeta: Record<string, { color: string; label: string }> = {
+const statusMeta: Record<
+  string,
+  { color: "danger" | "default" | "success"; label: string }
+> = {
   archived: { color: "default", label: "已归档" },
   draft: { color: "default", label: "草稿" },
-  generation_failed: { color: "error", label: "生成失败" },
-  parse_failed: { color: "error", label: "解析失败" },
+  generation_failed: { color: "danger", label: "生成失败" },
+  parse_failed: { color: "danger", label: "解析失败" },
   ready: { color: "success", label: "已解析" },
 };
 
 export function ResumesPage() {
-  const [messageApi, contextHolder] = message.useMessage();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [rows, setRows] = useState<ResumeListRow[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,7 +75,7 @@ export function ResumesPage() {
 
   async function handleUpload(file: File) {
     if (!isSupportedResumeFile(file)) {
-      messageApi.error("仅支持 PDF、DOC、DOCX、RTF 格式。");
+      Toast.toast.danger("仅支持 PDF、DOC、DOCX、RTF 格式。");
       return;
     }
 
@@ -89,80 +90,19 @@ export function ResumesPage() {
         nextRow,
         ...currentRows.filter((row) => row.id !== nextRow.id),
       ]);
-      messageApi.success("简历上传并解析完成。");
+      Toast.toast.success("简历上传并解析完成。");
     } catch (error) {
+      console.error("[upload-resume error]", error);
       const errorMessage = getErrorMessage(error, "简历上传失败。");
       setLoadError(errorMessage);
-      messageApi.error(errorMessage);
+      Toast.toast.danger(errorMessage);
     } finally {
       setIsUploading(false);
     }
   }
 
-  const uploadProps: UploadProps = {
-    accept: ".pdf,.doc,.docx,.rtf",
-    beforeUpload: (file) => {
-      void handleUpload(file);
-      return Upload.LIST_IGNORE;
-    },
-    disabled: isUploading || !isSupabaseConfigured,
-    maxCount: 1,
-    showUploadList: false,
-  };
-
-  const columns: TableProps<ResumeListRow>["columns"] = useMemo(
-    () => [
-      {
-        dataIndex: "title",
-        key: "title",
-        render: (title: string) => (
-          <div className="flex min-w-0 items-center gap-2">
-            <FileText
-              aria-hidden="true"
-              className="size-4 shrink-0 text-muted-foreground"
-            />
-            <span className="truncate font-medium">{title}</span>
-          </div>
-        ),
-        title: "简历名称",
-      },
-      {
-        dataIndex: "source_type",
-        key: "source_type",
-        render: (sourceType: string) =>
-          sourceTypeLabels[sourceType] ?? sourceType,
-        title: "来源",
-        width: 140,
-      },
-      {
-        dataIndex: "status",
-        key: "status",
-        render: (status: string) => {
-          const meta = statusMeta[status] ?? {
-            color: "default",
-            label: status,
-          };
-
-          return <Tag color={meta.color}>{meta.label}</Tag>;
-        },
-        title: "状态",
-        width: 120,
-      },
-      {
-        dataIndex: "updated_at",
-        key: "updated_at",
-        render: (updatedAt: string) => formatDateTime(updatedAt),
-        title: "更新时间",
-        width: 200,
-      },
-    ],
-    [],
-  );
-
   return (
     <section className="mx-auto flex w-full max-w-[1440px] flex-col gap-5 px-4 py-5 lg:px-6">
-      {contextHolder}
-
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">简历</h1>
@@ -170,36 +110,113 @@ export function ResumesPage() {
             管理已上传的基础简历和解析状态。
           </p>
         </div>
-        <Upload {...uploadProps}>
-          <Button
-            disabled={!isSupabaseConfigured}
-            htmlType="button"
-            loading={isUploading}
-            type="primary"
-          >
-            <UploadIcon data-icon="inline-start" />
-            上传简历
-          </Button>
-        </Upload>
+        <input
+          accept=".pdf,.doc,.docx,.rtf"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+
+            if (file) {
+              void handleUpload(file);
+            }
+          }}
+          ref={fileInputRef}
+          type="file"
+        />
+        <Button
+          isDisabled={!isSupabaseConfigured || isUploading}
+          onPress={() => fileInputRef.current?.click()}
+          type="button"
+          variant="primary"
+        >
+          <UploadIcon className="size-4" />
+          {isUploading ? "上传中..." : "上传简历"}
+        </Button>
       </div>
 
       {loadError ? (
-        <Alert closable message={loadError} showIcon type="error" />
+        <Alert status="danger">
+          <Alert.Content>
+            <Alert.Title>简历列表不可用</Alert.Title>
+            <Alert.Description>{loadError}</Alert.Description>
+          </Alert.Content>
+        </Alert>
       ) : null}
 
-      <Table<ResumeListRow>
-        columns={columns}
-        dataSource={rows}
-        loading={isLoading}
-        pagination={{
-          hideOnSinglePage: true,
-          pageSize: 10,
-          showSizeChanger: false,
-        }}
-        rowKey="id"
-        scroll={{ x: 720 }}
-      />
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+        {isLoading ? (
+          <div className="flex min-h-40 items-center px-5 py-6 text-sm font-medium text-muted-foreground">
+            正在读取简历列表...
+          </div>
+        ) : null}
+
+        {!isLoading && rows.length > 0 ? (
+          <Table>
+            <Table.ScrollContainer>
+              <Table.Content aria-label="简历列表">
+                <Table.Header>
+                  <Table.Column isRowHeader>简历名称</Table.Column>
+                  <Table.Column>来源</Table.Column>
+                  <Table.Column>状态</Table.Column>
+                  <Table.Column>更新时间</Table.Column>
+                </Table.Header>
+                <Table.Body items={rows}>
+                  {(row) => (
+                    <Table.Row id={row.id}>
+                      <Table.Cell>
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
+                            <FileText aria-hidden="true" className="size-4" />
+                          </span>
+                          <span className="truncate font-medium">
+                            {row.title}
+                          </span>
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        {sourceTypeLabels[row.source_type] ?? row.source_type}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <StatusChip status={row.status} />
+                      </Table.Cell>
+                      <Table.Cell>{formatDateTime(row.updated_at)}</Table.Cell>
+                    </Table.Row>
+                  )}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
+        ) : null}
+
+        {!isLoading && rows.length === 0 ? (
+          <div className="flex min-h-56 flex-col items-center justify-center gap-3 px-5 py-10 text-center">
+            <span className="flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <FileText aria-hidden="true" className="size-6" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold">还没有简历记录</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                上传一份基础简历后，这里会显示解析状态、来源和更新时间。
+              </p>
+            </div>
+          </div>
+        ) : null}
+      </div>
     </section>
+  );
+}
+
+function StatusChip({ status }: { status: string }) {
+  const meta = statusMeta[status] ?? {
+    color: "default" as const,
+    label: status,
+  };
+
+  return (
+    <Chip color={meta.color} size="sm" variant="soft">
+      {meta.label}
+    </Chip>
   );
 }
 
@@ -226,16 +243,13 @@ function formatDateTime(value: string) {
   }
 
   return new Intl.DateTimeFormat("zh-CN", {
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    month: "2-digit",
-    year: "numeric",
+    dateStyle: "medium",
+    timeStyle: "short",
   }).format(date);
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof Error && error.message.trim().length > 0) {
+  if (error instanceof Error) {
     return error.message;
   }
 

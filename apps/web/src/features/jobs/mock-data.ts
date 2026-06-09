@@ -143,7 +143,7 @@ const jobs: JobRecord[] = [
       evidence: [
         "Profile 中有 Next.js、TypeScript 和工作台式产品经验。",
         "简历中的上传、解析、编辑和导出流程可以映射成复杂表单/状态管理案例。",
-        "已有 shadcn/Tailwind 组件实践，可支撑设计 QA 和一致性表达。",
+        "已有 HeroUI/Tailwind 组件实践，可支撑设计 QA 和一致性表达。",
       ],
       gaps: [
         "保险领域经验不足，需要把行业学习能力写清楚。",
@@ -255,7 +255,7 @@ const jobs: JobRecord[] = [
         "平台方向相关，但需要更具体的组件库维护、测试和文档产出证据。",
       evidence: [
         "技术栈与 React/TypeScript/组件系统要求一致。",
-        "已有 shadcn/Tailwind 和工作台 UI 实作，可转成设计系统案例。",
+        "已有 HeroUI/Tailwind 和工作台 UI 实作，可转成设计系统案例。",
         "多模块 monorepo 项目能支撑工程化叙事。",
       ],
       gaps: [

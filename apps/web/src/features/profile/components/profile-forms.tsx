@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Button } from "antd";
+import { Button, Tag, TagGroup } from "@heroui/react";
 import { Plus, X } from "lucide-react";
 
 import { skillSuggestions } from "@/features/profile/data";
@@ -90,12 +90,8 @@ function EducationForm({
           </div>
         </SortableEditorCard>
       ))}
-      <Button
-        className="w-fit"
-        htmlType="button"
-        icon={<Plus />}
-        onClick={onAdd}
-      >
+      <Button onPress={onAdd} type="button" variant="outline">
+        <Plus className="size-4" />
         添加教育经历
       </Button>
     </div>
@@ -156,12 +152,8 @@ function WorkForm({
           </div>
         </SortableEditorCard>
       ))}
-      <Button
-        className="w-fit"
-        htmlType="button"
-        icon={<Plus />}
-        onClick={onAdd}
-      >
+      <Button onPress={onAdd} type="button" variant="outline">
+        <Plus className="size-4" />
         添加工作经历
       </Button>
     </div>
@@ -211,7 +203,7 @@ function WorkCoreFields({
         value={item.endDate}
         onChange={(value) => onUpdate(item.id, { endDate: value })}
       />
-      <label className="flex items-center gap-2 text-sm font-medium md:col-span-2">
+      <label className="flex items-center gap-2 text-sm font-medium text-foreground md:col-span-2">
         <input
           checked={item.current}
           className="size-4 rounded border-border accent-primary"
@@ -238,20 +230,23 @@ function WorkBulletList({
   return (
     <div className="md:col-span-2">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold">工作描述</p>
+        <p className="text-sm font-semibold text-foreground">工作描述</p>
         <Button
-          htmlType="button"
-          icon={<Plus />}
-          onClick={() => onUpdate(item.id, { bullets: [...item.bullets, ""] })}
-          size="small"
+          onPress={() => onUpdate(item.id, { bullets: [...item.bullets, ""] })}
+          size="sm"
+          type="button"
+          variant="outline"
         >
+          <Plus className="size-4" />
           添加要点
         </Button>
       </div>
       <div className="flex flex-col gap-2">
         {item.bullets.map((bullet, bulletIndex) => (
           <div className="flex items-start gap-2" key={bulletIndex}>
-            <span className="pt-2 text-sm font-semibold">•</span>
+            <span className="pt-2 text-sm font-semibold text-muted-foreground">
+              •
+            </span>
             <textarea
               className={cn(textareaClassName, "min-h-10 py-2")}
               onChange={(event) =>
@@ -261,19 +256,20 @@ function WorkBulletList({
             />
             <Button
               aria-label="删除要点"
-              danger
-              htmlType="button"
-              icon={<X />}
-              onClick={() =>
+              isIconOnly
+              onPress={() =>
                 onUpdate(item.id, {
                   bullets: item.bullets.filter(
                     (_, currentIndex) => currentIndex !== bulletIndex,
                   ),
                 })
               }
-              size="small"
-              type="text"
-            />
+              size="sm"
+              type="button"
+              variant="danger-soft"
+            >
+              <X className="size-4" />
+            </Button>
           </div>
         ))}
       </div>
@@ -292,6 +288,10 @@ function SkillsForm({
   const [isFocused, setIsFocused] = useState(false);
   const normalizedSkills = useMemo(
     () => new Set(skills.map((skill) => skill.toLowerCase())),
+    [skills],
+  );
+  const skillItems = useMemo(
+    () => skills.map((skill) => ({ id: skill, name: skill })),
     [skills],
   );
   const filteredSuggestions = skillSuggestions
@@ -314,25 +314,23 @@ function SkillsForm({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap gap-2">
-        {skills.map((skill) => (
-          <span
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-muted px-2.5 text-sm font-semibold text-secondary-foreground"
-            key={skill}
-          >
-            {skill}
-            <Button
-              aria-label={`删除 ${skill}`}
-              className="rounded p-0.5 text-muted-foreground transition hover:bg-card hover:text-foreground"
-              htmlType="button"
-              icon={<X className="size-3.5" />}
-              onClick={() => onChange(skills.filter((item) => item !== skill))}
-              size="small"
-              type="text"
-            />
-          </span>
-        ))}
-      </div>
+      <TagGroup
+        aria-label="技能标签"
+        onRemove={(keys) => {
+          const keysToRemove = new Set(Array.from(keys, String));
+          onChange(skills.filter((skill) => !keysToRemove.has(skill)));
+        }}
+        size="lg"
+      >
+        <TagGroup.List items={skillItems}>
+          {(item) => (
+            <Tag id={item.id}>
+              {item.name}
+              <Tag.RemoveButton aria-label={`删除 ${item.name}`} />
+            </Tag>
+          )}
+        </TagGroup.List>
+      </TagGroup>
 
       <SkillInput
         addSkill={addSkill}
@@ -368,8 +366,7 @@ function SkillInput({
     query.trim() &&
     !normalizedSkills.has(query.trim().toLowerCase()) &&
     !filteredSuggestions.some(
-      (suggestion) =>
-        suggestion.toLowerCase() === query.trim().toLowerCase(),
+      (suggestion) => suggestion.toLowerCase() === query.trim().toLowerCase(),
     );
 
   return (
@@ -392,23 +389,21 @@ function SkillInput({
         <div className="absolute left-0 top-11 z-10 w-full overflow-hidden rounded-lg border border-border bg-card shadow-[0_10px_28px_rgba(15,23,42,0.14)]">
           {filteredSuggestions.map((suggestion) => (
             <Button
-              block
-              className="block w-full px-3 py-2 text-left text-sm font-medium transition hover:bg-muted"
-              htmlType="button"
+              fullWidth
               key={suggestion}
-              onClick={() => addSkill(suggestion)}
-              type="text"
+              onPress={() => addSkill(suggestion)}
+              type="button"
+              variant="tertiary"
             >
               {suggestion}
             </Button>
           ))}
           {canCreate ? (
             <Button
-              block
-              className="block w-full border-t border-border px-3 py-2 text-left text-sm font-semibold text-primary transition hover:bg-accent"
-              htmlType="button"
-              onClick={() => addSkill(query)}
-              type="text"
+              fullWidth
+              onPress={() => addSkill(query)}
+              type="button"
+              variant="secondary"
             >
               {`创建“${query.trim()}”`}
             </Button>

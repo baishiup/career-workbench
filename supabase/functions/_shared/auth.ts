@@ -4,20 +4,21 @@
  * 这里使用调用者的 Authorization header 创建用户态 client，让后续表写入
  * 仍然经过 RLS；不要在这些用户流程里默认使用 service_role。
  */
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import "@supabase/functions-js/edge-runtime.d.ts";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "./database.types.ts";
 
 /** 旧 admin 占位函数的返回结构，后续实现 admin 流程时再替换。 */
 export type AdminAuthResult =
   | {
-      ok: true;
-      userId: string;
-    }
+    ok: true;
+    userId: string;
+  }
   | {
-      ok: false;
-      status: number;
-      message: string;
-    };
+    ok: false;
+    status: number;
+    message: string;
+  };
 
 export function requireAdminPlaceholder(request: Request): AdminAuthResult {
   const authHeader = request.headers.get("authorization");
@@ -26,7 +27,8 @@ export function requireAdminPlaceholder(request: Request): AdminAuthResult {
     return {
       ok: false,
       status: 401,
-      message: "Missing authorization header. Wire Supabase Auth role checks before production use.",
+      message:
+        "Missing authorization header. Wire Supabase Auth role checks before production use.",
     };
   }
 
@@ -39,19 +41,19 @@ export function requireAdminPlaceholder(request: Request): AdminAuthResult {
 /** 基于当前请求 JWT 得到用户态 Supabase client。 */
 type AuthenticatedClientResult =
   | {
-      ok: true;
-      supabase: ReturnType<typeof createClient>;
-      user: {
-        id: string;
-        email: string | null;
-        user_metadata?: Record<string, unknown>;
-      };
-    }
-  | {
-      ok: false;
-      status: number;
-      message: string;
+    ok: true;
+    supabase: SupabaseClient<Database>;
+    user: {
+      id: string;
+      email: string | null;
+      user_metadata?: Record<string, unknown>;
     };
+  }
+  | {
+    ok: false;
+    status: number;
+    message: string;
+  };
 
 function getSupabaseEnv() {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim();
@@ -118,13 +120,17 @@ async function requireAuthenticatedClient(
     };
   }
 
-  const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: authorization,
+  const supabase = createClient<Database>(
+    env.supabaseUrl,
+    env.supabaseAnonKey,
+    {
+      global: {
+        headers: {
+          Authorization: authorization,
+        },
       },
     },
-  });
+  );
   const { data, error } = await supabase.auth.getUser();
 
   if (error || !data.user) {
@@ -138,7 +144,9 @@ async function requireAuthenticatedClient(
   const user = {
     id: data.user.id,
     email: data.user.email ?? null,
-    user_metadata: data.user.user_metadata as Record<string, unknown> | undefined,
+    user_metadata: data.user.user_metadata as
+      | Record<string, unknown>
+      | undefined,
   };
 
   const { error: userError } = await supabase

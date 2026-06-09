@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "antd";
+import { Button, Card, Chip, ProgressBar } from "@heroui/react";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowLeft,
@@ -21,18 +21,6 @@ import {
 } from "lucide-react";
 
 import Link from "@/components/router-link";
-import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import {
   panelClassName,
   softPanelClassName,
@@ -93,9 +81,11 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline">{job.sourcePlatform}</Badge>
+              <Chip size="sm" variant="soft">{job.sourcePlatform}</Chip>
               <ImportStatusBadge status={job.importStatus} />
-              <Badge variant="secondary">{job.postedAt}</Badge>
+              <Chip color="default" size="sm" variant="secondary">
+                {job.postedAt}
+              </Chip>
             </div>
             <h1 className="mt-2 text-2xl font-semibold leading-tight tracking-tight">
               {job.title}
@@ -115,20 +105,13 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
             <p className="mt-2 text-4xl font-semibold">{job.match.score}%</p>
             <p className="mt-1 text-sm font-medium">{job.match.label}</p>
           </div>
-          <Progress value={job.match.score} />
+          <ProgressBar color="success" size="sm" value={job.match.score} />
           <div className="grid grid-cols-2 gap-2">
-            <Button
-              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
-              htmlType="button"
-            >
+            <Button type="button" variant="secondary">
               <PlayCircle data-icon="inline-start" />
               运行分析
             </Button>
-            <Button
-              className="bg-success text-success-foreground hover:bg-success/90"
-              htmlType="button"
-              type="primary"
-            >
+            <Button type="button" variant="primary">
               <Sparkles data-icon="inline-start" />
               生成简历
             </Button>
@@ -139,14 +122,14 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <main className="flex min-w-0 flex-col gap-4">
           <Card className={panelClassName}>
-            <CardHeader>
-              <CardTitle>职位概览</CardTitle>
-              <CardDescription>
+            <Card.Header>
+              <Card.Title>职位概览</Card.Title>
+              <Card.Description>
                 来自管理员导入后的结构化 JD mock 字段。
-              </CardDescription>
-              <CardAction>
+              </Card.Description>
+              <div className="ml-auto">
                 <a
-                  className={cn(buttonVariants({ variant: "outline" }))}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-sm font-semibold text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/35"
                   href={job.sourceUrl}
                   rel="noreferrer"
                   target="_blank"
@@ -154,16 +137,16 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
                   <ExternalLink data-icon="inline-start" />
                   原始链接
                 </a>
-              </CardAction>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              </div>
+            </Card.Header>
+            <Card.Content className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <Fact icon={MapPin} label="地点" value={job.location} />
               <Fact icon={Globe2} label="远程状态" value={job.remoteStatus} />
               <Fact icon={BriefcaseBusiness} label="岗位类型" value={job.jobType} />
               <Fact icon={GraduationCap} label="级别" value={job.seniority} />
               <Fact icon={CalendarDays} label="年限要求" value={job.yearsRequired} />
               <Fact icon={Building2} label="薪资范围" value={job.salaryRange} />
-            </CardContent>
+            </Card.Content>
           </Card>
 
           <div className="grid gap-4 xl:grid-cols-2">
@@ -180,13 +163,13 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
           </div>
 
           <Card className={panelClassName}>
-            <CardHeader>
-              <CardTitle>技能标签</CardTitle>
-              <CardDescription>
+            <Card.Header>
+              <Card.Title>技能标签</Card.Title>
+              <Card.Description>
                 必备技能和加分技能会进入后续匹配分析输入。
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+              </Card.Description>
+            </Card.Header>
+            <Card.Content className="grid gap-4 md:grid-cols-2">
               <SkillGroup
                 items={job.requiredSkills}
                 title="必备技能"
@@ -197,28 +180,28 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
                 title="加分技能"
                 tone="preferred"
               />
-            </CardContent>
+            </Card.Content>
           </Card>
         </main>
 
         <aside className="flex min-w-0 flex-col gap-4">
           <Card className={panelClassName}>
-            <CardHeader>
-              <CardTitle>匹配分析</CardTitle>
-              <CardDescription>
+            <Card.Header>
+              <Card.Title>匹配分析</Card.Title>
+              <Card.Description>
                 {job.match.provider} · {job.match.runId}
-              </CardDescription>
-              <CardAction>
-                <Badge className="bg-accent text-primary">
+              </Card.Description>
+              <div className="ml-auto">
+                <Chip color="accent" size="sm" variant="soft">
                   {job.match.generatedAt}
-                </Badge>
-              </CardAction>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
+                </Chip>
+              </div>
+            </Card.Header>
+            <Card.Content className="flex flex-col gap-4">
               <p className="text-sm leading-6 text-muted-foreground">
                 {job.match.aiNote}
               </p>
-              <Separator />
+              <div className="h-px bg-border" />
               <MatchSection
                 icon={BadgeCheck}
                 items={job.match.evidence}
@@ -237,15 +220,15 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
                 title="风险表达"
                 tone="muted"
               />
-            </CardContent>
+            </Card.Content>
           </Card>
 
           <Card className={panelClassName}>
-            <CardHeader>
-              <CardTitle>生成状态</CardTitle>
-              <CardDescription>演示入口，不调用真实 AI。</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
+            <Card.Header>
+              <Card.Title>生成状态</Card.Title>
+              <Card.Description>演示入口，不调用真实 AI。</Card.Description>
+            </Card.Header>
+            <Card.Content className="flex flex-col gap-3">
               <div className={cn(softPanelClassName, "p-3")}>
                 <div className="flex items-start gap-2">
                   <CheckCircle2
@@ -263,23 +246,23 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
                   </div>
                 </div>
               </div>
-              <Button className="w-full" htmlType="button" type="primary">
+              <Button fullWidth type="button" variant="primary">
                 <Sparkles data-icon="inline-start" />
                 生成 target job 简历
               </Button>
-            </CardContent>
+            </Card.Content>
           </Card>
 
           <Card className={panelClassName}>
-            <CardHeader>
-              <CardTitle>导入元数据</CardTitle>
-              <CardDescription>{job.importedBy}</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-2 text-sm">
+            <Card.Header>
+              <Card.Title>导入元数据</Card.Title>
+              <Card.Description>{job.importedBy}</Card.Description>
+            </Card.Header>
+            <Card.Content className="grid gap-2 text-sm">
               <MetaRow label="导入方式" value={importMethodLabel(job.importMethod)} />
               <MetaRow label="导入状态" value={job.importStatus} />
               <MetaRow label="申请信号" value={job.applicantSignal} />
-            </CardContent>
+            </Card.Content>
           </Card>
         </aside>
       </div>
@@ -318,13 +301,13 @@ function TextListCard({
 }) {
   return (
     <Card className={panelClassName}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+      <Card.Header>
+        <Card.Title className="flex items-center gap-2">
           <Icon aria-hidden="true" className="size-4 text-primary" />
           {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </Card.Title>
+      </Card.Header>
+      <Card.Content>
         <ul className="space-y-3 text-sm leading-6 text-muted-foreground">
           {items.map((item) => (
             <li className="flex gap-2" key={item}>
@@ -333,7 +316,7 @@ function TextListCard({
             </li>
           ))}
         </ul>
-      </CardContent>
+      </Card.Content>
     </Card>
   );
 }
@@ -352,15 +335,14 @@ function SkillGroup({
       <p className="text-sm font-medium">{title}</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {items.map((item) => (
-          <Badge
-            className={
-              tone === "required" ? "bg-primary text-primary-foreground" : ""
-            }
+          <Chip
+            color={tone === "required" ? "accent" : "default"}
             key={item}
-            variant={tone === "required" ? "default" : "secondary"}
+            size="sm"
+            variant={tone === "required" ? "primary" : "secondary"}
           >
             {item}
-          </Badge>
+          </Chip>
         ))}
       </div>
     </div>
@@ -414,16 +396,26 @@ function MetaRow({ label, value }: { label: string; value: string }) {
 
 function ImportStatusBadge({ status }: { status: JobRecord["importStatus"] }) {
   if (status === "已解析") {
-    return <Badge className="bg-success text-success-foreground">{status}</Badge>;
+    return (
+      <Chip color="success" size="sm" variant="primary">
+        {status}
+      </Chip>
+    );
   }
 
   if (status === "待人工确认") {
     return (
-      <Badge className="bg-warning text-warning-foreground">{status}</Badge>
+      <Chip color="warning" size="sm" variant="primary">
+        {status}
+      </Chip>
     );
   }
 
-  return <Badge variant="destructive">{status}</Badge>;
+  return (
+    <Chip color="danger" size="sm" variant="soft">
+      {status}
+    </Chip>
+  );
 }
 
 function importMethodLabel(method: JobRecord["importMethod"]) {

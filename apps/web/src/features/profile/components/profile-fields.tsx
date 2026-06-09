@@ -1,24 +1,21 @@
-import { CalendarDays } from "lucide-react";
+import { Input, TextArea } from "@heroui/react";
 
-import type { ProfileIcon } from "@/features/profile/types";
 import { cn } from "@/lib/utils";
 
 const fieldClassName =
-  "h-9 w-full rounded-lg border border-transparent bg-muted/60 px-3 text-sm font-medium outline-none transition placeholder:text-muted-foreground/70 focus:border-ring focus:bg-card focus:ring-3 focus:ring-ring/20";
+  "h-9 w-full rounded-lg border border-transparent bg-muted/60 px-3 text-sm font-medium text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-ring focus:bg-card focus:ring-3 focus:ring-ring/20";
 
 const textareaClassName =
-  "min-h-20 w-full rounded-lg border border-transparent bg-muted/60 px-3 py-2 text-sm font-medium leading-5 outline-none transition placeholder:text-muted-foreground/70 focus:border-ring focus:bg-card focus:ring-3 focus:ring-ring/20";
+  "min-h-20 w-full rounded-lg border border-transparent bg-muted/60 px-3 py-2 text-sm font-medium leading-5 text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-ring focus:bg-card focus:ring-3 focus:ring-ring/20";
 
 function TextField({
   className,
-  icon: Icon,
   label,
   onChange,
   required = false,
   value,
 }: {
   className?: string;
-  icon?: ProfileIcon;
   label: string;
   onChange: (value: string) => void;
   required?: boolean;
@@ -26,22 +23,15 @@ function TextField({
 }) {
   return (
     <label className={cn("flex flex-col gap-1.5", className)}>
-      <span className="text-sm font-semibold">
+      <span className="text-sm font-semibold text-muted-foreground">
         {required ? <span className="text-destructive">*</span> : null} {label}
       </span>
-      <div className="relative">
-        {Icon ? (
-          <Icon
-            aria-hidden="true"
-            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-        ) : null}
-        <input
-          className={cn(fieldClassName, Icon ? "pl-9" : "")}
-          onChange={(event) => onChange(event.target.value)}
-          value={value}
-        />
-      </div>
+      <Input
+        fullWidth
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+        variant="secondary"
+      />
     </label>
   );
 }
@@ -55,14 +45,7 @@ function DateField({
   onChange: (value: string) => void;
   value: string;
 }) {
-  return (
-    <TextField
-      icon={CalendarDays}
-      label={label}
-      onChange={onChange}
-      value={value}
-    />
-  );
+  return <TextField label={label} onChange={onChange} value={value} />;
 }
 
 function TextAreaField({
@@ -78,14 +61,24 @@ function TextAreaField({
 }) {
   return (
     <label className={cn("flex flex-col gap-1.5", className)}>
-      <span className="text-sm font-semibold">{label}</span>
-      <textarea
-        className={textareaClassName}
+      <span className="text-sm font-semibold text-muted-foreground">
+        {label}
+      </span>
+      <TextArea
+        fullWidth
         onChange={(event) => onChange(event.target.value)}
+        rows={4}
         value={value}
+        variant="secondary"
       />
     </label>
   );
 }
 
-export { DateField, fieldClassName, TextAreaField, textareaClassName, TextField };
+export {
+  DateField,
+  fieldClassName,
+  TextAreaField,
+  textareaClassName,
+  TextField,
+};

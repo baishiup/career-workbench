@@ -6,7 +6,7 @@
 
 - 页面文件只负责路由装配和布局组合。
 - 基础 UI、工作台 shell、业务 feature、跨 feature 工具边界清楚。
-- 本地 fixture/mock 数据、业务类型、业务组件跟随 feature 归属，避免散落在 `components/ui`、`lib` 或 route 私有目录。
+- 本地 fixture/mock 数据、业务类型、业务组件跟随 feature 归属，避免散落在 `components/workbench`、`lib` 或 route 私有目录。
 - 后续 AI agent 可以根据路径规则做小步修改，不靠猜。
 
 ## 顶层边界
@@ -16,7 +16,6 @@ apps/web/src/
   App.tsx               # Vite SPA 路由装配和工作台 shell 组合
   main.tsx              # React 入口，只挂载全局 provider
   components/
-    ui/                 # 基础 UI primitive
     workbench/          # 跨 feature 工作台组件
   features/
     jobs/               # Jobs 业务代码
@@ -44,22 +43,21 @@ apps/web/src/
 - 本地 fixture/mock 数据放到对应 feature，不放在路由装配层。
 - route 私有小组件只用于真正强绑定当前 route 的展示状态。
 
-## `src/components/ui`
+## 基础 UI 组件
 
-只放基础 UI primitive。
+基础 UI 组件优先从 `@heroui/react` 直接导入，不再维护 shadcn/base-ui 风格的 `src/components/ui` primitive 目录。
 
 允许：
 
-- Button、Badge、Card、Tabs、Textarea、Tooltip 等通用组件。
-- 通用 variant、size、样式组合。
-- 无业务语义的可访问性处理。
+- 在 feature 页面或组件中直接使用 HeroUI 的 Button、Chip、Card、Table、Drawer、Toast、Input 等组件。
+- 在 `src/components/workbench` 沉淀只服务工作台 shell 的共享组件或样式 helper。
+- 为了保持顶部导航等既有视觉，使用少量原生元素封装，但不得重新引入 Antd、Base UI 或 shadcn。
 
 禁止：
 
-- `job`、`resume`、`profile`、`match` 等业务命名。
-- 引入 `useWorkbenchStore` 或任何 feature store。
-- 引入本地 fixture/mock 数据。
-- 引入路由装配逻辑或页面级状态。
+- 重新创建 `src/components/ui` 作为业务组件或 shadcn primitive 堆放目录。
+- 把 `job`、`resume`、`profile`、`match` 等业务组件放入 `src/components/workbench`。
+- 引入本地 fixture/mock 数据到跨 feature 组件。
 
 ## `src/components/workbench`
 
@@ -170,10 +168,10 @@ src/features/profile/
 改动后至少检查：
 
 ```bash
-rg -n "job|resume|profile|workbench-store" apps/web/src/components/ui
+rg -n "antd|@base-ui/react|components/ui|shadcn|class-variance-authority" apps/web/src apps/web/package.json
 pnpm check
 pnpm test
 pnpm build
 ```
 
-如果 `components/ui` 出现业务词，应优先判断是否放错目录。
+如果重新出现 `components/ui` 或旧 UI 依赖，应优先判断是否偏离 HeroUI 组件体系。

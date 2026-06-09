@@ -1,14 +1,12 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import "antd/dist/reset.css";
+import { Toast } from "@heroui/react";
 import "./globals.css";
 import { App } from "./App";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <TooltipProvider>
-      <App />
-    </TooltipProvider>
+    <App />
+    <Toast.Provider />
   </StrictMode>,
 );

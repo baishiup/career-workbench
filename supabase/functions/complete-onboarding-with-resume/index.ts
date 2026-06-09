@@ -4,13 +4,16 @@
  * 用户仍处在首次建档阶段，所以这里允许用 AI 解析结果覆盖
  * profiles.profile_data，并同步创建一份基础 resume。
  */
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import "@supabase/functions-js/edge-runtime.d.ts";
 import { requireAuthenticatedClient } from "../_shared/auth.ts";
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
-import { DifyResumeParseError, parseResumeWithDify } from "../_shared/dify-resume-parse.ts";
 import {
-  buildBaseResumeFromAIParsedDraft,
+  DifyResumeParseError,
+  parseResumeWithDify,
+} from "../_shared/dify-resume-parse.ts";
+import {
   type AIParsedResumeDraftToProfileOptions,
+  buildBaseResumeFromAIParsedDraft,
 } from "../_shared/resume-normalize.ts";
 
 /** 用于前端和日志定位失败发生在哪一层。 */
@@ -85,7 +88,9 @@ Deno.serve(async (request) => {
         updated_at: updatedAt,
         user_id: auth.user.id,
       })
-      .select("id,title,source_type,status,document_json,style_json,created_at,updated_at")
+      .select(
+        "id,title,source_type,status,document_json,style_json,created_at,updated_at",
+      )
       .single();
 
     if (resumeError) {
@@ -130,7 +135,9 @@ function parsePreferences(value: FormDataEntryValue | null) {
   }
 
   try {
-    return JSON.parse(value) as AIParsedResumeDraftToProfileOptions["preferences"];
+    return JSON.parse(
+      value,
+    ) as AIParsedResumeDraftToProfileOptions["preferences"];
   } catch {
     throw new DifyResumeParseError(
       "preferences_json must be valid JSON",
@@ -148,13 +155,25 @@ function getResumeTitle(fileName: string, fullName: string | null) {
 
 function parseErrorResponse(error: unknown) {
   if (error instanceof DifyResumeParseError) {
+    console.error("[complete-onboarding-with-resume:dify-error]", {
+      details: error.details,
+      message: error.message,
+      stage: error.stage,
+      status: error.status,
+    });
+
     return errorResponse(error.message, error.status, getErrorStage(error), {
       details: error.details,
       stage: error.stage,
     });
   }
 
-  return errorResponse("Complete onboarding with resume failed", 500, "request", serializeDetails(error));
+  return errorResponse(
+    "Complete onboarding with resume failed",
+    500,
+    "request",
+    serializeDetails(error),
+  );
 }
 
 function getErrorStage(error: DifyResumeParseError): Stage {

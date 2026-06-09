@@ -4,12 +4,12 @@
  * 这个函数不重新调用 Dify，只读取 resumes.ai_parsed_draft_json 重新归一化；
  * 这样用户确认动作可重复执行，也不会产生新的 AI 成本和不一致结果。
  */
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import "@supabase/functions-js/edge-runtime.d.ts";
 import { requireAuthenticatedClient } from "../_shared/auth.ts";
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import {
-  aiParsedResumeDraftToProfileDraft,
   type AIParsedResumeDraft,
+  aiParsedResumeDraftToProfileDraft,
 } from "../_shared/resume-normalize.ts";
 
 /** 用于前端和日志定位失败发生在哪一层。 */
@@ -66,7 +66,9 @@ Deno.serve(async (request) => {
   }
 
   // 用保存下来的 AIParsedResumeDraft 重新生成 Profile，保持和上传链路同一套归一化规则。
-  const profile = aiParsedResumeDraftToProfileDraft(resume.ai_parsed_draft_json);
+  const profile = aiParsedResumeDraftToProfileDraft(
+    resume.ai_parsed_draft_json,
+  );
   const { error: profileError } = await auth.supabase.from("profiles").upsert(
     {
       profile_data: profile,

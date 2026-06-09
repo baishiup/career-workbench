@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { ChevronDown, LogOut } from "lucide-react";
 
-import { PillTabs, type PillTabItem } from "@/components/ui/pill-tabs";
+import { PillTabs, type PillTabItem } from "@/components/workbench/pill-tabs";
 import type { AuthProfile } from "@/lib/auth-store";
 import { useAuthStore } from "@/lib/auth-store";
 import { usePathname } from "@/lib/router";

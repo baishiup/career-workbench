@@ -1,5 +1,4 @@
 import type { ComponentType, SVGProps } from "react";
-import { Button } from "antd";
 
 import Link from "@/components/router-link";
 import { cn } from "@/lib/utils";
@@ -49,7 +48,7 @@ function PillTab<TValue extends string>({
   const isActive = activeValue === item.value;
   const Icon = isActive && item.activeIcon ? item.activeIcon : item.icon;
   const className = cn(
-    "flex h-8 shrink-0 items-center gap-2 rounded-[12px] px-3 text-sm font-semibold leading-5 text-muted-foreground transition cursor-pointer",
+    "flex h-8 shrink-0 cursor-pointer items-center gap-2 rounded-[12px] px-3 text-sm font-semibold leading-5 text-muted-foreground transition",
     "hover:bg-muted/70 hover:text-foreground",
     isActive &&
       "bg-card text-primary shadow-[0_4px_14px_rgba(15,23,42,0.08)] hover:bg-card hover:text-primary",
@@ -89,15 +88,14 @@ function PillTab<TValue extends string>({
   }
 
   return (
-    <Button
+    <button
       aria-current={isActive ? "page" : undefined}
       className={className}
-      htmlType="button"
       onClick={() => onValueChange?.(item.value)}
-      type="text"
+      type="button"
     >
       {content}
-    </Button>
+    </button>
   );
 }
 
