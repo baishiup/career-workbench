@@ -191,6 +191,6 @@ comment on table public.profiles is
   'Career profile records keyed to public.users. Stores long-lived ProfileDraft data separately from account basics and resumes.';
 
 comment on column public.profiles.profile_data is
-  'ProfileDraft JSON from @career-workbench/resume.';
+  'ProfileDraft JSON from @career-workbench/domain.';
 
 notify pgrst, 'reload schema';

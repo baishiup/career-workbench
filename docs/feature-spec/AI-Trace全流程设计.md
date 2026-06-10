@@ -108,7 +108,7 @@ sequenceDiagram
 - prompt/workflow registry。
 - Dify 输出到业务 artifact 的解析和校验。
 
-### packages/resume
+### packages/domain
 
 负责简历业务对象：
 
@@ -557,7 +557,7 @@ mock provider 必须模拟真实 provider 的关键边界：
 
 建议按以下顺序实现：
 
-1. 类型与事件协议：在 `packages/ai` 和 `packages/resume` 定义共享契约。
+1. 类型与事件协议：在 `packages/ai` 和 `packages/domain` 定义共享契约。
 2. mock trace runner：不依赖 Dify，先跑通事件和业务 artifact。
 3. Supabase schema：创建 `ai_runs`、`ai_run_events`、`external_ai_runs`、`resume_conversations`、`resume_patches`、`resume_change_logs`、`match_reports`。
 4. Dify adapter：接入 Workflow / Chatflow，转换为统一事件。

@@ -27,16 +27,15 @@ career-workbench/
 
 ## 服务拆分
 
-| 区域 | 服务 | 说明 |
-|---|---|---|
-| 用户端应用 | Vercel Hobby / Cloudflare Pages | 部署 `apps/web` 的 Vite 静态产物。 |
-| Admin 应用 | 后续再定 | 现在保持 `apps/admin` 为空；只有内部流程需要独立应用时再实现。 |
-| 数据库 | Supabase Free | 用 Postgres 保存用户、Profile、简历、职位、匹配结果、AI trace。 |
-| Auth | Supabase Free | 负责用户登录和 admin 权限控制。 |
-| 文件存储 | Supabase Storage | 后续保存生成的导出文件；上传原始简历文件第一阶段不长期保存。 |
-| 后端逻辑 | Supabase Edge Functions | 负责接收上传文件、调用 Dify、写入业务结果。 |
-| AI 编排 | Dify Workflow / Chatflow | 负责简历解析、匹配分析、生成和简历级对话。 |
-| AI fallback | 本地 mock / OpenAI-compatible | 无 Dify 配置时用于开发和契约测试；真实模型调用必须加 allowlist 和 rate limit。 |
+| 区域        | 服务                            | 说明                                                                           |
+| ----------- | ------------------------------- | ------------------------------------------------------------------------------ |
+| 用户端应用  | Vercel Hobby / Cloudflare Pages | 部署 `apps/web` 的 Vite 静态产物。                                             |
+| 数据库      | Supabase Free                   | 用 Postgres 保存用户、Profile、简历、职位、匹配结果、AI trace。                |
+| Auth        | Supabase Free                   | 负责用户登录和 admin 权限控制。                                                |
+| 文件存储    | Supabase Storage                | 后续保存生成的导出文件；上传原始简历文件第一阶段不长期保存。                   |
+| 后端逻辑    | Supabase Edge Functions         | 负责接收上传文件、调用 Dify、写入业务结果。                                    |
+| AI 编排     | Dify Workflow / Chatflow        | 负责简历解析、匹配分析、生成和简历级对话。                                     |
+| AI fallback | 本地 mock / OpenAI-compatible   | 无 Dify 配置时用于开发和契约测试；真实模型调用必须加 allowlist 和 rate limit。 |
 
 ## 为什么一开始不做 `apps/api`
 
@@ -65,8 +64,6 @@ apps/web
 ```
 
 MVP 里先不做 signed upload URL 和 resume_files 表。只有文件需要长期保存、支持大文件或异步解析时，再重新设计 Storage 直传流程。
-
-当前脚手架状态：`apps/admin` 故意保持为空。本文只保留未来边界。
 
 ## Dify 调用边界
 
@@ -98,7 +95,7 @@ Edge Function 调 Dify 时遵守：
 
 - `_shared/cors.ts`：CORS 与 JSON response helper。
 - `_shared/auth.ts`：认证 helper 占位，后续要替换为真实 Supabase Auth 校验。
-- `_shared/resume-normalize.ts`：Edge Function 到 `packages/resume` 归一化逻辑的桥接。
+- `_shared/resume-normalize.ts`：Edge Function 到 `packages/domain` 归一化逻辑的桥接。
 - `_shared/dify-resume-parse.ts`：Dify 文件上传、Workflow 调用和 `AIParsedResumeDraft` 提取。
 
 已删除未实现的空壳函数。后续只有在对应业务真正开始实施时，再新增函数：

@@ -1,30 +1,21 @@
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { workbenchNavItems } from "@/components/workbench/nav-items";
 import { TopNav } from "@/components/workbench/top-nav";
-import { AiChatDemoPage } from "@/features/ai-chat/components/ai-chat-demo-page";
-import { LoginPage } from "@/features/auth/components/login-page";
-import { JobsListPage } from "@/features/jobs/components/jobs-list-page";
-import { JobDetailPage } from "@/features/jobs/components/job-detail-page";
-import { OnboardingFlow } from "@/features/onboarding/components/onboarding-flow";
-import { ProfileDisplay } from "@/features/profile/components/profile-display";
-import { ProfileDrawer } from "@/features/profile/components/profile-drawer";
-import { emptyProfile } from "@/features/profile/data";
-import {
-  fetchProfileFromSupabase,
-  saveProfileToSupabase,
-} from "@/features/profile/supabase-profile";
-import type { ProfileSection } from "@/features/profile/types";
-import { ResumesPage } from "@/features/resumes/components/resumes-page";
+import { LoginPage } from "@/pages/login/login-page";
+import { JobsListPage } from "@/pages/jobs-list/jobs-list-page";
+import { JobDetailPage } from "@/pages/job-detail/job-detail-page";
+import { OnboardingFlow } from "@/pages/onboarding/onboarding-flow";
+import { ProfilePage } from "@/pages/profile/profile-page";
+import { ResumeDetailPage } from "@/pages/resume-detail/resume-detail-page";
+import { ResumesPage } from "@/pages/resumes/resumes-page";
 import { useAuthStore } from "@/lib/auth-store";
 import { usePathname, navigateTo } from "@/lib/router";
 import { useWorkbenchStore } from "@/lib/workbench-store";
-import type { ProfileDraft } from "@career-workbench/resume";
 
 function App() {
   const pathname = usePathname();
-  const canUseAiChatDemo = import.meta.env.DEV && pathname === "/ai-chat";
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
   const isAuthConfigured = useAuthStore((state) => state.isConfigured);
   const isAuthLoading = useAuthStore((state) => state.isLoading);
@@ -42,7 +33,6 @@ function App() {
 
   useEffect(() => {
     if (
-      canUseAiChatDemo ||
       !hasHydrated ||
       (isAuthConfigured && (isAuthLoading || (user && isProfileLoading)))
     ) {
@@ -88,13 +78,11 @@ function App() {
     pathname,
     profile,
     user,
-    canUseAiChatDemo,
   ]);
 
   if (
-    !canUseAiChatDemo &&
-    (!hasHydrated ||
-      (isAuthConfigured && (isAuthLoading || (user && isProfileLoading))))
+    !hasHydrated ||
+    (isAuthConfigured && (isAuthLoading || (user && isProfileLoading)))
   ) {
     return <LoadingScreen text="Loading Career Workbench..." />;
   }
@@ -113,10 +101,9 @@ function App() {
     : hasCompletedOnboarding;
 
   if (
-    !canUseAiChatDemo &&
-    (pathname === "/" ||
-      requiresLogin ||
-      (pathname !== "/onboarding" && !hasPassedOnboarding))
+    pathname === "/" ||
+    requiresLogin ||
+    (pathname !== "/onboarding" && !hasPassedOnboarding)
   ) {
     return <LoadingScreen text="正在准备工作台..." />;
   }
@@ -152,12 +139,14 @@ function renderWorkbenchRoute(pathname: string) {
     return <ResumesPage />;
   }
 
-  if (pathname === "/profile") {
-    return <ProfilePage />;
+  const resumeMatch = pathname.match(/^\/resumes\/([^/]+)$/);
+
+  if (resumeMatch) {
+    return <ResumeDetailPage resumeId={decodeURIComponent(resumeMatch[1])} />;
   }
 
-  if (pathname === "/ai-chat") {
-    return <AiChatDemoPage />;
+  if (pathname === "/profile") {
+    return <ProfilePage />;
   }
 
   return <NotFoundPage />;
@@ -177,143 +166,8 @@ function NotFoundPage() {
       <p className="text-sm font-medium text-slate-500">404</p>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight">页面不存在</h1>
       <p className="mt-2 text-sm text-slate-500">
-        当前 Vite 版本只保留职位、简历、资料、AI 和 onboarding 页面。
+        当前 Vite 版本只保留职位、简历、资料和 onboarding 页面。
       </p>
-    </section>
-  );
-}
-
-function ProfilePage() {
-  const isAuthConfigured = useAuthStore((state) => state.isConfigured);
-  const user = useAuthStore((state) => state.user);
-  const [profile, setProfile] = useState<ProfileDraft>(emptyProfile);
-  const [draft, setDraft] = useState<ProfileDraft>(emptyProfile);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
-  const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [openSection, setOpenSection] = useState<ProfileSection | null>(null);
-
-  useEffect(() => {
-    if (!isAuthConfigured || !user) {
-      setProfile(emptyProfile);
-      setDraft(emptyProfile);
-      setLoadError(
-        isAuthConfigured
-          ? "请先登录后再查看资料。"
-          : "Supabase 环境变量未配置完整。",
-      );
-      return;
-    }
-
-    const userId = user.id;
-    let didCancel = false;
-
-    async function loadProfile() {
-      setIsLoadingProfile(true);
-      setLoadError(null);
-      setSaveError(null);
-
-      try {
-        const nextProfile = await fetchProfileFromSupabase(userId);
-
-        if (!didCancel) {
-          setProfile(nextProfile);
-          setDraft(nextProfile);
-        }
-      } catch (error) {
-        if (!didCancel) {
-          setProfile(emptyProfile);
-          setDraft(emptyProfile);
-          setLoadError(
-            error instanceof Error ? error.message : "资料读取失败。",
-          );
-        }
-      } finally {
-        if (!didCancel) {
-          setIsLoadingProfile(false);
-        }
-      }
-    }
-
-    void loadProfile();
-
-    return () => {
-      didCancel = true;
-    };
-  }, [isAuthConfigured, user]);
-
-  function openEditor(section: ProfileSection) {
-    setSaveError(null);
-    setDraft(structuredClone(profile));
-    setOpenSection(section);
-    setIsDrawerOpen(true);
-  }
-
-  async function saveEditor() {
-    if (isSavingProfile) {
-      return;
-    }
-
-    if (!isAuthConfigured || !user) {
-      setSaveError("请先登录后再保存资料。");
-      return;
-    }
-
-    setIsSavingProfile(true);
-    setSaveError(null);
-
-    try {
-      await saveProfileToSupabase(user.id, draft);
-      setProfile(draft);
-      closeEditor();
-    } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "资料保存失败。");
-    } finally {
-      setIsSavingProfile(false);
-    }
-  }
-
-  function closeEditor() {
-    setIsDrawerOpen(false);
-  }
-
-  return (
-    <section className="mx-auto grid w-full max-w-[1320px] gap-4 px-4 py-5">
-      {isLoadingProfile ? (
-        <p className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-500">
-          正在从 Supabase 读取资料...
-        </p>
-      ) : null}
-
-      {loadError && !isDrawerOpen ? (
-        <p className="rounded-lg bg-red-600/10 px-3 py-2 text-sm font-medium text-red-600">
-          资料读取失败：{loadError}
-        </p>
-      ) : null}
-
-      {!isLoadingProfile ? (
-        <ProfileDisplay onEdit={openEditor} profile={profile} />
-      ) : null}
-
-      {openSection && !isLoadingProfile ? (
-        <ProfileDrawer
-          draft={draft}
-          isSaving={isSavingProfile}
-          onAfterOpenChange={(open) => {
-            if (!open) {
-              setOpenSection(null);
-            }
-          }}
-          onClose={closeEditor}
-          onDraftChange={setDraft}
-          onSave={saveEditor}
-          open={isDrawerOpen}
-          saveError={saveError}
-          section={openSection}
-        />
-      ) : null}
     </section>
   );
 }

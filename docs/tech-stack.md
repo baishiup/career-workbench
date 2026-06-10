@@ -5,7 +5,7 @@
 本文只维护技术选型、运行模式、前后端边界和验证策略。
 
 - 产品范围见 `docs/product.md`。
-- 目录归属见 `docs/code-organization.md`。
+- 目录归属见 `docs/project-structure.md`。
 - 阶段计划见 `docs/mvp-roadmap.md`。
 - AI Trace 事件和数据模型见 `docs/feature-spec/AI-Trace全流程设计.md`。
 
@@ -55,7 +55,7 @@ packages/ai
   prompt/workflow registry
   unified AI event contract
 
-packages/resume
+packages/domain
   profile/resume/JD domain model
   match scoring
   resume patch/change-log contracts
@@ -98,9 +98,9 @@ AI_ORCHESTRATOR=openai-compatible
 - 页面只访问本项目 API、mock 数据或 Supabase client。
 - 组件不直接调用 Dify 或模型 API。
 - prompt 不写散在 UI 组件里。
-- 业务组件放在 `src/features/*`；HeroUI 基础组件优先从 `@heroui/react` 直接导入。
-- 跨 feature 的工作台外壳和少量共享样式 helper 放在 `src/components/workbench`。
-- Vite 路由装配层只做页面组合，具体规则见 `docs/code-organization.md`。
+- 业务组件放在 `src/pages/*` 或 `src/components/*`；HeroUI 基础组件优先从 `@heroui/react` 直接导入。
+- 跨页面的工作台外壳和少量共享样式 helper 放在 `src/components/workbench`。
+- Vite 路由装配层只做页面组合，具体规则见 `docs/project-structure.md`。
 
 ## 后端与 API 边界
 

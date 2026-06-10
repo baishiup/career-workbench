@@ -2,7 +2,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { create } from "zustand";
 
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
-import type { ProfileDraft } from "@career-workbench/resume";
+import type { ProfileDraft } from "@career-workbench/domain";
 
 type AuthProfile = {
   avatarUrl: string | null;

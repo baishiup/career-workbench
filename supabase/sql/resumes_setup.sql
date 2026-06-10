@@ -145,10 +145,10 @@ comment on table public.resumes is
   'MVP editable resume records. The canonical resume state is document_json plus style_json; file storage, versions, patch logs, and conversations are deferred.';
 
 comment on column public.resumes.document_json is
-  'ResumeDocument JSON from @career-workbench/resume.';
+  'ResumeDocument JSON from @career-workbench/domain.';
 
 comment on column public.resumes.style_json is
-  'ResumeStyleConfig JSON from @career-workbench/resume.';
+  'ResumeStyleConfig JSON from @career-workbench/domain.';
 
 comment on column public.resumes.ai_parsed_draft_json is
   'Optional AIParsedResumeDraft JSON kept only for parsing debug and review.';

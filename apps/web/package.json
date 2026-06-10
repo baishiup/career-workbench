@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@ai-sdk/react": "3.0.196",
-    "@career-workbench/resume": "workspace:*",
+    "@career-workbench/domain": "workspace:*",
     "@heroui/react": "3.1.0",
     "@heroui/styles": "3.1.0",
     "@streamdown/cjk": "^1.0.3",

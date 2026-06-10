@@ -88,7 +88,7 @@ UI 迁移或页面改动后，至少额外检查 Jobs、Resumes、Profile、Onbo
 
 - [产品边界](./docs/product.md)
 - [技术栈与架构边界](./docs/tech-stack.md)
-- [代码组织规则](./docs/code-organization.md)
+- [代码组织规则](./docs/project-structure.md)
 - [MVP 路线图](./docs/mvp-roadmap.md)
 - [功能规格](./docs/feature-spec/)
 - [AI Trace 全流程设计](./docs/feature-spec/AI-Trace全流程设计.md)

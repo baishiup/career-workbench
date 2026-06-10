@@ -1,0 +1,555 @@
+app:
+  description: ''
+  icon: 💼
+  icon_background: '#E0F2FE'
+  icon_type: emoji
+  mode: workflow
+  name: 简历附件解析 gemini
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/gemini:0.8.4@23aed1fa4d2c8015337bd18efa28b3dccf5b7309a83b1501541fb7358518faec
+    version: null
+kind: app
+version: 0.6.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        attachment_image_file_size_limit: 2
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        file_upload_limit: 50
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: document-extractor
+      id: 1776749897311-source-1780679045741-target
+      selected: false
+      source: '1776749897311'
+      sourceHandle: source
+      target: '1780679045741'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: document-extractor
+        targetType: code
+      id: 1780679045741-source-1780681000000-target
+      selected: false
+      source: '1780679045741'
+      sourceHandle: source
+      target: '1780681000000'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: llm
+      id: 1780681000000-source-1776749928227-target
+      selected: false
+      source: '1780681000000'
+      sourceHandle: source
+      target: '1776749928227'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: 1776749928227-source-1780682000000-target
+      selected: false
+      source: '1776749928227'
+      sourceHandle: source
+      target: '1780682000000'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: end
+      id: 1780682000000-source-1776750335278-target
+      selected: false
+      source: '1780682000000'
+      sourceHandle: source
+      target: '1776750335278'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: 在此处上传简历pdf
+        selected: false
+        title: 用户输入
+        type: start
+        variables:
+        - allowed_file_extensions:
+          - .pdf
+          allowed_file_types:
+          - custom
+          allowed_file_upload_methods:
+          - local_file
+          - remote_url
+          default:
+            base64Url: ''
+            id: df43175b-7e94-4113-8d48-b72d99c8ae30
+            name: Hongyuan Qi_Frontend Engineer_20260605.pdf
+            originalFile: {}
+            progress: 100
+            size: 75337
+            supportFileType: custom
+            transferMethod: local_file
+            type: application/pdf
+            uploadedId: 3b31aa3a-6518-40f6-9e74-80be629c839f
+          hide: false
+          hint: ''
+          label: resume_file
+          options: []
+          placeholder: ''
+          required: true
+          type: file
+          variable: resume_file
+      height: 137
+      id: '1776749897311'
+      position:
+        x: -288.8549393251845
+        y: 208.66607826614046
+      positionAbsolute:
+        x: -288.8549393251845
+        y: 208.66607826614046
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 从预处理后的简历文本抽取结构化 JSON。Gemini 兼容版不在 schema 中使用 nullable union。
+        model:
+          completion_params:
+            thinking_mode: false
+          mode: chat
+          name: gemini-2.5-flash-lite
+          provider: langgenius/gemini/google
+        prompt_template:
+        - id: c414cd6e-036a-4bad-8b25-1b5fabece82a
+          role: system
+          text: '你是一个严格的简历信息抽取器。只从输入文本中抽取明确出现的信息，不推测、不补全、不润色。
+
+
+            输出要求：
+
+            1. 只输出 JSON 对象，必须符合 Structured Output JSON Schema。
+
+            2. 缺失的字符串字段填空字符串 ""；缺失的 boolean 字段填 false；数组字段缺失时填 []。不要在 Structured Output
+            中输出 null，后续 Code 节点会把空字符串归一化为 null。
+
+            3. 日期能确定到月份时用 YYYY-MM；不能确定时日期字段填空字符串 ""，并保留 raw_date。
+
+            4. 保持原始事实表达，不新增量化结果，不改写为营销文案。
+
+            5. 工作经历、项目、教育按原文顺序输出，不合并不同公司/项目/学校。
+
+            6. 单条 work_experiences/projects 的 bullets 最多 6 条，每条不超过 120 字。
+
+            7. projects 最多 8 条，work_experiences 最多 8 条，skills 最多 60 个。
+
+            8. 文本被预处理截断时，在 parse_warnings 中说明可能遗漏长尾信息。
+
+            9. 无法归类但重要的片段放入 unmapped_text，最多 20 条。
+
+            '
+        - id: 3e121f4c-ccb6-4311-9501-04677f21956d
+          role: user
+          text: '请解析以下预处理后的 PDF 简历文本：
+
+
+            {{#1780681000000.cleaned_text#}}
+
+            '
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              candidate:
+                properties:
+                  city:
+                    type: string
+                  email:
+                    type: string
+                  full_name:
+                    type: string
+                  headline:
+                    type: string
+                  links:
+                    items:
+                      properties:
+                        label:
+                          type: string
+                        url:
+                          type: string
+                      required:
+                      - label
+                      - url
+                      type: object
+                    type: array
+                  phone:
+                    type: string
+                required:
+                - full_name
+                - email
+                - phone
+                - city
+                - headline
+                - links
+                type: object
+              education:
+                items:
+                  properties:
+                    degree:
+                      type: string
+                    description:
+                      type: string
+                    end_date:
+                      type: string
+                    location:
+                      type: string
+                    major:
+                      type: string
+                    raw_date:
+                      type: string
+                    school:
+                      type: string
+                    start_date:
+                      type: string
+                  required:
+                  - school
+                  - degree
+                  - major
+                  - location
+                  - start_date
+                  - end_date
+                  - raw_date
+                  - description
+                  type: object
+                type: array
+              parse_warnings:
+                items:
+                  type: string
+                type: array
+              projects:
+                items:
+                  properties:
+                    bullets:
+                      items:
+                        type: string
+                      type: array
+                    end_date:
+                      type: string
+                    links:
+                      items:
+                        properties:
+                          label:
+                            type: string
+                          url:
+                            type: string
+                        required:
+                        - label
+                        - url
+                        type: object
+                      type: array
+                    name:
+                      type: string
+                    raw_date:
+                      type: string
+                    role:
+                      type: string
+                    start_date:
+                      type: string
+                    summary:
+                      type: string
+                    technologies:
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - name
+                  - role
+                  - start_date
+                  - end_date
+                  - raw_date
+                  - summary
+                  - bullets
+                  - links
+                  - technologies
+                  type: object
+                type: array
+              schema_version:
+                enum:
+                - resume.parse.v1
+                type: string
+              skills:
+                items:
+                  type: string
+                type: array
+              unmapped_text:
+                items:
+                  type: string
+                type: array
+              work_experiences:
+                items:
+                  properties:
+                    bullets:
+                      items:
+                        type: string
+                      type: array
+                    company:
+                      type: string
+                    current:
+                      type: boolean
+                    end_date:
+                      type: string
+                    location:
+                      type: string
+                    raw_date:
+                      type: string
+                    start_date:
+                      type: string
+                    summary:
+                      type: string
+                    technologies:
+                      items:
+                        type: string
+                      type: array
+                    title:
+                      type: string
+                  required:
+                  - company
+                  - title
+                  - location
+                  - start_date
+                  - end_date
+                  - current
+                  - raw_date
+                  - summary
+                  - bullets
+                  - technologies
+                  type: object
+                type: array
+            required:
+            - schema_version
+            - candidate
+            - work_experiences
+            - projects
+            - education
+            - skills
+            - parse_warnings
+            - unmapped_text
+            type: object
+        structured_output_enabled: true
+        title: LLM Gemini
+        type: llm
+        vision:
+          enabled: false
+      height: 148
+      id: '1776749928227'
+      position:
+        x: 720
+        y: 234.1
+      positionAbsolute:
+        x: 720
+        y: 234.1
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: 生成最终内容
+        outputs:
+        - value_selector:
+          - '1780682000000'
+          - normalized_json
+          value_type: string
+          variable: text
+        selected: false
+        title: Output
+        type: end
+      height: 116
+      id: '1776750335278'
+      position:
+        x: 1445.5549623872612
+        y: 234.1
+      positionAbsolute:
+        x: 1445.5549623872612
+        y: 234.1
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        is_array_file: false
+        selected: false
+        title: 文档提取器
+        type: document-extractor
+        variable_selector:
+        - '1776749897311'
+        - resume_file
+      height: 104
+      id: '1780679045741'
+      position:
+        x: 44.87165209116006
+        y: 249.89004503588632
+      positionAbsolute:
+        x: 44.87165209116006
+        y: 249.89004503588632
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "function main({ raw_text }) {\n  const source = String(raw_text ||\
+          \ \"\");\n  const normalized = source\n    .replace(/\\u0000/g, \"\")\n\
+          \    .replace(/\\r\\n?/g, \"\\n\")\n    .replace(/[ \\t]+/g, \" \")\n  \
+          \  .split(\"\\n\")\n    .map((line) => line.trim())\n    .filter((line)\
+          \ => line.length > 0)\n    .filter((line) => !/^page\\s*\\d+\\s*(of\\s*\\\
+          d+)?$/i.test(line))\n    .filter((line, index, lines) => index === 0 ||\
+          \ line !== lines[index - 1])\n    .join(\"\\n\")\n    .replace(/\\n{3,}/g,\
+          \ \"\\n\\n\")\n    .trim();\n\n  const limit = 18000;\n  const cleaned =\
+          \ normalized.length > limit\n    ? `${normalized.slice(0, 14000)}\\n\\n[TRUNCATED_BY_PREPROCESSOR]\\\
+          n\\n${normalized.slice(-3000)}`\n    : normalized;\n\n  return {\n    cleaned_text:\
+          \ cleaned,\n    original_chars: source.length,\n    cleaned_chars: cleaned.length,\n\
+          \    truncated: normalized.length > limit\n  };\n}\n"
+        code_language: javascript
+        desc: 清洗 PDF 文本并限制 LLM 输入长度，降低解析耗时。
+        outputs:
+          cleaned_chars:
+            children: null
+            type: number
+          cleaned_text:
+            children: null
+            type: string
+          original_chars:
+            children: null
+            type: number
+          truncated:
+            children: null
+            type: boolean
+        selected: false
+        title: 文本预处理
+        type: code
+        variables:
+        - value_selector:
+          - '1780679045741'
+          - text
+          variable: raw_text
+      height: 96
+      id: '1780681000000'
+      position:
+        x: 382
+        y: 249.9
+      positionAbsolute:
+        x: 382
+        y: 249.9
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "function main({ raw_json }) {\n  const source = String(raw_json ||\
+          \ \"\").trim();\n  const jsonText = source\n    .replace(/^```(?:json)?\\\
+          s*/i, \"\")\n    .replace(/\\s*```$/i, \"\");\n\n  let parsed;\n  try {\n\
+          \    parsed = JSON.parse(jsonText);\n  } catch (error) {\n    return { normalized_json:\
+          \ jsonText };\n  }\n\n  function normalize(value) {\n    if (Array.isArray(value))\
+          \ {\n      return value.map(normalize);\n    }\n\n    if (value && typeof\
+          \ value === \"object\") {\n      return Object.fromEntries(\n        Object.entries(value).map(([key,\
+          \ child]) => [key, normalize(child)])\n      );\n    }\n\n    return value\
+          \ === \"\" ? null : value;\n  }\n\n  return {\n    normalized_json: JSON.stringify(normalize(parsed))\n\
+          \  };\n}"
+        code_language: javascript
+        desc: 把 Gemini 兼容 schema 里的空字符串恢复为后端期望的 null。
+        outputs:
+          normalized_json:
+            children: null
+            type: string
+        selected: false
+        title: 输出归一化
+        type: code
+        variables:
+        - value_selector:
+          - '1776749928227'
+          - text
+          variable: raw_json
+      height: 96
+      id: '1780682000000'
+      position:
+        x: 1072.6694146365664
+        y: 229.66607826614046
+      positionAbsolute:
+        x: 1072.6694146365664
+        y: 229.66607826614046
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: -558.8088971307405
+      y: 210.7324480508981
+      zoom: 0.7729118519311944
+  rag_pipeline_variables: []

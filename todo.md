@@ -8,7 +8,7 @@
 - `README.md`
 - `docs/product.md`
 - `docs/tech-stack.md`
-- `docs/code-organization.md`
+- `docs/project-structure.md`
 - `docs/feature-spec/*.md`
 
 验收：

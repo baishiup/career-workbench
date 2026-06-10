@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@heroui/react";
 import type { User } from "@supabase/supabase-js";
 import { ChevronDown, LogOut } from "lucide-react";
 
@@ -41,11 +42,12 @@ function TopNav({ items }: { items: Array<PillTabItem<string>> }) {
 
         <div className="flex items-center justify-start gap-2 lg:justify-end">
           <div className="relative">
-            <button
+            <Button
               aria-expanded={isUserMenuOpen}
               className="flex h-8 items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] font-medium leading-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-400/35"
-              onClick={() => setIsUserMenuOpen((open) => !open)}
+              onPress={() => setIsUserMenuOpen((open) => !open)}
               type="button"
+              variant="tertiary"
             >
               <UserAvatar profile={profile} user={user} />
               <span className="hidden max-w-32 truncate text-sm font-medium sm:inline">
@@ -58,21 +60,22 @@ function TopNav({ items }: { items: Array<PillTabItem<string>> }) {
                   isUserMenuOpen ? "rotate-180" : "",
                 )}
               />
-            </button>
+            </Button>
 
             {isUserMenuOpen ? (
               <div className="absolute right-0 top-10 z-30 w-48 rounded-lg border border-slate-200 bg-white p-1 shadow-[0_12px_28px_rgba(15,23,42,0.14)]">
-                <button
+                <Button
                   className="flex h-9 w-full items-center gap-2 rounded-md px-2.5 text-left text-sm font-medium text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/30"
-                  onClick={() => {
+                  onPress={() => {
                     setIsUserMenuOpen(false);
                     void signOut();
                   }}
                   type="button"
+                  variant="tertiary"
                 >
                   <LogOut className="size-4" />
                   退出登录
-                </button>
+                </Button>
               </div>
             ) : null}
           </div>

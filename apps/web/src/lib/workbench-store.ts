@@ -19,21 +19,16 @@ type WorkbenchState = {
   hasHydrated: boolean;
   hasCompletedOnboarding: boolean;
   resumes: ResumeRecord[];
-  selectedJobId: string;
   selectedResumeId: string;
   addUploadedResume: (fileName: string, jobFunction: string) => string;
   completeOnboarding: () => void;
   setHasHydrated: (hasHydrated: boolean) => void;
-  setSelectedJobId: (jobId: string) => void;
   setSelectedResumeId: (resumeId: string) => void;
 };
 
 type PersistedWorkbenchState = Pick<
   WorkbenchState,
-  | "hasCompletedOnboarding"
-  | "resumes"
-  | "selectedJobId"
-  | "selectedResumeId"
+  "hasCompletedOnboarding" | "resumes" | "selectedResumeId"
 >;
 
 export const useWorkbenchStore = create<WorkbenchState>()(
@@ -42,7 +37,6 @@ export const useWorkbenchStore = create<WorkbenchState>()(
       hasHydrated: true,
       hasCompletedOnboarding: false,
       resumes: [],
-      selectedJobId: "",
       selectedResumeId: "",
       addUploadedResume: (fileName, jobFunction) => {
         const id = `uploaded-${Date.now()}`;
@@ -72,7 +66,6 @@ export const useWorkbenchStore = create<WorkbenchState>()(
       },
       completeOnboarding: () => set({ hasCompletedOnboarding: true }),
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
-      setSelectedJobId: (selectedJobId) => set({ selectedJobId }),
       setSelectedResumeId: (selectedResumeId) => set({ selectedResumeId }),
     }),
     {
@@ -83,7 +76,6 @@ export const useWorkbenchStore = create<WorkbenchState>()(
       partialize: (state): PersistedWorkbenchState => ({
         hasCompletedOnboarding: state.hasCompletedOnboarding,
         resumes: state.resumes,
-        selectedJobId: state.selectedJobId,
         selectedResumeId: state.selectedResumeId,
       }),
       merge: (persistedState, currentState) => {

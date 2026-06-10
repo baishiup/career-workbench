@@ -1,4 +1,5 @@
 import type { ComponentType, SVGProps } from "react";
+import { Button } from "@heroui/react";
 
 import Link from "@/components/router-link";
 import { cn } from "@/lib/utils";
@@ -88,14 +89,15 @@ function PillTab<TValue extends string>({
   }
 
   return (
-    <button
+    <Button
       aria-current={isActive ? "page" : undefined}
       className={className}
-      onClick={() => onValueChange?.(item.value)}
+      onPress={() => onValueChange?.(item.value)}
       type="button"
+      variant="tertiary"
     >
       {content}
-    </button>
+    </Button>
   );
 }
 
