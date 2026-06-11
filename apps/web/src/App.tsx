@@ -10,7 +10,6 @@ import { JobDetailPage } from "@/pages/job-detail/job-detail-page";
 import { JobImportPage } from "@/pages/job-import/job-import-page";
 import { OnboardingFlow } from "@/pages/onboarding/onboarding-flow";
 import { ProfilePage } from "@/pages/profile/profile-page";
-import { ResumeDetailPage } from "@/pages/resume-detail/resume-detail-page";
 import { ResumesPage } from "@/pages/resumes/resumes-page";
 import { useAuthStore } from "@/lib/auth-store";
 import { usePathname, navigateTo } from "@/lib/router";
@@ -153,7 +152,9 @@ function renderWorkbenchRoute(pathname: string) {
   const resumeMatch = pathname.match(/^\/resumes\/([^/]+)$/);
 
   if (resumeMatch) {
-    return <ResumeDetailPage resumeId={decodeURIComponent(resumeMatch[1])} />;
+    return (
+      <ResumesPage initialOpenResumeId={decodeURIComponent(resumeMatch[1])} />
+    );
   }
 
   if (pathname === "/profile") {

@@ -4,7 +4,9 @@ import { useMemo, useRef, useState } from "react";
 import {
   Button,
   Checkbox,
+  ComboBox,
   Input,
+  ListBox,
   Tag,
   TagGroup,
   TextArea,
@@ -285,7 +287,6 @@ function SkillsForm({
   skills: string[];
 }) {
   const [query, setQuery] = useState("");
-  const [isFocused, setIsFocused] = useState(false);
   const normalizedSkills = useMemo(
     () => new Set(skills.map((skill) => skill.toLowerCase())),
     [skills],
@@ -335,10 +336,8 @@ function SkillsForm({
       <SkillInput
         addSkill={addSkill}
         filteredSuggestions={filteredSuggestions}
-        isFocused={isFocused}
         normalizedSkills={normalizedSkills}
         query={query}
-        setIsFocused={setIsFocused}
         setQuery={setQuery}
       />
     </div>
@@ -348,20 +347,17 @@ function SkillsForm({
 function SkillInput({
   addSkill,
   filteredSuggestions,
-  isFocused,
   normalizedSkills,
   query,
-  setIsFocused,
   setQuery,
 }: {
   addSkill: (value: string) => void;
   filteredSuggestions: string[];
-  isFocused: boolean;
   normalizedSkills: Set<string>;
   query: string;
-  setIsFocused: (isFocused: boolean) => void;
   setQuery: (query: string) => void;
 }) {
+  const createOptionId = "__create_skill__";
   const canCreate =
     query.trim() &&
     !normalizedSkills.has(query.trim().toLowerCase()) &&
@@ -370,48 +366,50 @@ function SkillInput({
     );
 
   return (
-    <div className="relative max-w-md">
-      <Input
-        fullWidth
-        onBlur={() => window.setTimeout(() => setIsFocused(false), 120)}
-        onChange={(event) => setQuery(event.target.value)}
-        onFocus={() => setIsFocused(true)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            addSkill(query);
-          }
-        }}
-        placeholder="添加技能..."
-        value={query}
-        variant="secondary"
-      />
-      {isFocused && (query || filteredSuggestions.length > 0) ? (
-        <div className="absolute left-0 top-11 z-10 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.14)]">
+    <ComboBox
+      allowsCustomValue
+      className="max-w-md"
+      fullWidth
+      inputValue={query}
+      menuTrigger="focus"
+      onInputChange={setQuery}
+      onSelectionChange={(key) => {
+        if (!key) {
+          return;
+        }
+
+        addSkill(String(key) === createOptionId ? query : String(key));
+      }}
+      variant="secondary"
+    >
+      <ComboBox.InputGroup>
+        <Input
+          fullWidth
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              addSkill(query);
+            }
+          }}
+          placeholder="添加技能..."
+        />
+        <ComboBox.Trigger />
+      </ComboBox.InputGroup>
+      <ComboBox.Popover>
+        <ListBox aria-label="技能建议">
           {filteredSuggestions.map((suggestion) => (
-            <Button
-              fullWidth
-              key={suggestion}
-              onPress={() => addSkill(suggestion)}
-              type="button"
-              variant="tertiary"
-            >
+            <ListBox.Item id={suggestion} key={suggestion}>
               {suggestion}
-            </Button>
+            </ListBox.Item>
           ))}
           {canCreate ? (
-            <Button
-              fullWidth
-              onPress={() => addSkill(query)}
-              type="button"
-              variant="secondary"
-            >
+            <ListBox.Item id={createOptionId}>
               {`创建“${query.trim()}”`}
-            </Button>
+            </ListBox.Item>
           ) : null}
-        </div>
-      ) : null}
-    </div>
+        </ListBox>
+      </ComboBox.Popover>
+    </ComboBox>
   );
 }
 

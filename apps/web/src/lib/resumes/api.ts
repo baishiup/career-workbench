@@ -28,7 +28,7 @@ async function listResumes() {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new ResumeFunctionError("Supabase 未配置，无法读取简历列表。");
+    throw new ResumeFunctionError("数据服务未连接，无法读取简历列表。");
   }
 
   const { data, error } = await supabase
@@ -48,7 +48,7 @@ async function renameResume(resumeId: string, title: string) {
   const nextTitle = title.trim();
 
   if (!supabase) {
-    throw new ResumeFunctionError("Supabase 未配置，无法修改简历名称。");
+    throw new ResumeFunctionError("数据服务未连接，无法修改简历名称。");
   }
 
   if (!nextTitle) {
@@ -80,7 +80,7 @@ async function deleteResume(resumeId: string) {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new ResumeFunctionError("Supabase 未配置，无法删除简历。");
+    throw new ResumeFunctionError("数据服务未连接，无法删除简历。");
   }
 
   const { count, error: countError } = await supabase
@@ -122,7 +122,7 @@ async function saveResumeContent(
   const title = input.document.title.trim();
 
   if (!supabase) {
-    throw new ResumeFunctionError("Supabase 未配置，无法保存简历修改。");
+    throw new ResumeFunctionError("数据服务未连接，无法保存简历修改。");
   }
 
   if (!title) {
@@ -158,7 +158,7 @@ async function getResume(resumeId: string) {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new ResumeFunctionError("Supabase 未配置，无法读取简历详情。");
+    throw new ResumeFunctionError("数据服务未连接，无法读取简历详情。");
   }
 
   const { data, error } = await supabase
@@ -178,6 +178,31 @@ async function getResume(resumeId: string) {
   }
 
   return data as ResumeFunctionRow;
+}
+
+async function getLatestTargetJobResume(jobId: string) {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    throw new ResumeFunctionError("数据服务未连接，无法读取职位定制简历。");
+  }
+
+  const { data, error } = await supabase
+    .from("resumes")
+    .select(
+      "id,title,source_type,document_json,style_json,source_context_json,created_at,updated_at",
+    )
+    .eq("source_type", "target_job")
+    .contains("source_context_json", { job_id: jobId })
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new ResumeFunctionError(error.message, { details: error });
+  }
+
+  return (data ?? null) as ResumeFunctionRow | null;
 }
 
 async function completeOnboardingWithResume(
@@ -214,6 +239,7 @@ export {
   completeOnboardingWithResume,
   deleteResume,
   generateTargetJobResume,
+  getLatestTargetJobResume,
   getResume,
   listResumes,
   renameResume,

@@ -2,9 +2,13 @@
 
 import type { ReactNode } from "react";
 import {
-  Input,
+  ColorArea,
+  ColorPicker,
+  ColorSlider,
+  ColorSwatch,
   ListBox,
   NumberField as HeroNumberField,
+  parseColor,
   Select,
 } from "@heroui/react";
 import type {
@@ -119,9 +123,9 @@ function ResumeStyleEditor({ onStyleChange, style }: ResumeStyleEditorProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <Panel title="模板">
-        <div className="grid gap-2.5 md:grid-cols-2">
+        <div className="grid grid-cols-2 gap-2.5">
           <SelectField
             label="模板"
             onChange={applyTemplate}
@@ -143,8 +147,9 @@ function ResumeStyleEditor({ onStyleChange, style }: ResumeStyleEditorProps) {
       </Panel>
 
       <Panel title="字体">
-        <div className="grid gap-2.5 md:grid-cols-2">
+        <div className="grid grid-cols-2 gap-2.5">
           <SelectField
+            className="col-span-2"
             label="字体"
             onChange={(fontFamily) => updateTypography({ fontFamily })}
             options={{
@@ -185,7 +190,7 @@ function ResumeStyleEditor({ onStyleChange, style }: ResumeStyleEditorProps) {
       </Panel>
 
       <Panel title="颜色">
-        <div className="grid gap-2.5 md:grid-cols-2">
+        <div className="grid grid-cols-2 gap-2.5">
           <ColorField
             label="正文"
             onChange={(text) => updateColors({ text })}
@@ -215,9 +220,10 @@ function ResumeStyleEditor({ onStyleChange, style }: ResumeStyleEditorProps) {
       </Panel>
 
       <Panel title="间距">
-        <div className="grid gap-2.5 md:grid-cols-2">
+        <div className="flex flex-col gap-2.5">
           <NumberField
             label="Section 间距"
+            layout="inline"
             max={40}
             min={4}
             onChange={(sectionSpacing) => updateSpacing({ sectionSpacing })}
@@ -226,6 +232,7 @@ function ResumeStyleEditor({ onStyleChange, style }: ResumeStyleEditorProps) {
           />
           <NumberField
             label="Block 间距"
+            layout="inline"
             max={24}
             min={2}
             onChange={(blockSpacing) => updateSpacing({ blockSpacing })}
@@ -234,6 +241,7 @@ function ResumeStyleEditor({ onStyleChange, style }: ResumeStyleEditorProps) {
           />
           <NumberField
             label="列表项间距"
+            layout="inline"
             max={18}
             min={0}
             onChange={(itemSpacing) => updateSpacing({ itemSpacing })}
@@ -244,9 +252,10 @@ function ResumeStyleEditor({ onStyleChange, style }: ResumeStyleEditorProps) {
       </Panel>
 
       <Panel title="页边距">
-        <div className="grid gap-2.5 md:grid-cols-2">
+        <div className="flex flex-col gap-2.5">
           <NumberField
             label="上"
+            layout="inline"
             max={90}
             min={16}
             onChange={(top) => updatePageMargin({ top })}
@@ -255,6 +264,7 @@ function ResumeStyleEditor({ onStyleChange, style }: ResumeStyleEditorProps) {
           />
           <NumberField
             label="右"
+            layout="inline"
             max={90}
             min={16}
             onChange={(right) => updatePageMargin({ right })}
@@ -263,6 +273,7 @@ function ResumeStyleEditor({ onStyleChange, style }: ResumeStyleEditorProps) {
           />
           <NumberField
             label="下"
+            layout="inline"
             max={90}
             min={16}
             onChange={(bottom) => updatePageMargin({ bottom })}
@@ -271,6 +282,7 @@ function ResumeStyleEditor({ onStyleChange, style }: ResumeStyleEditorProps) {
           />
           <NumberField
             label="左"
+            layout="inline"
             max={90}
             min={16}
             onChange={(left) => updatePageMargin({ left })}
@@ -285,8 +297,10 @@ function ResumeStyleEditor({ onStyleChange, style }: ResumeStyleEditorProps) {
 
 function Panel({ children, title }: { children: ReactNode; title: string }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-      <h3 className="mb-2.5 text-sm font-semibold text-slate-900">{title}</h3>
+    <section>
+      <h3 className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.07em] text-slate-400">
+        {title}
+      </h3>
       {children}
     </section>
   );
@@ -307,8 +321,9 @@ function SelectField<TValue extends string>({
 }) {
   return (
     <label className={cn("flex min-w-0 flex-col gap-1", className)}>
-      <span className="text-xs font-semibold text-slate-500">{label}</span>
+      <span className="text-[11px] font-semibold text-slate-500">{label}</span>
       <Select
+        className="h-8 rounded-[7px] border-slate-200 text-[12.5px]"
         aria-label={label}
         fullWidth
         onSelectionChange={(key) => {
@@ -317,9 +332,8 @@ function SelectField<TValue extends string>({
           }
         }}
         selectedKey={value}
-        variant="secondary"
       >
-        <Select.Trigger>
+        <Select.Trigger className="h-8 rounded-[7px] border-slate-200 text-[12.5px]">
           <Select.Value />
           <Select.Indicator />
         </Select.Trigger>
@@ -340,6 +354,7 @@ function SelectField<TValue extends string>({
 
 function NumberField({
   label,
+  layout = "stacked",
   max,
   min,
   onChange,
@@ -347,28 +362,35 @@ function NumberField({
   value,
 }: {
   label: string;
+  layout?: "inline" | "stacked";
   max: number;
   min: number;
   onChange: (value: number) => void;
   step: number;
   value: number;
 }) {
+  const isInline = layout === "inline";
+
   return (
-    <label className="flex min-w-0 flex-col gap-1">
-      <span className="text-xs font-semibold text-slate-500">{label}</span>
+    <label
+      className={cn(
+        "flex min-w-0 gap-1",
+        isInline ? "items-center justify-between gap-3" : "flex-col",
+      )}
+    >
+      <span className="text-[11px] font-semibold text-slate-500">{label}</span>
       <HeroNumberField
         aria-label={label}
-        fullWidth
+        className={cn(isInline ? "w-[132px]" : "w-full")}
         maxValue={max}
         minValue={min}
         onChange={onChange}
         step={step}
         value={value}
-        variant="secondary"
       >
-        <HeroNumberField.Group>
+        <HeroNumberField.Group className="h-8 w-full">
           <HeroNumberField.DecrementButton />
-          <HeroNumberField.Input />
+          <HeroNumberField.Input className="text-center text-[12.5px] font-medium" />
           <HeroNumberField.IncrementButton />
         </HeroNumberField.Group>
       </HeroNumberField>
@@ -385,24 +407,47 @@ function ColorField({
   onChange: (value: string) => void;
   value: string;
 }) {
+  const color = parseColor(value);
+
   return (
-    <label className="flex min-w-0 flex-col gap-1">
-      <span className="text-xs font-semibold text-slate-500">{label}</span>
-      <div className="flex gap-2">
-        <span
-          aria-label={`${label} color`}
-          className="h-8 w-10 shrink-0 rounded-lg border border-slate-200"
-          style={{ backgroundColor: value }}
-        />
-        <Input
-          aria-label={label}
-          fullWidth
-          onChange={(event) => onChange(event.target.value)}
-          value={value}
-          variant="secondary"
-        />
-      </div>
-    </label>
+    <div className="flex min-w-0 flex-col gap-1">
+      <span className="text-[11px] font-semibold text-slate-500">{label}</span>
+      <ColorPicker
+        aria-label={label}
+        onChange={(nextColor) => onChange(nextColor.toString("hex"))}
+        value={color}
+      >
+        <ColorPicker.Trigger className="flex h-8 w-full items-center gap-2 rounded-[7px] border border-slate-200 bg-white px-2.5 text-left text-[12px] text-slate-600 tabular-nums hover:bg-slate-50">
+          <ColorSwatch
+            className="h-[18px] w-[18px] shrink-0 rounded-[5px] border border-black/8"
+            color={color}
+          />
+          <span className="min-w-0 truncate">{value.toUpperCase()}</span>
+        </ColorPicker.Trigger>
+        <ColorPicker.Popover className="w-[232px] p-3">
+          <div className="flex flex-col gap-3">
+            <ColorArea
+              className="h-32 rounded-[8px]"
+              colorSpace="hsb"
+              xChannel="saturation"
+              yChannel="brightness"
+            >
+              <ColorArea.Thumb />
+            </ColorArea>
+            <ColorSlider channel="hue" colorSpace="hsb">
+              <ColorSlider.Track>
+                <ColorSlider.Thumb />
+              </ColorSlider.Track>
+            </ColorSlider>
+            <ColorSlider channel="alpha">
+              <ColorSlider.Track>
+                <ColorSlider.Thumb />
+              </ColorSlider.Track>
+            </ColorSlider>
+          </div>
+        </ColorPicker.Popover>
+      </ColorPicker>
+    </div>
   );
 }
 

@@ -152,7 +152,7 @@ function LoginPage() {
 
           {!isConfigured ? (
             <p className="mt-4 text-center text-sm font-medium text-slate-500">
-              Supabase 环境变量未配置，当前只能使用 mock/demo 模式。
+              登录服务未连接，当前只能使用演示模式。
             </p>
           ) : null}
 

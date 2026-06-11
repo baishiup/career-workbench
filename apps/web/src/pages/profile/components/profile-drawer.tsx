@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Alert, Button, Drawer, useOverlayState } from "@heroui/react";
-import { Save, X } from "lucide-react";
+import { Save } from "lucide-react";
 
 import { sectionMeta } from "@/pages/profile/data";
 import type {
@@ -133,15 +133,10 @@ function ProfileDrawer({
                   <Save className="size-4" />
                   {isSaving ? "保存中..." : "保存"}
                 </Button>
-                <Button
+                <Drawer.CloseTrigger
                   aria-label="关闭编辑抽屉"
-                  isIconOnly
-                  onPress={onClose}
-                  type="button"
-                  variant="tertiary"
-                >
-                  <X className="size-4" />
-                </Button>
+                  className="shrink-0"
+                />
               </div>
             </Drawer.Header>
             <Drawer.Body className="min-h-0 flex-1 overflow-y-auto px-5 py-5 text-slate-900">

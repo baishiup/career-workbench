@@ -16,20 +16,15 @@ import {
   FilePenLine,
   Loader2,
   MessageSquareText,
+  RotateCcw,
   Save,
   SlidersHorizontal,
 } from "lucide-react";
 
-import {
-  pillTabClassName,
-  pillTabIndicatorClassName,
-  pillTabListClassName,
-} from "@/components/workbench/surface-classes";
 import { saveResumeContent } from "@/lib/resumes/api";
 import type { ResumeFunctionRow } from "@/lib/resumes/types";
 import { cn } from "@/lib/utils";
 
-import { ResumeAiChatTab } from "./resume-ai-chat-tab";
 import { ResumeCanvasPreview } from "./resume-canvas-preview";
 import { ResumeFormEditor } from "./resume-form-editor";
 import { ResumeStyleEditor } from "./resume-style-editor";
@@ -45,18 +40,20 @@ type EditorTabItem = {
 type ResumeEditorWorkspaceProps = {
   className?: string;
   onSaved?: (resume: ResumeFunctionRow) => void;
+  previewSurface?: "canvas" | "flush";
   resume: ResumeFunctionRow;
 };
 
 const tabItems: EditorTabItem[] = [
-  { icon: FilePenLine, label: "editor", value: "editor" },
-  { icon: SlidersHorizontal, label: "style editor", value: "style" },
-  { icon: MessageSquareText, label: "AI 对话", value: "ai" },
+  { icon: FilePenLine, label: "内容", value: "editor" },
+  { icon: SlidersHorizontal, label: "样式", value: "style" },
+  { icon: MessageSquareText, label: "AI 助手", value: "ai" },
 ];
 
 function ResumeEditorWorkspace({
   className,
   onSaved,
+  previewSurface = "canvas",
   resume,
 }: ResumeEditorWorkspaceProps) {
   const initialDocument = useMemo(
@@ -82,6 +79,7 @@ function ResumeEditorWorkspace({
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
     initialDocument?.sections[0]?.id ?? null,
   );
+  const [sectionFocusSignal, setSectionFocusSignal] = useState(0);
 
   useEffect(() => {
     setDraftDocument(initialDocument);
@@ -140,6 +138,17 @@ function ResumeEditorWorkspace({
     }
   }
 
+  function handleRestoreUnsavedChanges() {
+    if (!isDirty || isSaving) {
+      return;
+    }
+
+    setDraftDocument(savedDocument);
+    setDraftStyle(savedStyle);
+    setSaveError(null);
+    setSelectedSectionId(savedDocument?.sections[0]?.id ?? null);
+  }
+
   useEffect(() => {
     if (!draftDocument) {
       setSelectedSectionId(null);
@@ -157,13 +166,19 @@ function ResumeEditorWorkspace({
 
   function handleEditWithAi(sectionId: string) {
     setSelectedSectionId(sectionId);
+    setSectionFocusSignal((current) => current + 1);
     setActiveTab("ai");
+  }
+
+  function handleSectionSelect(sectionId: string) {
+    setSelectedSectionId(sectionId);
+    setSectionFocusSignal((current) => current + 1);
   }
 
   return (
     <div
       className={cn(
-        "grid min-h-0 flex-1 auto-rows-[minmax(0,1fr)] grid-cols-1 gap-4 xl:grid-cols-[minmax(620px,1fr)_minmax(440px,520px)]",
+        "grid min-h-0 flex-1 auto-rows-[minmax(0,1fr)] grid-cols-1 gap-4 overflow-hidden xl:grid-cols-[minmax(620px,1fr)_minmax(440px,520px)]",
         className,
       )}
     >
@@ -171,48 +186,53 @@ function ResumeEditorWorkspace({
         <ResumeCanvasPreview
           document={draftDocument}
           onEditWithAi={handleEditWithAi}
-          onSectionSelect={setSelectedSectionId}
-          selectedSectionId={selectedSectionId}
+          onSectionSelect={handleSectionSelect}
+          surface={previewSurface}
           style={draftStyle}
         />
       </div>
 
-      <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-100/80 px-4 py-3">
+      <aside className="flex min-h-0 flex-col overflow-hidden bg-white">
+        <div className="flex shrink-0 items-center gap-2.5 border-b border-slate-200 bg-white px-3 py-2.5">
           <Tabs
+            className="min-w-0 flex-1"
             onSelectionChange={(key) => setActiveTab(String(key) as EditorTab)}
             selectedKey={activeTab}
           >
-            <Tabs.ListContainer>
+            <Tabs.ListContainer className="w-full">
               <Tabs.List
                 aria-label="简历编辑工具"
-                className={pillTabListClassName}
+                className="flex w-full gap-1 rounded-[10px] bg-slate-100 p-[3px]"
               >
                 {tabItems.map((item) => (
                   <Tabs.Tab
-                    className={pillTabClassName}
+                    className="flex h-8 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 text-[13px] font-semibold leading-5 text-slate-500 hover:text-slate-900 data-[selected=true]:text-blue-600"
                     id={item.value}
                     key={item.value}
                   >
-                    <item.icon aria-hidden="true" className="size-4" />
-                    <span>{item.label}</span>
-                    <Tabs.Indicator className={pillTabIndicatorClassName} />
+                    <item.icon aria-hidden="true" className="size-4 shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                    <Tabs.Indicator className="rounded-lg bg-white shadow-[0_1px_3px_rgba(15,23,42,0.12)]" />
                   </Tabs.Tab>
                 ))}
               </Tabs.List>
             </Tabs.ListContainer>
           </Tabs>
 
-          <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                "text-xs font-medium",
-                isDirty ? "text-amber-600" : "text-slate-400",
-              )}
-            >
-              {isSaving ? "保存中..." : isDirty ? "有未保存修改" : "已保存"}
-            </span>
+          <div className="flex shrink-0 items-center gap-2">
             <Button
+              className="h-8 w-[76px] justify-center rounded-lg"
+              isDisabled={!draftDocument || !isDirty || isSaving}
+              onPress={handleRestoreUnsavedChanges}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <RotateCcw className="size-4" />
+              还原
+            </Button>
+            <Button
+              className="h-8 w-[84px] justify-center rounded-lg"
               isDisabled={!draftDocument || !isDirty || isSaving}
               onPress={() => void handleSave()}
               size="sm"
@@ -239,28 +259,56 @@ function ResumeEditorWorkspace({
             </Alert>
           </div>
         ) : null}
-        <div className="min-h-0 flex-1 overflow-y-auto p-4">
-          {activeTab === "editor" ? (
-            draftDocument ? (
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <div
+            className={cn(
+              "h-full overflow-y-auto p-4",
+              activeTab !== "editor" && "hidden",
+            )}
+          >
+            {draftDocument ? (
               <ResumeFormEditor
                 document={draftDocument}
                 onDocumentChange={setDraftDocument}
+                sectionFocusSignal={sectionFocusSignal}
                 onSectionFocus={setSelectedSectionId}
                 selectedSectionId={selectedSectionId}
               />
             ) : (
               <InvalidDocumentAlert />
-            )
-          ) : null}
+            )}
+          </div>
 
-          {activeTab === "style" ? (
+          <div
+            className={cn(
+              "h-full overflow-y-auto p-4",
+              activeTab !== "style" && "hidden",
+            )}
+          >
             <ResumeStyleEditor
               onStyleChange={setDraftStyle}
               style={draftStyle}
             />
-          ) : null}
+          </div>
 
-          {activeTab === "ai" ? <ResumeAiChatTab /> : null}
+          <div
+            className={cn(
+              "h-full overflow-y-auto p-4",
+              activeTab !== "ai" && "hidden",
+            )}
+          >
+            <div className="flex min-h-[420px] flex-col items-center justify-center px-10 text-center">
+              <div className="mb-4 flex size-12 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-600">
+                <MessageSquareText className="size-6" />
+              </div>
+              <p className="text-sm font-semibold text-slate-900">
+                AI 助手即将上线
+              </p>
+              <p className="mt-1.5 max-w-[240px] text-xs leading-5 text-slate-400">
+                选中任意章节即可呼出 AI 帮你润色、改写与扩写。
+              </p>
+            </div>
+          </div>
         </div>
       </aside>
     </div>

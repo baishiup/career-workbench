@@ -234,7 +234,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
 
     if (!supabase) {
       set({
-        error: "Supabase 环境变量未配置完整。",
+        error: "登录服务未连接，无法继续。",
         isLoading: false,
         isProfileLoading: false,
       });

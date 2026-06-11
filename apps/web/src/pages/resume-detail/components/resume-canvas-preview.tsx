@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@heroui/react";
 import type {
   ResumeBlock,
@@ -17,7 +16,7 @@ type ResumeCanvasPreviewProps = {
   document: ResumeDocument | null;
   onEditWithAi: (sectionId: string) => void;
   onSectionSelect: (sectionId: string) => void;
-  selectedSectionId: string | null;
+  surface?: "canvas" | "flush";
   style: ResumeStyleConfig;
 };
 
@@ -30,10 +29,9 @@ function ResumeCanvasPreview({
   document,
   onEditWithAi,
   onSectionSelect,
-  selectedSectionId,
+  surface = "canvas",
   style,
 }: ResumeCanvasPreviewProps) {
-  const [hoveredSectionId, setHoveredSectionId] = useState<string | null>(null);
   const pageSize = pageSizes[style.pageSize] ?? pageSizes.a4;
 
   if (!document) {
@@ -45,9 +43,18 @@ function ResumeCanvasPreview({
   }
 
   return (
-    <div className="h-full overflow-auto rounded-xl bg-slate-200/70 px-4 py-6">
+    <div
+      className={cn(
+        "flex h-full items-start justify-center overflow-auto px-8 py-9",
+        surface === "canvas" ? "rounded-xl bg-[#eef1f6]" : "bg-[#eef1f6]",
+      )}
+    >
       <article
-        className="relative mx-auto max-w-full border border-slate-300 bg-white shadow-[0_18px_46px_rgba(15,23,42,0.16)]"
+        className={cn(
+          "relative mx-auto max-w-full bg-white",
+          surface === "canvas" &&
+            "rounded-[3px] border border-slate-200 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_18px_50px_rgba(15,23,42,0.13)]",
+        )}
         style={{
           background: style.colors.background,
           color: style.colors.text,
@@ -62,28 +69,6 @@ function ResumeCanvasPreview({
           width: pageSize.width,
         }}
       >
-        <header
-          className="mb-4 border-b pb-3"
-          style={{ borderColor: style.colors.border }}
-        >
-          <h2
-            className="font-semibold"
-            style={{
-              color: style.colors.text,
-              fontSize: style.typography.headingFontSize + 3,
-            }}
-          >
-            {document.title}
-          </h2>
-          {document.target?.title || document.target?.company ? (
-            <p className="mt-1" style={{ color: style.colors.mutedText }}>
-              {[document.target.title, document.target.company]
-                .filter(Boolean)
-                .join(" / ")}
-            </p>
-          ) : null}
-        </header>
-
         <div
           className="flex flex-col"
           style={{ gap: style.spacing.sectionSpacing }}
@@ -92,13 +77,10 @@ function ResumeCanvasPreview({
             .filter((section) => section.visible)
             .map((section) => (
               <PreviewSection
-                hoveredSectionId={hoveredSectionId}
                 key={section.id}
                 onEditWithAi={onEditWithAi}
                 onSectionSelect={onSectionSelect}
                 section={section}
-                selectedSectionId={selectedSectionId}
-                setHoveredSectionId={setHoveredSectionId}
                 style={style}
               />
             ))}
@@ -109,36 +91,20 @@ function ResumeCanvasPreview({
 }
 
 function PreviewSection({
-  hoveredSectionId,
   onEditWithAi,
   onSectionSelect,
   section,
-  selectedSectionId,
-  setHoveredSectionId,
   style,
 }: {
-  hoveredSectionId: string | null;
   onEditWithAi: (sectionId: string) => void;
   onSectionSelect: (sectionId: string) => void;
   section: ResumeSection;
-  selectedSectionId: string | null;
-  setHoveredSectionId: (sectionId: string | null) => void;
   style: ResumeStyleConfig;
 }) {
-  const isActive = selectedSectionId === section.id;
-  const isHovered = hoveredSectionId === section.id;
-
   return (
     <section
-      className={cn(
-        "group relative -mx-2 rounded-lg border px-2 py-2 transition",
-        isActive || isHovered
-          ? "border-blue-400/70 bg-blue-50/55"
-          : "border-transparent",
-      )}
+      className="group relative -mx-2 rounded-lg border border-transparent px-2 py-2 transition-colors hover:border-blue-300"
       onClick={() => onSectionSelect(section.id)}
-      onMouseEnter={() => setHoveredSectionId(section.id)}
-      onMouseLeave={() => setHoveredSectionId(null)}
     >
       <div className="pointer-events-none absolute -right-2 -top-3 opacity-0 transition group-hover:pointer-events-auto group-hover:opacity-100">
         <Button
@@ -147,8 +113,7 @@ function PreviewSection({
           type="button"
           variant="primary"
         >
-          <WandSparkles className="size-3.5" />
-          Edit with AI
+          <WandSparkles className="size-3.5" />用 AI 编辑
         </Button>
       </div>
 
@@ -223,10 +188,10 @@ function PreviewBlock({
   if (block.kind === "tagList") {
     return (
       <div className="flex flex-wrap gap-1.5">
-        {block.tags.map((tag) => (
+        {block.tags.map((tag, index) => (
           <span
             className="rounded border px-2 py-0.5 font-medium"
-            key={tag}
+            key={`${block.id}-tag-${index}-${tag}`}
             style={{
               borderColor: style.colors.border,
               color: style.colors.accent,

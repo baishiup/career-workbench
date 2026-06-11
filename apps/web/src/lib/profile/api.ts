@@ -96,7 +96,7 @@ async function fetchProfileFromSupabase(userId: string) {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new Error("Supabase 环境变量未配置完整。");
+    throw new Error("数据服务未连接，无法读取资料。");
   }
 
   const { data: userRow, error: userError } = await supabase
@@ -129,7 +129,7 @@ async function saveProfileToSupabase(userId: string, profile: ProfileDraft) {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new Error("Supabase 环境变量未配置完整。");
+    throw new Error("数据服务未连接，无法保存资料。");
   }
 
   const { error } = await supabase.from("profiles").upsert(

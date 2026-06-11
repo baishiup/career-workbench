@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Button, Tabs } from "@heroui/react";
+import { Dropdown, Tabs } from "@heroui/react";
 import type { User } from "@supabase/supabase-js";
 import { ChevronDown, LogOut } from "lucide-react";
 
@@ -15,14 +14,12 @@ import {
 import type { AuthProfile } from "@/lib/auth-store";
 import { useAuthStore } from "@/lib/auth-store";
 import { navigateTo, usePathname } from "@/lib/router";
-import { cn } from "@/lib/utils";
 
 function TopNav({ items }: { items: WorkbenchNavItem[] }) {
   const pathname = usePathname();
   const profile = useAuthStore((state) => state.profile);
   const signOut = useAuthStore((state) => state.signOut);
   const user = useAuthStore((state) => state.user);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const fallbackItem = items[0];
   const activeValue =
     items.find((item) => {
@@ -80,44 +77,34 @@ function TopNav({ items }: { items: WorkbenchNavItem[] }) {
         </nav>
 
         <div className="flex items-center justify-end gap-2">
-          <div className="relative">
-            <Button
-              aria-expanded={isUserMenuOpen}
-              className="flex h-8 items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] font-medium leading-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-400/35"
-              onPress={() => setIsUserMenuOpen((open) => !open)}
-              type="button"
-              variant="tertiary"
-            >
-              <UserAvatar profile={profile} user={user} />
-              <span className="hidden max-w-32 truncate text-sm font-medium sm:inline">
-                {getUserDisplayName(user, profile)}
+          <Dropdown>
+            <Dropdown.Trigger className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] font-medium leading-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-400/35">
+              <span className="flex items-center gap-2">
+                <UserAvatar profile={profile} user={user} />
+                <span className="hidden max-w-32 truncate text-sm font-medium sm:inline">
+                  {getUserDisplayName(user, profile)}
+                </span>
+                <ChevronDown aria-hidden="true" className="size-4" />
               </span>
-              <ChevronDown
-                aria-hidden="true"
-                className={cn(
-                  "size-4 transition-transform",
-                  isUserMenuOpen ? "rotate-180" : "",
-                )}
-              />
-            </Button>
-
-            {isUserMenuOpen ? (
-              <div className="absolute right-0 top-10 z-30 w-48 rounded-lg border border-slate-200 bg-white p-1 shadow-[0_12px_28px_rgba(15,23,42,0.14)]">
-                <Button
-                  className="flex h-9 w-full items-center gap-2 rounded-md px-2.5 text-left text-sm font-medium text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/30"
-                  onPress={() => {
-                    setIsUserMenuOpen(false);
+            </Dropdown.Trigger>
+            <Dropdown.Popover className="min-w-40" placement="bottom end">
+              <Dropdown.Menu
+                aria-label="用户菜单"
+                onAction={(key) => {
+                  if (key === "sign-out") {
                     void signOut();
-                  }}
-                  type="button"
-                  variant="tertiary"
-                >
-                  <LogOut className="size-4" />
-                  退出登录
-                </Button>
-              </div>
-            ) : null}
-          </div>
+                  }
+                }}
+              >
+                <Dropdown.Item id="sign-out" textValue="退出登录">
+                  <span className="flex items-center gap-2">
+                    <LogOut className="size-4" />
+                    <span>退出登录</span>
+                  </span>
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown>
         </div>
       </div>
     </div>

@@ -2,15 +2,14 @@
 
 import type { ChangeEvent, ReactNode, RefObject } from "react";
 import { useRef, useState } from "react";
-import { Button, Input, ProgressBar } from "@heroui/react";
-import { ArrowRight, Check, FileText, Loader2, Upload } from "lucide-react";
+import { Button, Checkbox, Input, ProgressBar } from "@heroui/react";
+import { ArrowRight, FileText, Loader2, Upload } from "lucide-react";
 
 import { OnboardingAside } from "@/components/onboarding/onboarding-aside";
 import { emptyProfile, jobTypeOptions } from "@/pages/profile/data";
 import { completeOnboardingWithResume } from "@/lib/resumes/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { navigateTo } from "@/lib/router";
-import { cn } from "@/lib/utils";
 import { useWorkbenchStore } from "@/lib/workbench-store";
 import type { JobPreferences, ProfileDraft } from "@career-workbench/domain";
 
@@ -74,9 +73,7 @@ export function OnboardingFlow() {
     const isComplete = await completeProfileOnboarding(nextProfile);
 
     if (!isComplete) {
-      setCompletionError(
-        "保存 onboarding 状态失败，请确认 Supabase profiles 表和 RLS 已配置。",
-      );
+      setCompletionError("保存引导状态失败，请稍后重试或联系管理员。");
       setIsCompleting(false);
       setIsParsing(false);
       return;
@@ -234,7 +231,7 @@ function PreferenceStep({
               checked={preferences.jobTypes.includes(jobType)}
               key={jobType}
               label={jobType}
-              onClick={() => updateJobType(jobType)}
+              onChange={() => updateJobType(jobType)}
             />
           ))}
         </div>
@@ -359,27 +356,22 @@ function FieldGroup({
 function CheckOption({
   checked,
   label,
-  onClick,
+  onChange,
 }: {
   checked: boolean;
   label: string;
-  onClick: () => void;
+  onChange: () => void;
 }) {
   return (
-    <Button
-      onPress={onClick}
-      type="button"
-      variant={checked ? "secondary" : "tertiary"}
+    <Checkbox
+      className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 transition hover:border-emerald-300"
+      isSelected={checked}
+      onChange={onChange}
     >
-      <span
-        className={cn(
-          "flex size-5 shrink-0 items-center justify-center rounded border border-slate-200 bg-white",
-          checked ? "border-emerald-600 bg-emerald-600 text-white" : "",
-        )}
-      >
-        {checked ? <Check className="size-3.5" /> : null}
-      </span>
-      <span>{label}</span>
-    </Button>
+      <Checkbox.Control>
+        <Checkbox.Indicator />
+      </Checkbox.Control>
+      <Checkbox.Content>{label}</Checkbox.Content>
+    </Checkbox>
   );
 }

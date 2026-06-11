@@ -5,9 +5,8 @@ import {
   Button,
   Card,
   Chip,
-  Drawer,
+  Link as HeroLink,
   ProgressBar,
-  useOverlayState,
 } from "@heroui/react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -16,6 +15,7 @@ import {
   Building2,
   CalendarDays,
   CheckCircle2,
+  Eye,
   ExternalLink,
   FileText,
   Globe2,
@@ -28,7 +28,6 @@ import {
   RefreshCw,
   Sparkles,
   Target,
-  X,
 } from "lucide-react";
 
 import Link from "@/components/router-link";
@@ -49,7 +48,10 @@ import {
 } from "@/lib/jobs/labels";
 import type { JobRecord } from "@/lib/jobs/types";
 import { useProfileDraft } from "@/lib/profile/use-profile-draft";
-import { generateTargetJobResume } from "@/lib/resumes/api";
+import {
+  generateTargetJobResume,
+  getLatestTargetJobResume,
+} from "@/lib/resumes/api";
 import type { ResumeFunctionRow } from "@/lib/resumes/types";
 import {
   computeRuleMatch,
@@ -57,7 +59,7 @@ import {
   type RuleMatchResult,
 } from "@career-workbench/domain";
 
-import { ResumeEditorWorkspace } from "@/pages/resume-detail/components/resume-editor-workspace";
+import { ResumeEditorDrawer } from "@/pages/resume-detail/components/resume-editor-drawer";
 import { MatchReportCard } from "./components/match-report-card";
 import { useMatchReport, type UseMatchReportResult } from "./use-match-report";
 
@@ -70,8 +72,15 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
   const [toggleError, setToggleError] = useState<string | null>(null);
   const [isGeneratingResume, setIsGeneratingResume] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
-  const [generatedResume, setGeneratedResume] =
+  const [targetJobResume, setTargetJobResume] =
     useState<ResumeFunctionRow | null>(null);
+  const [openedResume, setOpenedResume] = useState<ResumeFunctionRow | null>(
+    null,
+  );
+  const [isLoadingTargetResume, setIsLoadingTargetResume] = useState(true);
+  const [targetResumeError, setTargetResumeError] = useState<string | null>(
+    null,
+  );
   const { profile, isLoading: isProfileLoading } = useProfileDraft();
 
   const ruleMatch = useMemo(() => {
@@ -93,10 +102,10 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
 
   const canGenerateResume =
     matchReport.report?.status === "succeeded" && !matchReport.isStale;
+  const hasTargetJobResume = Boolean(targetJobResume);
 
   const handleGenerateResume = async () => {
     setGenerateError(null);
-    setGeneratedResume(null);
 
     if (!ruleMatch) {
       navigateTo("/profile");
@@ -114,7 +123,8 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
 
     try {
       const result = await generateTargetJobResume(jobId);
-      setGeneratedResume(result.resume);
+      setTargetJobResume(result.resume);
+      setOpenedResume(result.resume);
     } catch (error) {
       setGenerateError(
         error instanceof Error ? error.message : "生成定制简历失败。",
@@ -145,7 +155,38 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
   }, [loadJob]);
 
   useEffect(() => {
-    setGeneratedResume(null);
+    let didCancel = false;
+
+    async function loadTargetJobResume() {
+      setIsLoadingTargetResume(true);
+      setTargetResumeError(null);
+      setTargetJobResume(null);
+      setOpenedResume(null);
+
+      try {
+        const resume = await getLatestTargetJobResume(jobId);
+
+        if (!didCancel) {
+          setTargetJobResume(resume);
+        }
+      } catch (error) {
+        if (!didCancel) {
+          setTargetResumeError(
+            error instanceof Error ? error.message : "读取职位定制简历失败。",
+          );
+        }
+      } finally {
+        if (!didCancel) {
+          setIsLoadingTargetResume(false);
+        }
+      }
+    }
+
+    void loadTargetJobResume();
+
+    return () => {
+      didCancel = true;
+    };
   }, [jobId]);
 
   if (isLoading) {
@@ -307,6 +348,7 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
           <MatchScorePanel
             generationActionLabel={getGenerationActionLabel({
               canGenerateResume,
+              hasTargetJobResume,
               isGeneratingResume,
               isLoadingReport: matchReport.isLoading,
               isRunningAnalysis: matchReport.isRunning,
@@ -315,15 +357,25 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
             })}
             isGeneratingResume={isGeneratingResume}
             isGenerationActionDisabled={
-              matchReport.isLoading ||
-              matchReport.isRunning ||
-              isGeneratingResume
+              hasTargetJobResume
+                ? false
+                : matchReport.isLoading ||
+                  matchReport.isRunning ||
+                  isGeneratingResume
             }
             isProfileLoading={isProfileLoading}
             isRunningAnalysis={matchReport.isRunning}
             match={ruleMatch}
-            onGenerateResume={() => void handleGenerateResume()}
+            onGenerateResume={() => {
+              if (targetJobResume) {
+                setOpenedResume(targetJobResume);
+                return;
+              }
+
+              void handleGenerateResume();
+            }}
             onRunAnalysis={handleRunAnalysis}
+            hasTargetJobResume={hasTargetJobResume}
           />
         </div>
 
@@ -337,7 +389,7 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
                 </Card.Description>
                 {job.sourceUrl ? (
                   <div className="ml-auto">
-                    <a
+                    <HeroLink
                       className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-400/35"
                       href={job.sourceUrl}
                       rel="noreferrer"
@@ -345,7 +397,7 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
                     >
                       <ExternalLink data-icon="inline-start" />
                       原始链接
-                    </a>
+                    </HeroLink>
                   </div>
                 ) : null}
               </Card.Header>
@@ -430,9 +482,17 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
               canRunAnalysis={Boolean(ruleMatch)}
               generateError={generateError}
               isGeneratingResume={isGeneratingResume}
+              isLoadingTargetResume={isLoadingTargetResume}
               matchReport={matchReport}
               onGenerate={() => void handleGenerateResume()}
               onOpenProfile={() => navigateTo("/profile")}
+              onOpenResume={() => {
+                if (targetJobResume) {
+                  setOpenedResume(targetJobResume);
+                }
+              }}
+              targetResume={targetJobResume}
+              targetResumeError={targetResumeError}
             />
 
             <Card className={panelClassName}>
@@ -452,75 +512,12 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
           </aside>
         </div>
       </section>
-      <GeneratedResumeDrawer
-        onClose={() => setGeneratedResume(null)}
-        open={Boolean(generatedResume)}
-        resume={generatedResume}
+      <ResumeEditorDrawer
+        onClose={() => setOpenedResume(null)}
+        open={Boolean(openedResume)}
+        resume={openedResume}
       />
     </>
-  );
-}
-
-function GeneratedResumeDrawer({
-  onClose,
-  open,
-  resume,
-}: {
-  onClose: () => void;
-  open: boolean;
-  resume: ResumeFunctionRow | null;
-}) {
-  const drawerState = useOverlayState({
-    isOpen: open,
-    onOpenChange: (nextOpen) => {
-      if (!nextOpen) {
-        onClose();
-      }
-    },
-  });
-
-  return (
-    <Drawer state={drawerState}>
-      <Drawer.Backdrop isDismissable>
-        <Drawer.Content className="justify-end" placement="right">
-          <Drawer.Dialog className="flex h-dvh w-[min(1280px,100vw)] max-w-[100vw] flex-col border-l border-slate-200 bg-white p-0 shadow-2xl sm:w-[min(1280px,96vw)]">
-            <Drawer.Header className="shrink-0 flex-row items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
-              <div className="min-w-0">
-                <div className="flex min-w-0 items-center gap-2">
-                  <Drawer.Heading className="truncate text-lg font-semibold">
-                    {resume?.title ?? "定制简历"}
-                  </Drawer.Heading>
-                  <Chip color="default" size="sm" variant="soft">
-                    本地联动
-                  </Chip>
-                </div>
-                <p className="mt-1 text-sm font-normal text-slate-500">
-                  当前修改只存在于侧滑编辑器内，离开后会丢弃，不写入 Supabase。
-                </p>
-              </div>
-              <Button
-                aria-label="关闭简历编辑器"
-                isIconOnly
-                onPress={onClose}
-                type="button"
-                variant="tertiary"
-              >
-                <X className="size-4" />
-              </Button>
-            </Drawer.Header>
-            <Drawer.Body className="min-h-0 flex-1 overflow-hidden bg-slate-100 p-4 text-slate-900">
-              {resume ? (
-                <ResumeEditorWorkspace
-                  className="h-full"
-                  key={resume.id}
-                  resume={resume}
-                />
-              ) : null}
-            </Drawer.Body>
-          </Drawer.Dialog>
-        </Drawer.Content>
-      </Drawer.Backdrop>
-    </Drawer>
   );
 }
 
@@ -541,6 +538,7 @@ function DetailShell({ children }: { children: React.ReactNode }) {
 
 function MatchScorePanel({
   generationActionLabel,
+  hasTargetJobResume,
   isGeneratingResume,
   isGenerationActionDisabled,
   isProfileLoading,
@@ -550,6 +548,7 @@ function MatchScorePanel({
   onRunAnalysis,
 }: {
   generationActionLabel: string;
+  hasTargetJobResume: boolean;
   isGeneratingResume: boolean;
   isGenerationActionDisabled: boolean;
   isProfileLoading: boolean;
@@ -628,6 +627,8 @@ function MatchScorePanel({
         >
           {isGeneratingResume ? (
             <Loader2 className="size-4 animate-spin" />
+          ) : hasTargetJobResume ? (
+            <Eye data-icon="inline-start" />
           ) : (
             <Sparkles data-icon="inline-start" />
           )}
@@ -643,20 +644,29 @@ function TargetResumeCard({
   canRunAnalysis,
   generateError,
   isGeneratingResume,
+  isLoadingTargetResume,
   matchReport,
   onGenerate,
   onOpenProfile,
+  onOpenResume,
+  targetResume,
+  targetResumeError,
 }: {
   canGenerateResume: boolean;
   canRunAnalysis: boolean;
   generateError: string | null;
   isGeneratingResume: boolean;
+  isLoadingTargetResume: boolean;
   matchReport: UseMatchReportResult;
   onGenerate: () => void;
   onOpenProfile: () => void;
+  onOpenResume: () => void;
+  targetResume: ResumeFunctionRow | null;
+  targetResumeError: string | null;
 }) {
   const actionLabel = getGenerationActionLabel({
     canGenerateResume,
+    hasTargetJobResume: Boolean(targetResume),
     isGeneratingResume,
     isLoadingReport: matchReport.isLoading,
     isRunningAnalysis: matchReport.isRunning,
@@ -675,7 +685,12 @@ function TargetResumeCard({
       <Card.Content className="flex flex-col gap-3">
         <div className={cn(softPanelClassName, "p-3")}>
           <div className="flex items-start gap-2">
-            {canGenerateResume ? (
+            {targetResume ? (
+              <FileText
+                aria-hidden="true"
+                className="mt-0.5 size-4 shrink-0 text-blue-600"
+              />
+            ) : canGenerateResume ? (
               <CheckCircle2
                 aria-hidden="true"
                 className="mt-0.5 size-4 shrink-0 text-emerald-600"
@@ -688,20 +703,65 @@ function TargetResumeCard({
             )}
             <div>
               <p className="text-sm font-medium">
-                {canGenerateResume ? "可生成草稿" : "需要匹配分析"}
+                {targetResume
+                  ? "已生成定制简历"
+                  : canGenerateResume
+                    ? "可生成草稿"
+                    : "需要匹配分析"}
               </p>
               <p className="mt-1 text-sm leading-5 text-slate-500">
-                {getGenerationBodyText()}
+                {targetResume
+                  ? getTargetResumeBodyText()
+                  : getGenerationBodyText()}
               </p>
             </div>
           </div>
         </div>
 
+        {isLoadingTargetResume ? (
+          <p className="inline-flex items-center gap-2 text-sm text-slate-500">
+            <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+            正在检查这个职位是否已有定制简历...
+          </p>
+        ) : null}
+
+        {targetResumeError ? (
+          <p className="text-sm leading-5 text-red-600">{targetResumeError}</p>
+        ) : null}
+
         {generateError ? (
           <p className="text-sm leading-5 text-red-600">{generateError}</p>
         ) : null}
 
-        {canRunAnalysis ? (
+        {targetResume ? (
+          <div className="grid gap-2">
+            <Button
+              fullWidth
+              onPress={onOpenResume}
+              type="button"
+              variant="primary"
+            >
+              <Eye className="size-4" />
+              查看已生成简历
+            </Button>
+            {canGenerateResume ? (
+              <Button
+                fullWidth
+                isDisabled={isBusy}
+                onPress={onGenerate}
+                type="button"
+                variant="outline"
+              >
+                {isGeneratingResume ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="size-4" />
+                )}
+                重新生成
+              </Button>
+            ) : null}
+          </div>
+        ) : canRunAnalysis ? (
           <Button
             fullWidth
             isDisabled={isBusy}
@@ -731,6 +791,14 @@ function TargetResumeCard({
   );
 
   function getGenerationDescription() {
+    if (targetResume) {
+      return "可直接查看";
+    }
+
+    if (isLoadingTargetResume) {
+      return "正在检查已有简历";
+    }
+
     if (isGeneratingResume) {
       return "正在调用 resume_generate";
     }
@@ -769,10 +837,19 @@ function TargetResumeCard({
 
     return "将基于当前 Profile、结构化 JD 和匹配报告生成 target job 简历草稿。";
   }
+
+  function getTargetResumeBodyText() {
+    const updatedAt = formatDateTime(targetResume?.updated_at ?? null);
+
+    return `「${targetResume?.title ?? "定制简历"}」已关联到当前职位${
+      updatedAt ? `，最近更新 ${updatedAt}` : ""
+    }。`;
+  }
 }
 
 function getGenerationActionLabel({
   canGenerateResume,
+  hasTargetJobResume,
   isGeneratingResume,
   isLoadingReport,
   isRunningAnalysis,
@@ -780,12 +857,17 @@ function getGenerationActionLabel({
   reportStale,
 }: {
   canGenerateResume: boolean;
+  hasTargetJobResume: boolean;
   isGeneratingResume: boolean;
   isLoadingReport: boolean;
   isRunningAnalysis: boolean;
   reportStatus: string | null;
   reportStale: boolean;
 }) {
+  if (hasTargetJobResume) {
+    return "查看简历";
+  }
+
   if (isGeneratingResume) {
     return "生成中…";
   }
@@ -811,6 +893,25 @@ function getGenerationActionLabel({
   }
 
   return "先运行分析";
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("zh-CN", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "2-digit",
+  }).format(date);
 }
 
 function Fact({

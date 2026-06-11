@@ -131,9 +131,7 @@ async function runJobMatchAnalysis(
     const mockReport = buildMockContext(jobId).report;
 
     if (!mockReport) {
-      throw new MatchReportApiError(
-        "Supabase 未配置，当前职位也没有本地演示报告。",
-      );
+      throw new MatchReportApiError("数据服务未连接，当前职位也没有演示报告。");
     }
 
     return mockReport;

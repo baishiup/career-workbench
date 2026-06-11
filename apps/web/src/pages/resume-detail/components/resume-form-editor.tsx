@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Button,
   Checkbox,
@@ -24,6 +24,7 @@ import {
   ChevronUp,
   Eye,
   EyeOff,
+  GripVertical,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -33,35 +34,76 @@ import { cn } from "@/lib/utils";
 type ResumeFormEditorProps = {
   document: ResumeDocument;
   onDocumentChange: (document: ResumeDocument) => void;
+  sectionFocusSignal: number;
   onSectionFocus: (sectionId: string) => void;
   selectedSectionId: string | null;
 };
 
 const sectionKindLabels: Record<ResumeSectionKind, string> = {
-  custom: "Custom",
-  education: "Education",
-  personal: "Personal",
-  projects: "Projects",
-  skills: "Skills",
-  summary: "Summary",
-  work: "Work",
+  custom: "自定义",
+  education: "教育背景",
+  personal: "个人信息",
+  projects: "项目",
+  skills: "技能",
+  summary: "简介",
+  work: "工作经历",
 };
 
 const blockKindLabels: Record<ResumeBlockKind, string> = {
-  bulletList: "Bullet List",
-  dateRange: "Date Range",
-  linkList: "Link List",
-  paragraph: "Paragraph",
-  tagList: "Tag List",
-  text: "Text",
+  bulletList: "要点列表",
+  dateRange: "日期区间",
+  linkList: "链接",
+  paragraph: "段落",
+  tagList: "标签",
+  text: "文本",
+};
+
+const blockBarColor: Record<ResumeBlockKind, string> = {
+  bulletList: "bg-violet-600",
+  dateRange: "bg-teal-600",
+  linkList: "bg-sky-500",
+  paragraph: "bg-blue-600",
+  tagList: "bg-amber-500",
+  text: "bg-blue-600",
 };
 
 function ResumeFormEditor({
   document,
   onDocumentChange,
+  sectionFocusSignal,
   onSectionFocus,
   selectedSectionId,
 }: ResumeFormEditorProps) {
+  const sectionRefs = useRef(new Map<string, HTMLElement>());
+
+  useEffect(() => {
+    if (!selectedSectionId || sectionFocusSignal <= 0) {
+      return;
+    }
+
+    const sectionElement = sectionRefs.current.get(selectedSectionId);
+
+    if (!sectionElement) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      sectionElement.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }, [sectionFocusSignal, selectedSectionId]);
+
+  function setSectionRef(sectionId: string, node: HTMLElement | null) {
+    if (node) {
+      sectionRefs.current.set(sectionId, node);
+      return;
+    }
+
+    sectionRefs.current.delete(sectionId);
+  }
+
   function updateDocument(patch: Partial<ResumeDocument>) {
     onDocumentChange({ ...document, ...patch });
   }
@@ -119,9 +161,12 @@ function ResumeFormEditor({
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="rounded-xl border border-slate-200 bg-white p-3">
-        <div className="grid gap-2.5 md:grid-cols-2">
+    <div className="flex flex-col gap-5">
+      <section>
+        <div className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.07em] text-slate-400">
+          简历信息
+        </div>
+        <div className="grid grid-cols-[minmax(0,1fr)_116px] gap-2.5">
           <TextField
             label="简历名称"
             onChange={(title) => updateDocument({ title })}
@@ -133,13 +178,26 @@ function ResumeFormEditor({
             value={document.locale}
           />
         </div>
-      </div>
+      </section>
 
-      <div className="flex items-center justify-between gap-3 pt-1">
-        <h3 className="text-sm font-semibold text-slate-900">Sections</h3>
-        <Button onPress={addSection} size="sm" type="button" variant="outline">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.07em] text-slate-400">
+            章节
+          </h3>
+          <span className="text-[11px] font-semibold text-slate-300">
+            {document.sections.length}
+          </span>
+        </div>
+        <Button
+          className="rounded-[7px] border border-blue-100 bg-blue-50 px-2.5 py-1.5 text-[12px] font-semibold text-blue-600 hover:bg-blue-100"
+          onPress={addSection}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
           <Plus className="size-4" />
-          添加 Section
+          添加章节
         </Button>
       </div>
 
@@ -154,6 +212,7 @@ function ResumeFormEditor({
           onMoveDown={() => moveSection(index, index + 1)}
           onMoveUp={() => moveSection(index, index - 1)}
           onReplace={replaceSection}
+          onSectionRef={(node) => setSectionRef(section.id, node)}
           onUpdate={(patch) => updateSection(section.id, patch)}
           section={section}
         />
@@ -171,6 +230,7 @@ function SectionEditor({
   onMoveDown,
   onMoveUp,
   onReplace,
+  onSectionRef,
   onUpdate,
   section,
 }: {
@@ -182,6 +242,7 @@ function SectionEditor({
   onMoveDown: () => void;
   onMoveUp: () => void;
   onReplace: (section: ResumeSection) => void;
+  onSectionRef: (node: HTMLElement | null) => void;
   onUpdate: (patch: Partial<ResumeSection>) => void;
   section: ResumeSection;
 }) {
@@ -210,56 +271,69 @@ function SectionEditor({
     });
   }
 
+  if (!isSelected) {
+    return (
+      <section
+        className="flex cursor-pointer items-center gap-2.5 rounded-[10px] border border-slate-200 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-colors hover:border-blue-300"
+        onClick={onFocus}
+        onFocus={onFocus}
+        ref={onSectionRef}
+      >
+        <GripVertical className="size-3.5 text-slate-300" />
+        <span className="flex-1 truncate text-[13px] font-semibold text-slate-900">
+          {section.title || sectionKindLabels[section.kind]}
+        </span>
+        <span className="rounded-[5px] bg-slate-100 px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.05em] text-slate-400">
+          {sectionKindLabels[section.kind]}
+        </span>
+        <ChevronDown className="size-[15px] text-slate-300" />
+      </section>
+    );
+  }
+
   return (
     <section
-      className={cn(
-        "rounded-xl border bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]",
-        isSelected
-          ? "border-blue-400 ring-3 ring-blue-400/20"
-          : "border-slate-200",
-      )}
+      className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors hover:border-blue-300"
+      onClick={onFocus}
       onFocus={onFocus}
+      ref={onSectionRef}
     >
-      <div className="mb-3 flex flex-col gap-2.5">
-        <div className="flex items-center justify-between gap-3">
-          <Button
-            className="min-w-0 text-left text-sm font-semibold text-slate-900"
-            onPress={onFocus}
-            type="button"
-            variant="tertiary"
-          >
-            {section.title || sectionKindLabels[section.kind]}
-          </Button>
-          <div className="flex shrink-0 items-center gap-1">
-            <IconButton
-              icon={section.visible ? Eye : EyeOff}
-              label={section.visible ? "隐藏 section" : "显示 section"}
-              onPress={() => onUpdate({ visible: !section.visible })}
-            />
-            <IconButton
-              disabled={!canMoveUp}
-              icon={ChevronUp}
-              label="上移 section"
-              onPress={onMoveUp}
-            />
-            <IconButton
-              disabled={!canMoveDown}
-              icon={ChevronDown}
-              label="下移 section"
-              onPress={onMoveDown}
-            />
-            <IconButton
-              icon={Trash2}
-              label="删除 section"
-              onPress={onDelete}
-              variant="danger-soft"
-            />
-          </div>
+      <div className="flex items-center gap-2.5 border-b border-slate-100 bg-slate-50 px-3 py-2.5">
+        <GripVertical className="size-3.5 text-slate-400" />
+        <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-slate-900">
+          {section.title || sectionKindLabels[section.kind]}
+        </span>
+        <div className="flex shrink-0 items-center gap-1">
+          <IconButton
+            icon={section.visible ? Eye : EyeOff}
+            label={section.visible ? "隐藏 section" : "显示 section"}
+            onPress={() => onUpdate({ visible: !section.visible })}
+          />
+          <IconButton
+            disabled={!canMoveUp}
+            icon={ChevronUp}
+            label="上移 section"
+            onPress={onMoveUp}
+          />
+          <IconButton
+            disabled={!canMoveDown}
+            icon={ChevronDown}
+            label="下移 section"
+            onPress={onMoveDown}
+          />
+          <IconButton
+            icon={Trash2}
+            label="删除 section"
+            onPress={onDelete}
+            variant="danger-soft"
+          />
         </div>
+      </div>
 
-        <div className="grid gap-2.5 md:grid-cols-[minmax(0,1fr)_150px]">
+      <div className="flex flex-col gap-3 p-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_132px] gap-2.5">
           <TextField
-            label="Section 标题"
+            label="章节标题"
             onChange={(title) => onUpdate({ title })}
             value={section.title}
           />
@@ -270,31 +344,38 @@ function SectionEditor({
             value={section.kind}
           />
         </div>
-      </div>
 
-      <div className="flex flex-col gap-2">
-        {section.blocks.map((block) => (
-          <BlockEditor
-            block={block}
-            key={block.id}
-            onDelete={() => deleteBlock(block.id)}
-            onUpdate={(nextBlock) => updateBlock(block.id, nextBlock)}
+        <div className="flex flex-col gap-2">
+          {section.blocks.map((block) => (
+            <BlockEditor
+              block={block}
+              key={block.id}
+              onDelete={() => deleteBlock(block.id)}
+              onUpdate={(nextBlock) => updateBlock(block.id, nextBlock)}
+            />
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2 rounded-[9px] border border-dashed border-slate-300 bg-[#fbfdff] p-2.5">
+          <SelectField
+            className="min-w-0 flex-1"
+            hideLabel
+            label="新增 Block"
+            onChange={(kind) => setNewBlockKind(kind as ResumeBlockKind)}
+            options={blockKindLabels}
+            value={newBlockKind}
           />
-        ))}
-      </div>
-
-      <div className="mt-3 flex flex-col gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-2.5 sm:flex-row sm:items-end">
-        <SelectField
-          className="sm:w-48"
-          label="新增 Block"
-          onChange={(kind) => setNewBlockKind(kind as ResumeBlockKind)}
-          options={blockKindLabels}
-          value={newBlockKind}
-        />
-        <Button onPress={addBlock} type="button" variant="outline">
-          <Plus className="size-4" />
-          添加 Block
-        </Button>
+          <Button
+            className="shrink-0 rounded-[7px] border border-blue-100 bg-blue-50 px-2.5 py-1.5 text-[12px] font-semibold text-blue-600 hover:bg-blue-100"
+            onPress={addBlock}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            <Plus className="size-4" />
+            添加 Block
+          </Button>
+        </div>
       </div>
     </section>
   );
@@ -310,10 +391,15 @@ function BlockEditor({
   onUpdate: (block: ResumeBlock) => void;
 }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5">
+    <div className="rounded-[9px] border border-slate-100 bg-[#f9fbfd] p-2.5">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
-          {blockKindLabels[block.kind]}
+        <span className="flex items-center gap-1.5">
+          <span
+            className={cn("h-3 w-[3px] rounded-sm", blockBarColor[block.kind])}
+          />
+          <span className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-slate-500">
+            {blockKindLabels[block.kind]}
+          </span>
         </span>
         <IconButton
           icon={Trash2}
@@ -348,19 +434,23 @@ function BlockEditor({
       ) : null}
 
       {block.kind === "dateRange" ? (
-        <div className="grid gap-2.5 md:grid-cols-3">
+        <div className="flex items-center gap-2">
           <TextField
+            className="min-w-0 flex-1"
             label="开始日期"
             onChange={(startDate) => onUpdate({ ...block, startDate })}
             value={block.startDate}
           />
+          <span className="mt-5 text-slate-300">-</span>
           <TextField
+            className="min-w-0 flex-1"
+            isDisabled={Boolean(block.current)}
             label="结束日期"
             onChange={(endDate) => onUpdate({ ...block, endDate })}
             value={block.endDate}
           />
           <Checkbox
-            className="items-end pb-1.5"
+            className="mt-5 shrink-0 text-[12px] text-slate-500"
             isSelected={Boolean(block.current)}
             onChange={(checked) => onUpdate({ ...block, current: checked })}
           >
@@ -406,12 +496,13 @@ function BulletListEditor({
     <div className="flex flex-col gap-2">
       {block.items.map((item) => (
         <div className="flex gap-2" key={item.id}>
+          <span className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-slate-300" />
           <TextArea
+            className="min-w-0 flex-1 rounded-[7px] text-[12.5px] leading-relaxed"
             fullWidth
             onChange={(event) => updateItem(item.id, event.target.value)}
-            rows={3}
+            rows={2}
             value={item.text}
-            variant="secondary"
           />
           <IconButton
             icon={Trash2}
@@ -422,6 +513,7 @@ function BulletListEditor({
         </div>
       ))}
       <Button
+        className="self-start rounded-[7px] border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] font-semibold text-slate-600 hover:bg-slate-50"
         onPress={() =>
           onUpdate({
             ...block,
@@ -451,6 +543,7 @@ function TagListEditor({
       {block.tags.map((tag, index) => (
         <div className="flex gap-2" key={`${tag}-${index}`}>
           <Input
+            className="h-8 rounded-[7px] border-slate-200 text-[12.5px]"
             fullWidth
             onChange={(event) => {
               const tags = [...block.tags];
@@ -458,7 +551,6 @@ function TagListEditor({
               onUpdate({ ...block, tags });
             }}
             value={tag}
-            variant="secondary"
           />
           <IconButton
             icon={Trash2}
@@ -474,6 +566,7 @@ function TagListEditor({
         </div>
       ))}
       <Button
+        className="self-start rounded-[7px] border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] font-semibold text-slate-600 hover:bg-slate-50"
         onPress={() => onUpdate({ ...block, tags: [...block.tags, ""] })}
         size="sm"
         type="button"
@@ -497,10 +590,11 @@ function LinkListEditor({
     <div className="flex flex-col gap-2">
       {block.links.map((link) => (
         <div
-          className="grid gap-2 md:grid-cols-[160px_minmax(0,1fr)_auto]"
+          className="grid gap-2 md:grid-cols-[132px_minmax(0,1fr)_auto]"
           key={link.id}
         >
           <Input
+            className="h-8 rounded-[7px] border-slate-200 text-[12.5px]"
             fullWidth
             onChange={(event) =>
               onUpdate({
@@ -514,9 +608,9 @@ function LinkListEditor({
             }
             placeholder="Label"
             value={link.label}
-            variant="secondary"
           />
           <Input
+            className="h-8 rounded-[7px] border-slate-200 text-[12.5px]"
             fullWidth
             onChange={(event) =>
               onUpdate({
@@ -530,7 +624,6 @@ function LinkListEditor({
             }
             placeholder="URL"
             value={link.url}
-            variant="secondary"
           />
           <IconButton
             icon={Trash2}
@@ -546,6 +639,7 @@ function LinkListEditor({
         </div>
       ))}
       <Button
+        className="self-start rounded-[7px] border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] font-semibold text-slate-600 hover:bg-slate-50"
         onPress={() =>
           onUpdate({
             ...block,
@@ -568,23 +662,26 @@ function LinkListEditor({
 
 function TextField({
   className,
+  isDisabled = false,
   label,
   onChange,
   value,
 }: {
   className?: string;
+  isDisabled?: boolean;
   label: string;
   onChange: (value: string) => void;
   value: string;
 }) {
   return (
     <label className={cn("flex min-w-0 flex-col gap-1", className)}>
-      <span className="text-xs font-semibold text-slate-500">{label}</span>
+      <span className="text-[11px] font-semibold text-slate-500">{label}</span>
       <Input
+        className="h-8 rounded-[7px] border-slate-200 text-[12.5px] disabled:bg-slate-50 disabled:text-slate-400"
+        disabled={isDisabled}
         fullWidth
         onChange={(event) => onChange(event.target.value)}
         value={value}
-        variant="secondary"
       />
     </label>
   );
@@ -601,13 +698,13 @@ function TextAreaField({
 }) {
   return (
     <label className="flex min-w-0 flex-col gap-1">
-      <span className="text-xs font-semibold text-slate-500">{label}</span>
+      <span className="text-[11px] font-semibold text-slate-500">{label}</span>
       <TextArea
+        className="rounded-[7px] text-[12.5px] leading-relaxed"
         fullWidth
         onChange={(event) => onChange(event.target.value)}
         rows={3}
         value={value}
-        variant="secondary"
       />
     </label>
   );
@@ -615,12 +712,14 @@ function TextAreaField({
 
 function SelectField<TValue extends string>({
   className,
+  hideLabel = false,
   label,
   onChange,
   options,
   value,
 }: {
   className?: string;
+  hideLabel?: boolean;
   label: string;
   onChange: (value: TValue) => void;
   options: Record<TValue, string>;
@@ -628,8 +727,16 @@ function SelectField<TValue extends string>({
 }) {
   return (
     <label className={cn("flex min-w-0 flex-col gap-1", className)}>
-      <span className="text-xs font-semibold text-slate-500">{label}</span>
+      <span
+        className={cn(
+          "text-[11px] font-semibold text-slate-500",
+          hideLabel && "sr-only",
+        )}
+      >
+        {label}
+      </span>
       <Select
+        className="h-8 rounded-[7px] border-slate-200 text-[12.5px]"
         aria-label={label}
         fullWidth
         onSelectionChange={(key) => {
@@ -638,9 +745,8 @@ function SelectField<TValue extends string>({
           }
         }}
         selectedKey={value}
-        variant="secondary"
       >
-        <Select.Trigger>
+        <Select.Trigger className="h-8 rounded-[7px] border-slate-200 text-[12.5px]">
           <Select.Value />
           <Select.Indicator />
         </Select.Trigger>
@@ -675,6 +781,11 @@ function IconButton({
   return (
     <Button
       aria-label={label}
+      className={cn(
+        "inline-flex size-[26px] items-center justify-center rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-900",
+        variant === "danger-soft" &&
+          "text-slate-400 hover:bg-red-100 hover:text-red-600",
+      )}
       isDisabled={disabled}
       isIconOnly
       onPress={onPress}
@@ -682,7 +793,7 @@ function IconButton({
       type="button"
       variant={variant}
     >
-      <Icon className="size-4" />
+      <Icon className="size-[15px]" />
     </Button>
   );
 }

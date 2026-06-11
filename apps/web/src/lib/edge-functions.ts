@@ -31,9 +31,7 @@ async function invokeEdgeFunction<TResponse>(
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new EdgeFunctionError(
-      `Supabase 未配置，无法调用 ${functionName} Edge Function。`,
-    );
+    throw new EdgeFunctionError(`服务未连接，无法完成 ${functionName} 操作。`);
   }
 
   const { data, error } = await supabase.functions.invoke<TResponse>(

@@ -14,6 +14,7 @@ type ResumeFunctionRow = {
   created_at: string;
   document_json: ResumeDocument;
   id: string;
+  source_context_json?: unknown;
   source_type: string;
   style_json: ResumeStyleConfig;
   title: string;

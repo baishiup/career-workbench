@@ -250,7 +250,7 @@ function requireSupabase(action: string) {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new JobsApiError(`Supabase 未配置，无法${action}。`);
+    throw new JobsApiError(`数据服务未连接，无法${action}。`);
   }
 
   return supabase;

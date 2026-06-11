@@ -1,13 +1,22 @@
 "use client";
 
 import {
+  useCallback,
   type FormEvent,
   type ReactNode,
   useEffect,
   useRef,
   useState,
 } from "react";
-import { Alert, Button, Dropdown, Input, Table, Toast } from "@heroui/react";
+import {
+  Alert,
+  Button,
+  Dropdown,
+  Input,
+  Modal,
+  Table,
+  Toast,
+} from "@heroui/react";
 import {
   ChevronDown,
   Download,
@@ -19,19 +28,18 @@ import {
   Trash2,
   Upload as UploadIcon,
   UserRoundCheck,
-  X,
 } from "lucide-react";
-
-import Link from "@/components/router-link";
 import {
   applyResumeToProfile,
   deleteResume,
+  getResume,
   listResumes,
   renameResume,
   uploadResume,
 } from "@/lib/resumes/api";
 import type { ResumeFunctionRow, ResumeListRow } from "@/lib/resumes/types";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { ResumeEditorDrawer } from "@/pages/resume-detail/components/resume-editor-drawer";
 
 const sourceTypeLabels: Record<string, string> = {
   ai_generated: "AI 生成",
@@ -43,12 +51,21 @@ const sourceTypeLabels: Record<string, string> = {
 type MoreAction = "apply-profile" | "delete" | "export" | "rename";
 type ProfileDialogSource = "manual" | "upload";
 
-export function ResumesPage() {
+type ResumesPageProps = {
+  initialOpenResumeId?: string;
+};
+
+export function ResumesPage({ initialOpenResumeId }: ResumesPageProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const didOpenInitialResumeRef = useRef(false);
   const [rows, setRows] = useState<ResumeListRow[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [openingResumeId, setOpeningResumeId] = useState<string | null>(null);
+  const [openedResume, setOpenedResume] = useState<ResumeFunctionRow | null>(
+    null,
+  );
   const [renameDialogRow, setRenameDialogRow] = useState<ResumeListRow | null>(
     null,
   );
@@ -66,7 +83,7 @@ export function ResumesPage() {
   useEffect(() => {
     if (!isSupabaseConfigured) {
       setIsLoading(false);
-      setLoadError("Supabase 环境变量未配置，无法读取真实简历列表。");
+      setLoadError("数据服务未连接，无法读取简历列表。");
       return;
     }
 
@@ -99,6 +116,41 @@ export function ResumesPage() {
       didCancel = true;
     };
   }, []);
+
+  const handleOpenResume = useCallback(async (resumeId: string) => {
+    setOpeningResumeId(resumeId);
+    setLoadError(null);
+
+    try {
+      const resume = await getResume(resumeId);
+
+      setOpenedResume(resume);
+      setRows((currentRows) => {
+        const nextRow = toResumeListRow(resume);
+
+        if (currentRows.some((row) => row.id === nextRow.id)) {
+          return currentRows.map((row) =>
+            row.id === nextRow.id ? nextRow : row,
+          );
+        }
+
+        return [nextRow, ...currentRows];
+      });
+    } catch (error) {
+      Toast.toast.danger(getErrorMessage(error, "简历读取失败。"));
+    } finally {
+      setOpeningResumeId(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!initialOpenResumeId || didOpenInitialResumeRef.current) {
+      return;
+    }
+
+    didOpenInitialResumeRef.current = true;
+    void handleOpenResume(initialOpenResumeId);
+  }, [handleOpenResume, initialOpenResumeId]);
 
   async function handleUpload(file: File) {
     if (!isSupportedResumeFile(file)) {
@@ -329,13 +381,29 @@ export function ResumesPage() {
                       <Table.Cell>{formatDateTime(row.updated_at)}</Table.Cell>
                       <Table.Cell>
                         <div className="flex items-center gap-2">
-                          <Link
-                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-400/35"
-                            href={`/resumes/${row.id}`}
+                          <Button
+                            className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                            isDisabled={
+                              openingResumeId === row.id ||
+                              isRowMutating(row.id, {
+                                applyingProfileResumeId,
+                                deletingResumeId,
+                                openingResumeId,
+                                renamingResumeId,
+                              })
+                            }
+                            onPress={() => void handleOpenResume(row.id)}
+                            size="sm"
+                            type="button"
+                            variant="outline"
                           >
-                            <Eye aria-hidden="true" className="size-4" />
+                            {openingResumeId === row.id ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                              <Eye aria-hidden="true" className="size-4" />
+                            )}
                             查看
-                          </Link>
+                          </Button>
 
                           <Dropdown>
                             <Dropdown.Trigger
@@ -345,6 +413,7 @@ export function ResumesPage() {
                                 isRowMutating(row.id, {
                                   applyingProfileResumeId,
                                   deletingResumeId,
+                                  openingResumeId,
                                   renamingResumeId,
                                 })
                               }
@@ -483,7 +552,7 @@ export function ResumesPage() {
         >
           <div className="flex flex-col gap-4">
             <p className="text-sm leading-6 text-slate-600">
-              {profileDialogDescription}这个操作会写入 Supabase。
+              {profileDialogDescription}这个操作会更新你的资料。
             </p>
             <div className="flex justify-end gap-2 border-t border-slate-200 pt-4">
               <Button
@@ -511,6 +580,20 @@ export function ResumesPage() {
           </div>
         </DialogShell>
       ) : null}
+
+      <ResumeEditorDrawer
+        onClose={() => setOpenedResume(null)}
+        onSaved={(savedResume) => {
+          setOpenedResume(savedResume);
+          setRows((currentRows) =>
+            currentRows.map((row) =>
+              row.id === savedResume.id ? toResumeListRow(savedResume) : row,
+            ),
+          );
+        }}
+        open={Boolean(openedResume)}
+        resume={openedResume}
+      />
     </section>
   );
 }
@@ -546,36 +629,32 @@ function DialogShell({
   title: string;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
-      <Button
-        aria-label={closeLabel}
-        className="absolute inset-0 bg-slate-950/30"
-        isDisabled={isCloseDisabled}
-        onPress={onClose}
-        type="button"
-        variant="tertiary"
-      />
-      <div
-        aria-modal="true"
-        className="relative z-10 flex w-full max-w-[480px] flex-col rounded-xl border border-slate-200 bg-white p-0 shadow-2xl"
-        role="dialog"
-      >
-        <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4">
-          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-          <Button
-            aria-label={closeLabel}
-            isDisabled={isCloseDisabled}
-            isIconOnly
-            onPress={onClose}
-            type="button"
-            variant="tertiary"
-          >
-            <X className="size-4" />
-          </Button>
-        </div>
-        <div className="px-5 py-5">{children}</div>
-      </div>
-    </div>
+    <Modal
+      isOpen
+      onOpenChange={(isOpen) => {
+        if (!isOpen && !isCloseDisabled) {
+          onClose();
+        }
+      }}
+    >
+      <Modal.Backdrop isDismissable={!isCloseDisabled}>
+        <Modal.Container placement="center" size="md">
+          <Modal.Dialog className="w-full max-w-[480px] rounded-xl border border-slate-200 bg-white p-0 shadow-2xl">
+            <Modal.Header className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4">
+              <Modal.Heading className="text-lg font-semibold text-slate-900">
+                {title}
+              </Modal.Heading>
+              <Modal.CloseTrigger
+                aria-label={closeLabel}
+                className="shrink-0"
+                isDisabled={isCloseDisabled}
+              />
+            </Modal.Header>
+            <Modal.Body className="px-5 py-5">{children}</Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   );
 }
 
@@ -584,12 +663,14 @@ function isRowMutating(
   state: {
     applyingProfileResumeId: string | null;
     deletingResumeId: string | null;
+    openingResumeId: string | null;
     renamingResumeId: string | null;
   },
 ) {
   return (
     state.applyingProfileResumeId === rowId ||
     state.deletingResumeId === rowId ||
+    state.openingResumeId === rowId ||
     state.renamingResumeId === rowId
   );
 }

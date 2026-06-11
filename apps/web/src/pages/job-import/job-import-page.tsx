@@ -6,11 +6,14 @@ import {
   Button,
   Card,
   Chip,
+  Input,
   ListBox,
   Select,
+  Tag,
+  TagGroup,
   TextArea,
 } from "@heroui/react";
-import { ArrowLeft, ImagePlus, Loader2, Save, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ImagePlus, Loader2, Save, Sparkles } from "lucide-react";
 
 import Link from "@/components/router-link";
 import { panelClassName } from "@/components/workbench/surface-classes";
@@ -35,7 +38,6 @@ import type {
   JobRemoteStatus,
 } from "@/lib/jobs/types";
 import { navigateTo } from "@/lib/router";
-import { cn } from "@/lib/utils";
 
 const MAX_SCREENSHOTS = 5;
 const ACCEPTED_IMAGE_TYPES = "image/png,image/jpeg,image/webp";
@@ -136,7 +138,7 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
     return (
       <ImportShell title="职位导入不可用">
         <p className="mt-2 text-sm text-slate-500">
-          当前是本地演示模式（未配置 Supabase），职位导入需要连接真实数据库。
+          当前是本地演示模式，职位导入需要连接数据服务。
         </p>
       </ImportShell>
     );
@@ -328,28 +330,29 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
           </div>
 
           {screenshots.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {screenshots.map((file, index) => (
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-sm text-slate-700"
-                  key={`${file.name}-${index}`}
-                >
-                  {file.name}
-                  <button
-                    aria-label={`移除 ${file.name}`}
-                    className="text-slate-400 transition hover:text-slate-700"
-                    onClick={() =>
-                      setScreenshots((current) =>
-                        current.filter((_, fileIndex) => fileIndex !== index),
-                      )
-                    }
-                    type="button"
+            <TagGroup
+              aria-label="已上传的职位截图"
+              onRemove={(keys) => {
+                setScreenshots((current) =>
+                  current.filter(
+                    (file, index) => !keys.has(`${file.name}-${index}`),
+                  ),
+                );
+              }}
+            >
+              <TagGroup.List className="flex flex-wrap gap-2">
+                {screenshots.map((file, index) => (
+                  <Tag
+                    className="bg-slate-100 text-sm text-slate-700"
+                    id={`${file.name}-${index}`}
+                    key={`${file.name}-${index}`}
                   >
-                    <X className="size-3.5" />
-                  </button>
-                </span>
-              ))}
-            </div>
+                    {file.name}
+                    <Tag.RemoveButton aria-label={`移除 ${file.name}`} />
+                  </Tag>
+                ))}
+              </TagGroup.List>
+            </TagGroup>
           ) : null}
 
           <div>
@@ -626,13 +629,11 @@ function FormField({
       <span className="text-sm font-semibold text-slate-500">
         {required ? <span className="text-red-600">*</span> : null} {label}
       </span>
-      <input
-        className={cn(
-          "h-9 w-full rounded-lg border border-transparent bg-slate-100/60 px-3 text-sm font-medium text-slate-900 outline-none transition",
-          "placeholder:text-slate-500/70 focus:border-blue-400 focus:bg-white focus:ring-3 focus:ring-blue-400/20",
-        )}
+      <Input
+        fullWidth
         onChange={(event) => onChange(event.target.value)}
         value={value}
+        variant="secondary"
       />
     </label>
   );
