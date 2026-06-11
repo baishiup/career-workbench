@@ -105,10 +105,7 @@ function App() {
     ? Boolean(profile?.hasCompletedOnboarding)
     : hasCompletedOnboarding;
 
-  if (
-    requiresLogin ||
-    (pathname !== "/onboarding" && !hasPassedOnboarding)
-  ) {
+  if (requiresLogin || (pathname !== "/onboarding" && !hasPassedOnboarding)) {
     return <LoadingScreen text="正在准备工作台..." />;
   }
 

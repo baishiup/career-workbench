@@ -1,6 +1,4 @@
 {
   "nodeModulesDir": "auto",
-  "workspace": [
-    "./supabase/functions"
-  ]
+  "workspace": ["./supabase/functions"]
 }

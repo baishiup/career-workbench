@@ -6,7 +6,6 @@
 
 - 产品范围见 `docs/product.md`。
 - 目录归属见 `docs/project-structure.md`。
-- 阶段计划见 `docs/mvp-roadmap.md`。
 - AI Trace 事件和数据模型见 `docs/feature-spec/AI-Trace全流程设计.md`。
 
 ## 选型原则
@@ -26,13 +25,15 @@
 - HeroUI v3 组件体系。
 - lucide-react 图标。
 - Zustand 本地状态。
+- Supabase Auth、Postgres、Edge Functions（Deno）。
+- Dify Workflow（简历解析、job_parse、job_match、resume_generate，清单见 `dify/README.md`）。
 - `streamdown` 与 `@streamdown/*` 当前是预留依赖，源码尚未接入。
 
 计划引入但当前未实现：
 
-- Dify Workflow / Chatflow。
-- Supabase Auth、Postgres、Storage、Edge Functions。
-- TipTap / ProseMirror 简历编辑器。
+- Dify Chatflow（简历级 AI 对话）。
+- Supabase Storage（当前上传文件只作为一次性解析输入，不落盘）。
+- TipTap / ProseMirror 简历编辑器（当前为 HeroUI 表单编辑器 + DOM 预览）。
 
 Streamdown 预留用途：
 
@@ -67,29 +68,18 @@ packages/shared
   shared schemas and utilities
 ```
 
-当前 `packages/*` 多数仍是占位，只有稳定跨边界代码才应放入。
+当前 `packages/domain` 已承载真实领域模型（resume/profile/job 类型、规则匹配分、normalize 函数）并有单元测试；`packages/ai`、`packages/db`、`packages/shared` 仍是占位。只有稳定跨边界代码才应放入。
 
 ## 运行模式
 
-应用运行模式：
+当前实现：运行模式由 Supabase env 是否存在决定。
 
-```bash
-VITE_APP_MODE=mock
-VITE_APP_MODE=local
-VITE_APP_MODE=supabase
-```
+- 无 `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` 时只保证本地开发 fixture 可用。
+- 配置完整后业务页面走 Supabase session 和持久化主路径。
+- AI 编排固定走 Dify：每个 workflow 一个独立 API Key，由对应 Edge Function 读取（见 `dify/README.md`）；缺 key 时 Edge Function 返回 `config` 阶段错误。
 
-AI 编排模式：
+规划中的显式模式开关（`VITE_APP_MODE=mock|local|supabase`、`AI_ORCHESTRATOR=mock|dify|openai-compatible`）当前代码尚未读取，等 mock provider 契约测试落地时再接：
 
-```bash
-AI_ORCHESTRATOR=mock
-AI_ORCHESTRATOR=dify
-AI_ORCHESTRATOR=openai-compatible
-```
-
-要求：
-
-- 无 Supabase 配置时只保证本地开发 fixture 可用。
 - 无 Dify 或模型 key 时可用 mock provider 做契约测试；集成环境应明确提示配置缺失。
 - UI 要能显示当前是 mock/local/supabase 中哪种模式。
 
@@ -136,9 +126,11 @@ MVP 数据层分两步：
 1. 本地开发期：mock/fixture 数据 + Zustand localStorage。
 2. 完整 MVP：Supabase 保存用户、Profile、职位、简历、AI run、对话、修改日志和导出记录。
 
+当前进度：用户、Profile、职位、匹配报告、简历正文/样式已落 Supabase（`users` / `profiles` / `job_descriptions` / `match_reports` / `resumes`）；AI run、对话、修改日志和导出记录未建表。表结构事实源见 `docs/feature-spec/Supabase持久化.md`。
+
 关键枚举约定：
 
-- Resume source：`manual_upload`、`target_job`。
+- Resume source：`manual_created`、`manual_upload`、`ai_generated`、`target_job`。
 - Job import method：`manual_form`、`manual_text`、`screenshot`（链接不自动抓取，`source_url` 仅作元数据手动填写）。
 - Change actor：`user`、`ai`、`system`。
 - AI orchestrator：`mock`、`dify`、`openai_compatible`。
@@ -154,9 +146,11 @@ pnpm test
 pnpm build
 ```
 
+已有：`packages/domain` 的规则匹配分与匹配报告过期判断单元测试（vitest）。
+
 后续按风险补充：
 
 - AI adapter mock 测试。
-- JD parse / match scoring 单元测试。
+- JD parse 解析契约测试。
 - resume patch schema 测试。
 - Profile 表单和 Jobs 筛选交互测试。

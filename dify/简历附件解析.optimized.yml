@@ -1,6 +1,6 @@
 ---
 app:
-  description: ''
+  description: ""
   icon: "\U0001F4BC"
   icon_background: "#E0F2FE"
   icon_type: emoji
@@ -8,11 +8,11 @@ app:
   name: 简历附件解析 optimized
   use_icon_as_answer_icon: false
 dependencies:
-- current_identifier: 
-  type: marketplace
-  value:
-    marketplace_plugin_unique_identifier: langgenius/deepseek:0.0.17@f7a5c1d222d17ee419b17a80d6e4923838fe93788dc724a3af73fbc6990b3a32
-    version: 
+  - current_identifier:
+    type: marketplace
+    value:
+      marketplace_plugin_unique_identifier: langgenius/deepseek:0.0.17@f7a5c1d222d17ee419b17a80d6e4923838fe93788dc724a3af73fbc6990b3a32
+      version:
 kind: app
 version: 0.6.0
 workflow:
@@ -21,17 +21,17 @@ workflow:
   features:
     file_upload:
       allowed_file_extensions:
-      - ".JPG"
-      - ".JPEG"
-      - ".PNG"
-      - ".GIF"
-      - ".WEBP"
-      - ".SVG"
+        - ".JPG"
+        - ".JPEG"
+        - ".PNG"
+        - ".GIF"
+        - ".WEBP"
+        - ".SVG"
       allowed_file_types:
-      - image
+        - image
       allowed_file_upload_methods:
-      - local_file
-      - remote_url
+        - local_file
+        - remote_url
       enabled: false
       fileUploadConfig:
         attachment_image_file_size_limit: 2
@@ -48,10 +48,10 @@ workflow:
         enabled: false
         number_limits: 3
         transfer_methods:
-        - local_file
-        - remote_url
+          - local_file
+          - remote_url
       number_limits: 3
-    opening_statement: ''
+    opening_statement: ""
     retriever_resource:
       enabled: false
     sensitive_word_avoidance:
@@ -63,509 +63,509 @@ workflow:
       enabled: false
     text_to_speech:
       enabled: false
-      language: ''
-      voice: ''
+      language: ""
+      voice: ""
   graph:
     edges:
-    - data:
-        isInLoop: false
-        sourceType: start
-        targetType: document-extractor
-      id: 1776749897311-source-1780679045741-target
-      selected: false
-      source: '1776749897311'
-      sourceHandle: source
-      target: '1780679045741'
-      targetHandle: target
-      type: custom
-      zIndex: 0
-    - data:
-        isInLoop: false
-        sourceType: llm
-        targetType: end
-      id: 1776749928227-source-1776750335278-target
-      selected: false
-      source: '1776749928227'
-      sourceHandle: source
-      target: '1776750335278'
-      targetHandle: target
-      type: custom
-      zIndex: 0
-    - data:
-        isInLoop: false
-        sourceType: document-extractor
-        targetType: code
-      id: 1780679045741-source-1780681000000-target
-      selected: false
-      source: '1780679045741'
-      sourceHandle: source
-      target: '1780681000000'
-      targetHandle: target
-      type: custom
-      zIndex: 0
-    - data:
-        isInLoop: false
-        sourceType: code
-        targetType: llm
-      id: 1780681000000-source-1776749928227-target
-      selected: false
-      source: '1780681000000'
-      sourceHandle: source
-      target: '1776749928227'
-      targetHandle: target
-      type: custom
-      zIndex: 0
+      - data:
+          isInLoop: false
+          sourceType: start
+          targetType: document-extractor
+        id: 1776749897311-source-1780679045741-target
+        selected: false
+        source: "1776749897311"
+        sourceHandle: source
+        target: "1780679045741"
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInLoop: false
+          sourceType: llm
+          targetType: end
+        id: 1776749928227-source-1776750335278-target
+        selected: false
+        source: "1776749928227"
+        sourceHandle: source
+        target: "1776750335278"
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInLoop: false
+          sourceType: document-extractor
+          targetType: code
+        id: 1780679045741-source-1780681000000-target
+        selected: false
+        source: "1780679045741"
+        sourceHandle: source
+        target: "1780681000000"
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInLoop: false
+          sourceType: code
+          targetType: llm
+        id: 1780681000000-source-1776749928227-target
+        selected: false
+        source: "1780681000000"
+        sourceHandle: source
+        target: "1776749928227"
+        targetHandle: target
+        type: custom
+        zIndex: 0
     nodes:
-    - data:
-        desc: 在此处上传简历pdf
+      - data:
+          desc: 在此处上传简历pdf
+          selected: false
+          title: 用户输入
+          type: start
+          variables:
+            - allowed_file_extensions:
+                - ".pdf"
+              allowed_file_types:
+                - custom
+              allowed_file_upload_methods:
+                - local_file
+                - remote_url
+              default:
+                base64Url: ""
+                id: df43175b-7e94-4113-8d48-b72d99c8ae30
+                name: Hongyuan Qi_Frontend Engineer_20260605.pdf
+                originalFile: {}
+                progress: 100
+                size: 75337
+                supportFileType: custom
+                transferMethod: local_file
+                type: application/pdf
+                uploadedId: 3b31aa3a-6518-40f6-9e74-80be629c839f
+              hide: false
+              hint: ""
+              label: resume_file
+              options: []
+              placeholder: ""
+              required: true
+              type: file
+              variable: resume_file
+        height: 137
+        id: "1776749897311"
+        position:
+          x: -288.8549393251845
+          y: 208.66607826614046
+        positionAbsolute:
+          x: -288.8549393251845
+          y: 208.66607826614046
         selected: false
-        title: 用户输入
-        type: start
-        variables:
-        - allowed_file_extensions:
-          - ".pdf"
-          allowed_file_types:
-          - custom
-          allowed_file_upload_methods:
-          - local_file
-          - remote_url
-          default:
-            base64Url: ''
-            id: df43175b-7e94-4113-8d48-b72d99c8ae30
-            name: Hongyuan Qi_Frontend Engineer_20260605.pdf
-            originalFile: {}
-            progress: 100
-            size: 75337
-            supportFileType: custom
-            transferMethod: local_file
-            type: application/pdf
-            uploadedId: 3b31aa3a-6518-40f6-9e74-80be629c839f
-          hide: false
-          hint: ''
-          label: resume_file
-          options: []
-          placeholder: ''
-          required: true
-          type: file
-          variable: resume_file
-      height: 137
-      id: '1776749897311'
-      position:
-        x: -288.8549393251845
-        y: 208.66607826614046
-      positionAbsolute:
-        x: -288.8549393251845
-        y: 208.66607826614046
-      selected: false
-      sourcePosition: right
-      targetPosition: left
-      type: custom
-      width: 242
-    - data:
-        context:
-          enabled: false
-          variable_selector: []
-        desc: 从预处理后的简历文本抽取结构化 JSON。
-        model:
-          completion_params:
-            response_format: json_object
-            temperature: 0
-            top_p: 0.2
-            max_tokens: 4096
-          mode: chat
-          name: deepseek-v4-flash
-          provider: langgenius/deepseek/deepseek
-        prompt_template:
-        - id: c414cd6e-036a-4bad-8b25-1b5fabece82a
-          role: system
-          text: |
-            你是一个严格的简历信息抽取器。只从输入文本中抽取明确出现的信息，不推测、不补全、不润色。
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 从预处理后的简历文本抽取结构化 JSON。
+          model:
+            completion_params:
+              response_format: json_object
+              temperature: 0
+              top_p: 0.2
+              max_tokens: 4096
+            mode: chat
+            name: deepseek-v4-flash
+            provider: langgenius/deepseek/deepseek
+          prompt_template:
+            - id: c414cd6e-036a-4bad-8b25-1b5fabece82a
+              role: system
+              text: |
+                你是一个严格的简历信息抽取器。只从输入文本中抽取明确出现的信息，不推测、不补全、不润色。
 
-            输出要求：
-            1. 只输出 JSON 对象，必须符合 Structured Output JSON Schema。
-            2. 缺失信息填 null 或空数组。
-            3. 日期能确定到月份时用 YYYY-MM；不能确定时规范字段填 null，并保留 raw_date。
-            4. 保持原始事实表达，不新增量化结果，不改写为营销文案。
-            5. 工作经历、项目、教育按原文顺序输出，不合并不同公司/项目/学校。
-            6. 单条 work_experiences/projects 的 bullets 最多 6 条，每条不超过 120 字。
-            7. projects 最多 8 条，work_experiences 最多 8 条，skills 最多 60 个。
-            8. 文本被预处理截断时，在 parse_warnings 中说明可能遗漏长尾信息。
-            9. 无法归类但重要的片段放入 unmapped_text，最多 20 条。
-        - id: 3e121f4c-ccb6-4311-9501-04677f21956d
-          role: user
-          text: |
-            请解析以下预处理后的 PDF 简历文本：
+                输出要求：
+                1. 只输出 JSON 对象，必须符合 Structured Output JSON Schema。
+                2. 缺失信息填 null 或空数组。
+                3. 日期能确定到月份时用 YYYY-MM；不能确定时规范字段填 null，并保留 raw_date。
+                4. 保持原始事实表达，不新增量化结果，不改写为营销文案。
+                5. 工作经历、项目、教育按原文顺序输出，不合并不同公司/项目/学校。
+                6. 单条 work_experiences/projects 的 bullets 最多 6 条，每条不超过 120 字。
+                7. projects 最多 8 条，work_experiences 最多 8 条，skills 最多 60 个。
+                8. 文本被预处理截断时，在 parse_warnings 中说明可能遗漏长尾信息。
+                9. 无法归类但重要的片段放入 unmapped_text，最多 20 条。
+            - id: 3e121f4c-ccb6-4311-9501-04677f21956d
+              role: user
+              text: |
+                请解析以下预处理后的 PDF 简历文本：
 
-            原始字符数：{{#1780681000000.original_chars#}}
-            输入字符数：{{#1780681000000.cleaned_chars#}}
-            是否截断：{{#1780681000000.truncated#}}
+                原始字符数：{{#1780681000000.original_chars#}}
+                输入字符数：{{#1780681000000.cleaned_chars#}}
+                是否截断：{{#1780681000000.truncated#}}
 
-            {{#1780681000000.cleaned_text#}}
-        selected: false
-        structured_output:
-          schema:
-            properties:
-              candidate:
-                properties:
-                  city:
-                    type:
-                    - string
-                    - 'null'
-                  email:
-                    type:
-                    - string
-                    - 'null'
-                  full_name:
-                    type:
-                    - string
-                    - 'null'
-                  headline:
-                    type:
-                    - string
-                    - 'null'
-                  links:
-                    items:
-                      properties:
-                        label:
-                          type:
-                          - string
-                          - 'null'
-                        url:
-                          type: string
-                      required:
-                      - label
-                      - url
-                      type: object
-                    type: array
-                  phone:
-                    type:
-                    - string
-                    - 'null'
-                required:
-                - full_name
-                - email
-                - phone
-                - city
-                - headline
-                - links
-                type: object
-              education:
-                items:
+                {{#1780681000000.cleaned_text#}}
+          selected: false
+          structured_output:
+            schema:
+              properties:
+                candidate:
                   properties:
-                    degree:
+                    city:
                       type:
-                      - string
-                      - 'null'
-                    description:
+                        - string
+                        - "null"
+                    email:
                       type:
-                      - string
-                      - 'null'
-                    end_date:
+                        - string
+                        - "null"
+                    full_name:
                       type:
-                      - string
-                      - 'null'
-                    location:
+                        - string
+                        - "null"
+                    headline:
                       type:
-                      - string
-                      - 'null'
-                    major:
-                      type:
-                      - string
-                      - 'null'
-                    raw_date:
-                      type:
-                      - string
-                      - 'null'
-                    school:
-                      type:
-                      - string
-                      - 'null'
-                    start_date:
-                      type:
-                      - string
-                      - 'null'
-                  required:
-                  - school
-                  - degree
-                  - major
-                  - location
-                  - start_date
-                  - end_date
-                  - raw_date
-                  - description
-                  type: object
-                type: array
-              parse_warnings:
-                items:
-                  type: string
-                type: array
-              projects:
-                items:
-                  properties:
-                    bullets:
-                      items:
-                        type: string
-                      type: array
-                    end_date:
-                      type:
-                      - string
-                      - 'null'
+                        - string
+                        - "null"
                     links:
                       items:
                         properties:
                           label:
                             type:
-                            - string
-                            - 'null'
+                              - string
+                              - "null"
                           url:
                             type: string
                         required:
-                        - label
-                        - url
+                          - label
+                          - url
                         type: object
                       type: array
-                    name:
+                    phone:
                       type:
-                      - string
-                      - 'null'
-                    raw_date:
-                      type:
-                      - string
-                      - 'null'
-                    role:
-                      type:
-                      - string
-                      - 'null'
-                    start_date:
-                      type:
-                      - string
-                      - 'null'
-                    summary:
-                      type:
-                      - string
-                      - 'null'
-                    technologies:
-                      items:
-                        type: string
-                      type: array
+                        - string
+                        - "null"
                   required:
-                  - name
-                  - role
-                  - start_date
-                  - end_date
-                  - raw_date
-                  - summary
-                  - bullets
-                  - links
-                  - technologies
+                    - full_name
+                    - email
+                    - phone
+                    - city
+                    - headline
+                    - links
                   type: object
-                type: array
-              schema_version:
-                enum:
-                - resume.parse.v1
-                type: string
-              skills:
-                items:
+                education:
+                  items:
+                    properties:
+                      degree:
+                        type:
+                          - string
+                          - "null"
+                      description:
+                        type:
+                          - string
+                          - "null"
+                      end_date:
+                        type:
+                          - string
+                          - "null"
+                      location:
+                        type:
+                          - string
+                          - "null"
+                      major:
+                        type:
+                          - string
+                          - "null"
+                      raw_date:
+                        type:
+                          - string
+                          - "null"
+                      school:
+                        type:
+                          - string
+                          - "null"
+                      start_date:
+                        type:
+                          - string
+                          - "null"
+                    required:
+                      - school
+                      - degree
+                      - major
+                      - location
+                      - start_date
+                      - end_date
+                      - raw_date
+                      - description
+                    type: object
+                  type: array
+                parse_warnings:
+                  items:
+                    type: string
+                  type: array
+                projects:
+                  items:
+                    properties:
+                      bullets:
+                        items:
+                          type: string
+                        type: array
+                      end_date:
+                        type:
+                          - string
+                          - "null"
+                      links:
+                        items:
+                          properties:
+                            label:
+                              type:
+                                - string
+                                - "null"
+                            url:
+                              type: string
+                          required:
+                            - label
+                            - url
+                          type: object
+                        type: array
+                      name:
+                        type:
+                          - string
+                          - "null"
+                      raw_date:
+                        type:
+                          - string
+                          - "null"
+                      role:
+                        type:
+                          - string
+                          - "null"
+                      start_date:
+                        type:
+                          - string
+                          - "null"
+                      summary:
+                        type:
+                          - string
+                          - "null"
+                      technologies:
+                        items:
+                          type: string
+                        type: array
+                    required:
+                      - name
+                      - role
+                      - start_date
+                      - end_date
+                      - raw_date
+                      - summary
+                      - bullets
+                      - links
+                      - technologies
+                    type: object
+                  type: array
+                schema_version:
+                  enum:
+                    - resume.parse.v1
                   type: string
-                type: array
-              unmapped_text:
-                items:
-                  type: string
-                type: array
-              work_experiences:
-                items:
-                  properties:
-                    bullets:
-                      items:
-                        type: string
-                      type: array
-                    company:
-                      type:
-                      - string
-                      - 'null'
-                    current:
-                      type:
-                      - boolean
-                      - 'null'
-                    end_date:
-                      type:
-                      - string
-                      - 'null'
-                    location:
-                      type:
-                      - string
-                      - 'null'
-                    raw_date:
-                      type:
-                      - string
-                      - 'null'
-                    start_date:
-                      type:
-                      - string
-                      - 'null'
-                    summary:
-                      type:
-                      - string
-                      - 'null'
-                    technologies:
-                      items:
-                        type: string
-                      type: array
-                    title:
-                      type:
-                      - string
-                      - 'null'
-                  required:
-                  - company
-                  - title
-                  - location
-                  - start_date
-                  - end_date
-                  - current
-                  - raw_date
-                  - summary
-                  - bullets
-                  - technologies
-                  type: object
-                type: array
-            required:
-            - schema_version
-            - candidate
-            - work_experiences
-            - projects
-            - education
-            - skills
-            - parse_warnings
-            - unmapped_text
-            type: object
-        structured_output_enabled: true
-        title: LLM
-        type: llm
-        vision:
-          enabled: false
-      height: 116
-      id: '1776749928227'
-      position:
-        x: 720.0
-        y: 234.1
-      positionAbsolute:
-        x: 720.0
-        y: 234.1
-      selected: true
-      sourcePosition: right
-      targetPosition: left
-      type: custom
-      width: 242
-    - data:
-        desc: 生成最终内容
-        outputs:
-        - value_selector:
-          - '1776749928227'
-          - text
-          value_type: string
-          variable: text
+                skills:
+                  items:
+                    type: string
+                  type: array
+                unmapped_text:
+                  items:
+                    type: string
+                  type: array
+                work_experiences:
+                  items:
+                    properties:
+                      bullets:
+                        items:
+                          type: string
+                        type: array
+                      company:
+                        type:
+                          - string
+                          - "null"
+                      current:
+                        type:
+                          - boolean
+                          - "null"
+                      end_date:
+                        type:
+                          - string
+                          - "null"
+                      location:
+                        type:
+                          - string
+                          - "null"
+                      raw_date:
+                        type:
+                          - string
+                          - "null"
+                      start_date:
+                        type:
+                          - string
+                          - "null"
+                      summary:
+                        type:
+                          - string
+                          - "null"
+                      technologies:
+                        items:
+                          type: string
+                        type: array
+                      title:
+                        type:
+                          - string
+                          - "null"
+                    required:
+                      - company
+                      - title
+                      - location
+                      - start_date
+                      - end_date
+                      - current
+                      - raw_date
+                      - summary
+                      - bullets
+                      - technologies
+                    type: object
+                  type: array
+              required:
+                - schema_version
+                - candidate
+                - work_experiences
+                - projects
+                - education
+                - skills
+                - parse_warnings
+                - unmapped_text
+              type: object
+          structured_output_enabled: true
+          title: LLM
+          type: llm
+          vision:
+            enabled: false
+        height: 116
+        id: "1776749928227"
+        position:
+          x: 720.0
+          y: 234.1
+        positionAbsolute:
+          x: 720.0
+          y: 234.1
+        selected: true
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+      - data:
+          desc: 生成最终内容
+          outputs:
+            - value_selector:
+                - "1776749928227"
+                - text
+              value_type: string
+              variable: text
+          selected: false
+          title: Output
+          type: end
+        height: 116
+        id: "1776750335278"
+        position:
+          x: 1060.0
+          y: 234.1
+        positionAbsolute:
+          x: 1060.0
+          y: 234.1
         selected: false
-        title: Output
-        type: end
-      height: 116
-      id: '1776750335278'
-      position:
-        x: 1060.0
-        y: 234.1
-      positionAbsolute:
-        x: 1060.0
-        y: 234.1
-      selected: false
-      sourcePosition: right
-      targetPosition: left
-      type: custom
-      width: 242
-    - data:
-        is_array_file: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+      - data:
+          is_array_file: false
+          selected: false
+          title: 文档提取器
+          type: document-extractor
+          variable_selector:
+            - "1776749897311"
+            - resume_file
+        height: 104
+        id: "1780679045741"
+        position:
+          x: 44.87165209116006
+          y: 249.89004503588632
+        positionAbsolute:
+          x: 44.87165209116006
+          y: 249.89004503588632
         selected: false
-        title: 文档提取器
-        type: document-extractor
-        variable_selector:
-        - '1776749897311'
-        - resume_file
-      height: 104
-      id: '1780679045741'
-      position:
-        x: 44.87165209116006
-        y: 249.89004503588632
-      positionAbsolute:
-        x: 44.87165209116006
-        y: 249.89004503588632
-      selected: false
-      sourcePosition: right
-      targetPosition: left
-      type: custom
-      width: 242
-    - data:
-        code: |
-          function main({ raw_text }) {
-            const source = String(raw_text || "");
-            const normalized = source
-              .replace(/\u0000/g, "")
-              .replace(/\r\n?/g, "\n")
-              .replace(/[ \t]+/g, " ")
-              .split("\n")
-              .map((line) => line.trim())
-              .filter((line) => line.length > 0)
-              .filter((line) => !/^page\s*\d+\s*(of\s*\d+)?$/i.test(line))
-              .filter((line, index, lines) => index === 0 || line !== lines[index - 1])
-              .join("\n")
-              .replace(/\n{3,}/g, "\n\n")
-              .trim();
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+      - data:
+          code: |
+            function main({ raw_text }) {
+              const source = String(raw_text || "");
+              const normalized = source
+                .replace(/\u0000/g, "")
+                .replace(/\r\n?/g, "\n")
+                .replace(/[ \t]+/g, " ")
+                .split("\n")
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0)
+                .filter((line) => !/^page\s*\d+\s*(of\s*\d+)?$/i.test(line))
+                .filter((line, index, lines) => index === 0 || line !== lines[index - 1])
+                .join("\n")
+                .replace(/\n{3,}/g, "\n\n")
+                .trim();
 
-            const limit = 18000;
-            const cleaned = normalized.length > limit
-              ? `${normalized.slice(0, 14000)}\n\n[TRUNCATED_BY_PREPROCESSOR]\n\n${normalized.slice(-3000)}`
-              : normalized;
+              const limit = 18000;
+              const cleaned = normalized.length > limit
+                ? `${normalized.slice(0, 14000)}\n\n[TRUNCATED_BY_PREPROCESSOR]\n\n${normalized.slice(-3000)}`
+                : normalized;
 
-            return {
-              cleaned_text: cleaned,
-              original_chars: source.length,
-              cleaned_chars: cleaned.length,
-              truncated: normalized.length > limit
-            };
-          }
-        code_language: javascript
-        desc: 清洗 PDF 文本并限制 LLM 输入长度，降低解析耗时。
-        outputs:
-          cleaned_text:
-            children: 
-            type: string
-          original_chars:
-            children: 
-            type: number
-          cleaned_chars:
-            children: 
-            type: number
-          truncated:
-            children: 
-            type: boolean
+              return {
+                cleaned_text: cleaned,
+                original_chars: source.length,
+                cleaned_chars: cleaned.length,
+                truncated: normalized.length > limit
+              };
+            }
+          code_language: javascript
+          desc: 清洗 PDF 文本并限制 LLM 输入长度，降低解析耗时。
+          outputs:
+            cleaned_text:
+              children:
+              type: string
+            original_chars:
+              children:
+              type: number
+            cleaned_chars:
+              children:
+              type: number
+            truncated:
+              children:
+              type: boolean
+          selected: false
+          title: 文本预处理
+          type: code
+          variables:
+            - value_selector:
+                - "1780679045741"
+                - text
+              variable: raw_text
+        height: 54
+        id: "1780681000000"
+        position:
+          x: 382.0
+          y: 249.9
+        positionAbsolute:
+          x: 382.0
+          y: 249.9
         selected: false
-        title: 文本预处理
-        type: code
-        variables:
-        - value_selector:
-          - '1780679045741'
-          - text
-          variable: raw_text
-      height: 54
-      id: '1780681000000'
-      position:
-        x: 382.0
-        y: 249.9
-      positionAbsolute:
-        x: 382.0
-        y: 249.9
-      selected: false
-      sourcePosition: right
-      targetPosition: left
-      type: custom
-      width: 244
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
     viewport:
       x: 540.4835875417793
       y: 216.626604514089

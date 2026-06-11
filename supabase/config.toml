@@ -400,6 +400,9 @@ verify_jwt = false
 [functions.job-match]
 verify_jwt = false
 
+[functions.resume-generate]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

@@ -91,7 +91,8 @@ function coerceMatchReportNarrative(
     return null;
   }
 
-  const aiNote = typeof value.ai_note === "string" ? value.ai_note : value.aiNote;
+  const aiNote =
+    typeof value.ai_note === "string" ? value.ai_note : value.aiNote;
 
   if (typeof aiNote !== "string" || aiNote.trim().length === 0) {
     return null;

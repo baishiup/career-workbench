@@ -22,8 +22,9 @@
 - `README.md`：项目定位、当前状态、启动命令、验证命令、演示路径。
 - `docs/product.md`：用户、MVP 闭环、暂不做、产品风险。
 - `docs/tech-stack.md`：技术选型、运行模式、前后端边界。
-- `docs/mvp-roadmap.md`：阶段计划和验收标准。
 - `docs/project-structure.md`：目录归属、抽组件规则、代码放置边界。
+- `docs/local-operations.md`：本地运维与固定操作命令。
+- `dify/README.md`：Dify workflow 清单、API Key 约定、接入与验证方式。
 - `docs/feature-spec/*.md`：单个功能的行为、状态、失败、验收。
 - `docs/feature-spec/AI-Trace全流程设计.md`：AI Run Trace、prompt/workflow key、事件协议、外部运行引用。
 
@@ -65,6 +66,14 @@ pnpm build
 ```
 
 如果某个命令暂不可用，在交付说明里写清楚原因。
+
+## 固定操作入口
+
+- 前端格式化统一使用 `pnpm format:check` / `pnpm format`。
+- Edge Functions 格式化继续使用 `pnpm functions:fmt:check`，不要用 Prettier 处理 `supabase/functions`。
+- 本地 Supabase Edge Functions 统一使用 `pnpm functions:serve:local`、`pnpm functions:restart:local`、`pnpm functions:status:local`，不要临时手写 `pkill supabase...` 或 `nohup supabase functions serve...`。
+- 线上 `resume-generate` 部署统一使用 `pnpm functions:deploy:resume-generate`。
+- 更多说明见 `docs/local-operations.md`。
 
 ## Review Checklist
 

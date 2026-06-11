@@ -9,9 +9,6 @@
 /** 职位进入系统的方式：手动表单填写、粘贴 JD 文本解析或截图解析。 */
 type JobImportMethod = "manual_form" | "manual_text" | "screenshot";
 
-/** JD 解析流水线状态：已解析、待人工确认或解析失败可重试。 */
-type JobImportStatus = "parsed" | "needs_review" | "parse_failed";
-
 /** 远程办公状态。 */
 type JobRemoteStatus = "remote" | "hybrid" | "onsite";
 
@@ -41,7 +38,6 @@ type JobDescription = {
   summary: string | null;
   importedBy: string | null;
   importMethod: JobImportMethod;
-  importStatus: JobImportStatus;
   /** 停用职位仅 admin 可见，用于编辑或重新启用。 */
   isActive: boolean;
 };
@@ -50,6 +46,5 @@ export type {
   JobDescription,
   JobEmploymentType,
   JobImportMethod,
-  JobImportStatus,
   JobRemoteStatus,
 };

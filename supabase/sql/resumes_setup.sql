@@ -8,7 +8,6 @@ create table if not exists public.resumes (
   user_id uuid not null references public.users(id) on delete cascade,
   title text not null,
   source_type text not null default 'manual_created',
-  status text not null default 'draft',
   document_json jsonb not null default '{}'::jsonb,
   style_json jsonb not null default '{}'::jsonb,
   ai_parsed_draft_json jsonb,
@@ -25,9 +24,6 @@ alter table public.resumes
 
 alter table public.resumes
   add column if not exists source_type text not null default 'manual_created';
-
-alter table public.resumes
-  add column if not exists status text not null default 'draft';
 
 alter table public.resumes
   add column if not exists document_json jsonb not null default '{}'::jsonb;
@@ -64,19 +60,6 @@ alter table public.resumes
   ));
 
 alter table public.resumes
-  drop constraint if exists resumes_status_check;
-
-alter table public.resumes
-  add constraint resumes_status_check
-  check (status in (
-    'draft',
-    'ready',
-    'archived',
-    'parse_failed',
-    'generation_failed'
-  ));
-
-alter table public.resumes
   drop constraint if exists resumes_document_json_object_check;
 
 alter table public.resumes
@@ -99,9 +82,6 @@ alter table public.resumes
 
 create index if not exists resumes_user_updated_idx
   on public.resumes (user_id, updated_at desc);
-
-create index if not exists resumes_user_source_status_idx
-  on public.resumes (user_id, source_type, status);
 
 alter table public.resumes enable row level security;
 alter table public.resumes force row level security;

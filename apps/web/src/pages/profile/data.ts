@@ -1,4 +1,9 @@
-import { BriefcaseBusiness, Code2, GraduationCap, UserRound } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  Code2,
+  GraduationCap,
+  UserRound,
+} from "lucide-react";
 
 import { emptyProfile } from "@/lib/profile/empty-profile";
 import type { ProfileIcon, ProfileSection } from "./types";

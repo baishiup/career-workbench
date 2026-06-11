@@ -62,14 +62,13 @@ Deno.serve(async (request) => {
           workflow_outputs: parseResult.raw.outputs,
         },
         source_type: "manual_upload",
-        status: "ready",
         style_json: built.style,
         title: built.document.title,
         updated_at: new Date().toISOString(),
         user_id: auth.user.id,
       })
       .select(
-        "id,title,source_type,status,document_json,style_json,created_at,updated_at",
+        "id,title,source_type,document_json,style_json,created_at,updated_at",
       )
       .single();
 

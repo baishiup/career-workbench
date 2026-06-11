@@ -191,13 +191,5 @@ function mapReportRow(row: MatchReportRow): MatchReportRecord {
   };
 }
 
-export {
-  fetchMatchReportContext,
-  MatchReportApiError,
-  runJobMatchAnalysis,
-};
-export type {
-  MatchReportContext,
-  MatchReportRecord,
-  MatchReportsDataMode,
-};
+export { fetchMatchReportContext, MatchReportApiError, runJobMatchAnalysis };
+export type { MatchReportContext, MatchReportRecord, MatchReportsDataMode };

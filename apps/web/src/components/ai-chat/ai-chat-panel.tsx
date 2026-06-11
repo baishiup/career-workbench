@@ -2,7 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { Button, Chip, TextArea } from "@heroui/react";
-import { AlertCircle, Bot, SendHorizontal, Sparkles, UserRound } from "lucide-react";
+import {
+  AlertCircle,
+  Bot,
+  SendHorizontal,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 import { cjk } from "@streamdown/cjk";
 import { Streamdown } from "streamdown";
 

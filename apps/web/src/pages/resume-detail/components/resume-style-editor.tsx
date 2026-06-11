@@ -1,7 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Input, ListBox, NumberField as HeroNumberField, Select } from "@heroui/react";
+import {
+  Input,
+  ListBox,
+  NumberField as HeroNumberField,
+  Select,
+} from "@heroui/react";
 import type {
   ResumeColorConfig,
   ResumePageMargin,
@@ -82,7 +87,9 @@ function ResumeStyleEditor({ onStyleChange, style }: ResumeStyleEditorProps) {
   }
 
   function applyTemplate(templateId: string) {
-    const preset = templatePresets.find((template) => template.id === templateId);
+    const preset = templatePresets.find(
+      (template) => template.id === templateId,
+    );
 
     if (!preset) {
       updateStyle({ templateId });
@@ -160,7 +167,9 @@ function ResumeStyleEditor({ onStyleChange, style }: ResumeStyleEditorProps) {
             label="标题字号"
             max={24}
             min={11}
-            onChange={(headingFontSize) => updateTypography({ headingFontSize })}
+            onChange={(headingFontSize) =>
+              updateTypography({ headingFontSize })
+            }
             step={1}
             value={style.typography.headingFontSize}
           />
@@ -348,6 +357,7 @@ function NumberField({
     <label className="flex min-w-0 flex-col gap-1">
       <span className="text-xs font-semibold text-slate-500">{label}</span>
       <HeroNumberField
+        aria-label={label}
         fullWidth
         maxValue={max}
         minValue={min}
@@ -385,6 +395,7 @@ function ColorField({
           style={{ backgroundColor: value }}
         />
         <Input
+          aria-label={label}
           fullWidth
           onChange={(event) => onChange(event.target.value)}
           value={value}

@@ -94,7 +94,11 @@ function ProfileDrawer({
     });
   }
 
-  function reorderList(listName: "education" | "work", from: number, to: number) {
+  function reorderList(
+    listName: "education" | "work",
+    from: number,
+    to: number,
+  ) {
     if (from === to) {
       return;
     }

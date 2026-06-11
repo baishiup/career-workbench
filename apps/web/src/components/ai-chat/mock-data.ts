@@ -261,7 +261,14 @@ function createSuccessfulEvents({
   runId: string;
 }): AiRunEventDemo[] {
   return [
-    event(runId, 1, "run.started", "开始 AI 修改建议", `用户输入: ${input}`, createdAt),
+    event(
+      runId,
+      1,
+      "run.started",
+      "开始 AI 修改建议",
+      `用户输入: ${input}`,
+      createdAt,
+    ),
     event(
       runId,
       2,
@@ -321,7 +328,14 @@ function createFailedEvents({
   runId: string;
 }): AiRunEventDemo[] {
   return [
-    event(runId, 1, "run.started", "开始 AI 修改建议", `用户输入: ${input}`, createdAt),
+    event(
+      runId,
+      1,
+      "run.started",
+      "开始 AI 修改建议",
+      `用户输入: ${input}`,
+      createdAt,
+    ),
     event(
       runId,
       2,
@@ -348,7 +362,10 @@ function event(
   options?: { payload?: Record<string, unknown>; stepKey?: string },
 ): AiRunEventDemo {
   return {
-    createdAt: addMilliseconds(new Date(createdAt), sequence * 90).toISOString(),
+    createdAt: addMilliseconds(
+      new Date(createdAt),
+      sequence * 90,
+    ).toISOString(),
     eventId: `${runId}-event-${sequence}`,
     eventType,
     payload: options?.payload,

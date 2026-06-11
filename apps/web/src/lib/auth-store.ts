@@ -316,7 +316,10 @@ export const useAuthStore = create<AuthState>()((set) => ({
 
     try {
       const [{ data: sessionData }, { data: userData, error: userError }] =
-        await Promise.all([supabase.auth.getSession(), supabase.auth.getUser()]);
+        await Promise.all([
+          supabase.auth.getSession(),
+          supabase.auth.getUser(),
+        ]);
 
       if (userError || !userData.user) {
         const shouldShowError = userError && !isMissingSessionError(userError);

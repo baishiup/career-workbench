@@ -17,9 +17,7 @@ function OnboardingAside({ title }: OnboardingAsideProps) {
               <p className="text-lg font-semibold">Career</p>
               <span className="size-2 rounded-full bg-emerald-600" />
             </div>
-            <p className="text-sm font-medium text-slate-500">
-              AI 求职工作台
-            </p>
+            <p className="text-sm font-medium text-slate-500">AI 求职工作台</p>
           </div>
         </div>
         <h1 className="max-w-lg text-4xl font-semibold leading-tight tracking-tight">

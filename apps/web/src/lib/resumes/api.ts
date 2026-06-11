@@ -1,9 +1,14 @@
 import { EdgeFunctionError, invokeEdgeFunction } from "@/lib/edge-functions";
 import { getSupabaseClient } from "@/lib/supabase";
-import type { JobPreferences } from "@career-workbench/domain";
+import type {
+  JobPreferences,
+  ResumeDocument,
+  ResumeStyleConfig,
+} from "@career-workbench/domain";
 import type {
   ApplyResumeToProfileResponse,
   CompleteOnboardingWithResumeResponse,
+  ResumeGenerateResponse,
   ResumeFunctionRow,
   ResumeListRow,
   UploadResumeResponse,
@@ -108,6 +113,47 @@ async function deleteResume(resumeId: string) {
   return { id: data.id as string };
 }
 
+/** 保存编辑器修改：行 title 始终跟随 document.title，保持列表展示一致。 */
+async function saveResumeContent(
+  resumeId: string,
+  input: { document: ResumeDocument; style: ResumeStyleConfig },
+) {
+  const supabase = getSupabaseClient();
+  const title = input.document.title.trim();
+
+  if (!supabase) {
+    throw new ResumeFunctionError("Supabase 未配置，无法保存简历修改。");
+  }
+
+  if (!title) {
+    throw new ResumeFunctionError("简历标题不能为空，无法保存。");
+  }
+
+  const { data, error } = await supabase
+    .from("resumes")
+    .update({
+      document_json: { ...input.document, title },
+      style_json: input.style,
+      title,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", resumeId)
+    .select(
+      "id,title,source_type,document_json,style_json,created_at,updated_at",
+    )
+    .single();
+
+  if (error) {
+    throw new ResumeFunctionError(error.message, { details: error });
+  }
+
+  if (!data) {
+    throw new ResumeFunctionError("没有找到这份简历。");
+  }
+
+  return data as ResumeFunctionRow;
+}
+
 async function getResume(resumeId: string) {
   const supabase = getSupabaseClient();
 
@@ -118,7 +164,7 @@ async function getResume(resumeId: string) {
   const { data, error } = await supabase
     .from("resumes")
     .select(
-      "id,title,source_type,status,document_json,style_json,created_at,updated_at",
+      "id,title,source_type,document_json,style_json,created_at,updated_at",
     )
     .eq("id", resumeId)
     .single();
@@ -157,13 +203,21 @@ async function applyResumeToProfile(resumeId: string) {
   );
 }
 
+async function generateTargetJobResume(jobId: string) {
+  return invokeEdgeFunction<ResumeGenerateResponse>("resume-generate", {
+    job_id: jobId,
+  });
+}
+
 export {
   applyResumeToProfile,
   completeOnboardingWithResume,
   deleteResume,
+  generateTargetJobResume,
   getResume,
   listResumes,
   renameResume,
   ResumeFunctionError,
+  saveResumeContent,
   uploadResume,
 };

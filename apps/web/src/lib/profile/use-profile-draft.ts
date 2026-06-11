@@ -56,7 +56,8 @@ function useProfileDraft(): ProfileDraftState {
           setState({
             profile: null,
             isLoading: false,
-            error: error instanceof Error ? error.message : "读取 Profile 失败。",
+            error:
+              error instanceof Error ? error.message : "读取 Profile 失败。",
           });
         }
       });

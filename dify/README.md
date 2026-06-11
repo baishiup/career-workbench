@@ -2,14 +2,15 @@
 
 每个 workflow 在 Dify 里是独立 App，API Key 不能混用。Edge Functions 环境变量约定：
 
-| 变量 | 对应 workflow | 使用方 |
-| --- | --- | --- |
-| `DIFY_RESUME_PARSE_API_KEY` | 简历附件解析 | `upload-resume`、`complete-onboarding-with-resume` |
-| `DIFY_JOB_PARSE_API_KEY` | job_parse | `job-parse`（仅 admin） |
-| `DIFY_JOB_MATCH_API_KEY` | job_match | `job-match`（登录用户） |
-| `DIFY_BASE_URL` | — | 所有 Dify 调用共用，默认 `https://api.dify.ai/v1` |
-| `DIFY_USER` | — | Dify API 的 `user` 字段，本地调试标识 |
-| `DIFY_RESUME_INPUT_NAME` | 简历附件解析 | workflow 开始节点文件输入名，默认 `resume_file` |
+| 变量                           | 对应 workflow   | 使用方                                             |
+| ------------------------------ | --------------- | -------------------------------------------------- |
+| `DIFY_RESUME_PARSE_API_KEY`    | 简历附件解析    | `upload-resume`、`complete-onboarding-with-resume` |
+| `DIFY_JOB_PARSE_API_KEY`       | job_parse       | `job-parse`（仅 admin）                            |
+| `DIFY_JOB_MATCH_API_KEY`       | job_match       | `job-match`（登录用户）                            |
+| `DIFY_RESUME_GENERATE_API_KEY` | resume_generate | `resume-generate`（登录用户）                      |
+| `DIFY_BASE_URL`                | —               | 所有 Dify 调用共用，默认 `https://api.dify.ai/v1`  |
+| `DIFY_USER`                    | —               | Dify API 的 `user` 字段，本地调试标识              |
+| `DIFY_RESUME_INPUT_NAME`       | 简历附件解析    | workflow 开始节点文件输入名，默认 `resume_file`    |
 
 本地配置：复制 [supabase/.env.example](../supabase/.env.example) 为 `supabase/.env.local` 并填入 key。远程 Supabase 在 Dashboard → Edge Functions → Secrets 使用相同变量名。
 
@@ -60,6 +61,35 @@
 1. 在 Dify 调试界面填入一组 Profile / JD / 规则结果 JSON，确认输出只有叙事字段、没有分数。
 2. 把规则结果中的 missingRequiredSkills 改成不同技能，确认 gaps 围绕缺失技能展开。
 3. 故意传入空 Profile JSON，确认叙事不虚构经历（evidence 为空数组）。
+
+## resume_generate.yml
+
+工作机会任务 6 的定制简历生成 workflow，基于 Profile、结构化 JD 和最新 match report 叙事输出一份可进入编辑器的 `ResumeDocument`。
+
+编排：
+
+- 开始节点三个必填输入：`profile_json`（ProfileDraft JSON 字符串）、`job_json`（结构化 JD JSON 字符串）、`match_report_json`（match report JSON 字符串，含 report_json 与报告引用）。
+- 单个 Gemini LLM 节点（`temperature: 0`，关闭 thinking）只基于 Profile 事实重排和改写简历表达，不虚构经历、公司、项目、学历、指标。
+- Structured Output 限定 `ResumeDocument` 的最低形状：`title`、`locale`、`target`、`sections`。后端会补齐 `target.jobId/company/title` 并再次做运行时校验。
+- Code 节点兜底解析 code fence，并把最终 JSON 放到 `text` 输出。
+
+接入方式：
+
+1. 在 Dify 导入 `dify/resume_generate.yml`，发布后拿到该 app 的 API Key。
+2. 在 Supabase Edge Functions 配置 `DIFY_RESUME_GENERATE_API_KEY`（与其他 workflow 的 key 分开）。
+3. 后端入口是 `supabase/functions/resume-generate`，职位详情页在最新匹配报告可用时触发；结果写入 `public.resumes`，`source_type=target_job`。
+
+验证方式：
+
+1. 在 Dify 调试界面填入一组 Profile / JD / match report JSON，确认输出是 `ResumeDocument`，不是 markdown 或纯文本。
+2. 故意让 match report 里的 gaps 变化，确认 summary/skills/work bullets 会围绕缺口做真实补证据表达。
+3. 故意传入 Profile 里没有的技能或项目，确认 workflow 不会凭空添加事实。
+
+## 简历附件解析 gemini.yml
+
+简历附件解析 workflow 的 Gemini 变体，和 optimized 版同契约：输入 `resume_file`，输出 `text`（`schema_version: "resume.parse.v1"` 的 `AIParsedResumeDraft` JSON）。
+
+编排：文档提取器 → 文本预处理 Code 节点 → Gemini LLM（`gemini-2.5-flash-lite`）→ 输出归一化 Code 节点。与 optimized 版（DeepSeek）互为可替换的模型选项，切换时只需在 Dify 各自发布并更新 `DIFY_RESUME_PARSE_API_KEY` 指向的 App。
 
 ## 简历附件解析.optimized.yml
 

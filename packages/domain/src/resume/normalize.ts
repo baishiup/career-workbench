@@ -6,10 +6,7 @@
  * parser-only 字段不要进入 ProfileDraft 或 ResumeDocument 主数据。
  */
 
-import type {
-  AIParsedResumeDraft,
-  AIParsedResumeLink,
-} from "./parse.ts";
+import type { AIParsedResumeDraft, AIParsedResumeLink } from "./parse.ts";
 import type {
   JobPreferences,
   PersonalCustomField,
@@ -39,8 +36,8 @@ type DefaultResumeStyleConfigOptions = {
 
 type BuildBaseResumeFromAIParsedDraftOptions =
   AIParsedResumeDraftToProfileOptions &
-  ProfileDraftToResumeDocumentOptions &
-  DefaultResumeStyleConfigOptions;
+    ProfileDraftToResumeDocumentOptions &
+    DefaultResumeStyleConfigOptions;
 
 type BaseResumeBuildResult = {
   document: ResumeDocument;
@@ -90,8 +87,8 @@ function aiParsedResumeDraftToProfileDraft(
       ...emptyProfileDraft.personal,
       firstName,
       lastName,
-      headline: cleanString(parsed.candidate.headline) ||
-        preferences.jobFunction,
+      headline:
+        cleanString(parsed.candidate.headline) || preferences.jobFunction,
       email: cleanString(parsed.candidate.email),
       phone: cleanString(parsed.candidate.phone),
       city: cleanString(parsed.candidate.city),
@@ -219,36 +216,30 @@ function buildPersonalSection(profile: ProfileDraft): ResumeSection {
   const links = [
     profile.personal.linkedin
       ? {
-        id: "personal-link-linkedin",
-        label: "LinkedIn",
-        url: profile.personal.linkedin,
-      }
+          id: "personal-link-linkedin",
+          label: "LinkedIn",
+          url: profile.personal.linkedin,
+        }
       : null,
     profile.personal.github
       ? {
-        id: "personal-link-github",
-        label: "GitHub",
-        url: profile.personal.github,
-      }
+          id: "personal-link-github",
+          label: "GitHub",
+          url: profile.personal.github,
+        }
       : null,
     profile.personal.portfolio
       ? {
-        id: "personal-link-portfolio",
-        label: "Portfolio",
-        url: profile.personal.portfolio,
-      }
+          id: "personal-link-portfolio",
+          label: "Portfolio",
+          url: profile.personal.portfolio,
+        }
       : null,
   ].filter((item): item is { id: string; label: string; url: string } =>
-    Boolean(item)
+    Boolean(item),
   );
 
-  addTextBlock(
-    blocks,
-    "personal-name",
-    "姓名",
-    fullName,
-    "personal.firstName",
-  );
+  addTextBlock(blocks, "personal-name", "姓名", fullName, "personal.firstName");
   addTextBlock(
     blocks,
     "personal-headline",
@@ -327,15 +318,18 @@ function buildSkillsSection(profile: ProfileDraft): ResumeSection {
     kind: "skills",
     title: "Core Skills",
     visible: true,
-    blocks: tags.length > 0
-      ? [{
-        id: "skills-tags",
-        kind: "tagList",
-        label: "技能",
-        tags,
-        evidenceRefs: [profileEvidence("skills")],
-      }]
-      : [],
+    blocks:
+      tags.length > 0
+        ? [
+            {
+              id: "skills-tags",
+              kind: "tagList",
+              label: "技能",
+              tags,
+              evidenceRefs: [profileEvidence("skills")],
+            },
+          ]
+        : [],
   };
 }
 
@@ -630,7 +624,9 @@ function getLinkLabel(url: string) {
   }
 }
 
-function mergePreferences(preferences?: Partial<JobPreferences>): JobPreferences {
+function mergePreferences(
+  preferences?: Partial<JobPreferences>,
+): JobPreferences {
   return {
     ...emptyProfileDraft.preferences,
     ...preferences,

@@ -50,9 +50,7 @@ function normalizeProfileData(value: unknown): ProfileDraft {
     preferences: {
       ...emptyProfile.preferences,
       ...preferences,
-      jobTypes: Array.isArray(preferences.jobTypes)
-        ? preferences.jobTypes
-        : [],
+      jobTypes: Array.isArray(preferences.jobTypes) ? preferences.jobTypes : [],
       workAuthorization: Array.isArray(preferences.workAuthorization)
         ? preferences.workAuthorization
         : [],

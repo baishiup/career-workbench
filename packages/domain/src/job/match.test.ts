@@ -83,7 +83,6 @@ function buildJob(overrides: Partial<JobDescription> = {}): JobDescription {
     summary: null,
     importedBy: null,
     importMethod: "manual_form",
-    importStatus: "parsed",
     isActive: true,
     ...overrides,
   };
@@ -259,8 +258,14 @@ describe("computeRuleMatch", () => {
         workAuthorization: [],
       },
     });
-    const remoteJob = buildJob({ requiredSkills: ["React"], remoteStatus: "remote" });
-    const onsiteJob = buildJob({ requiredSkills: ["React"], remoteStatus: "onsite" });
+    const remoteJob = buildJob({
+      requiredSkills: ["React"],
+      remoteStatus: "remote",
+    });
+    const onsiteJob = buildJob({
+      requiredSkills: ["React"],
+      remoteStatus: "onsite",
+    });
 
     const remoteScore = computeRuleMatch(profile, remoteJob, fixedNow).score;
     const onsiteScore = computeRuleMatch(profile, onsiteJob, fixedNow).score;

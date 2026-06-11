@@ -14,12 +14,8 @@ function LoginPage() {
     (state) => state.signInLocalTestUser,
   );
   const signInWithGoogle = useAuthStore((state) => state.signInWithGoogle);
-  const signInWithPassword = useAuthStore(
-    (state) => state.signInWithPassword,
-  );
-  const signUpWithPassword = useAuthStore(
-    (state) => state.signUpWithPassword,
-  );
+  const signInWithPassword = useAuthStore((state) => state.signInWithPassword);
+  const signUpWithPassword = useAuthStore((state) => state.signUpWithPassword);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -73,9 +69,7 @@ function LoginPage() {
             ) : (
               <GoogleMark />
             )}
-            <span>
-              {isLoading ? "Connecting..." : "Continue with Google"}
-            </span>
+            <span>{isLoading ? "Connecting..." : "Continue with Google"}</span>
           </Button>
 
           <div className="my-6 flex w-full items-center gap-3">
@@ -181,11 +175,7 @@ function LoginPage() {
 
 function GoogleMark() {
   return (
-    <svg
-      aria-hidden="true"
-      className="size-8 shrink-0"
-      viewBox="0 0 48 48"
-    >
+    <svg aria-hidden="true" className="size-8 shrink-0" viewBox="0 0 48 48">
       <path
         d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3.1l5.7-5.7C34.2 6.1 29.9 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-8 20-20 0-1.3-.1-2.5-.4-3.5z"
         fill="#FFC107"

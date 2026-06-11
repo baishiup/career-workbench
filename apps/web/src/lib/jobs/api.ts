@@ -4,7 +4,6 @@ import { mockJobs } from "@/lib/jobs/mock-data";
 import type {
   JobEmploymentType,
   JobImportMethod,
-  JobImportStatus,
   JobRecord,
   JobRemoteStatus,
 } from "@/lib/jobs/types";
@@ -71,11 +70,10 @@ type JobDraftInput = {
   summary: string | null;
   importedBy: string | null;
   importMethod: JobImportMethod;
-  importStatus: JobImportStatus;
 };
 
 type JobDescriptionRow = {
-  id: string;
+  id: string | number[];
   source_platform: string | null;
   source_url: string | null;
   company: string;
@@ -95,12 +93,11 @@ type JobDescriptionRow = {
   summary: string | null;
   imported_by: string | null;
   import_method: JobImportMethod;
-  import_status: JobImportStatus;
   is_active: boolean;
 };
 
 const jobSelectColumns =
-  "id,source_platform,source_url,company,title,company_stage,location,remote_status,job_type,seniority,years_required,required_skills,preferred_skills,responsibilities,requirements,salary_range,posted_at,summary,imported_by,import_method,import_status,is_active";
+  "id,source_platform,source_url,company,title,company_stage,location,remote_status,job_type,seniority,years_required,required_skills,preferred_skills,responsibilities,requirements,salary_range,posted_at,summary,imported_by,import_method,is_active";
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -264,7 +261,6 @@ function toJobRowPayload(input: JobDraftInput) {
     company: input.company,
     company_stage: input.companyStage,
     import_method: input.importMethod,
-    import_status: input.importStatus,
     imported_by: input.importedBy,
     job_type: input.jobType,
     location: input.location,
@@ -286,7 +282,7 @@ function toJobRowPayload(input: JobDraftInput) {
 
 function mapJobRow(row: JobDescriptionRow): JobRecord {
   return {
-    id: row.id,
+    id: normalizeJobId(row.id),
     sourcePlatform: row.source_platform,
     sourceUrl: row.source_url,
     company: row.company,
@@ -306,9 +302,32 @@ function mapJobRow(row: JobDescriptionRow): JobRecord {
     summary: row.summary,
     importedBy: row.imported_by,
     importMethod: row.import_method,
-    importStatus: row.import_status,
     isActive: row.is_active,
   };
+}
+
+function normalizeJobId(value: string | number[]) {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return bytesToUuid(value);
+}
+
+function bytesToUuid(bytes: number[]) {
+  if (bytes.length !== 16) {
+    return bytes.join(",");
+  }
+
+  const hex = bytes.map((byte) => byte.toString(16).padStart(2, "0")).join("");
+
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    hex.slice(12, 16),
+    hex.slice(16, 20),
+    hex.slice(20),
+  ].join("-");
 }
 
 export {

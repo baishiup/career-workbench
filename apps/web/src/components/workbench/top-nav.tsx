@@ -5,6 +5,7 @@ import { Button, Tabs } from "@heroui/react";
 import type { User } from "@supabase/supabase-js";
 import { ChevronDown, LogOut } from "lucide-react";
 
+import Link from "@/components/router-link";
 import type { WorkbenchNavItem } from "@/components/workbench/nav-items";
 import {
   pillTabClassName,
@@ -34,12 +35,12 @@ function TopNav({ items }: { items: WorkbenchNavItem[] }) {
 
   return (
     <div className="sticky top-0 z-20 bg-slate-100">
-      <div className="grid min-h-14 grid-cols-1 items-center gap-3 px-3 py-2 lg:grid-cols-[1fr_auto_1fr] lg:px-3">
+      <div className="grid min-h-14 grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 px-3 py-2 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
         <div className="flex min-w-0 items-center gap-2">
           <BrandMark />
         </div>
 
-        <nav className="flex justify-start lg:justify-center">
+        <nav className="col-span-2 row-start-2 flex min-w-0 justify-start overflow-x-auto sm:col-span-1 sm:row-start-auto sm:justify-center sm:overflow-visible">
           {activeValue ? (
             <Tabs
               onSelectionChange={(key) => {
@@ -52,7 +53,10 @@ function TopNav({ items }: { items: WorkbenchNavItem[] }) {
               selectedKey={activeValue}
             >
               <Tabs.ListContainer>
-                <Tabs.List aria-label="工作台导航" className={pillTabListClassName}>
+                <Tabs.List
+                  aria-label="工作台导航"
+                  className={pillTabListClassName}
+                >
                   {items.map((item) => {
                     const Icon =
                       activeValue === item.value ? item.activeIcon : item.icon;
@@ -75,7 +79,7 @@ function TopNav({ items }: { items: WorkbenchNavItem[] }) {
           ) : null}
         </nav>
 
-        <div className="flex items-center justify-start gap-2 lg:justify-end">
+        <div className="flex items-center justify-end gap-2">
           <div className="relative">
             <Button
               aria-expanded={isUserMenuOpen}
@@ -190,15 +194,19 @@ function UserAvatar({
 
 function BrandMark() {
   return (
-    <div className="flex items-center gap-1.5 text-2xl">
+    <Link
+      aria-label="返回首页"
+      className="flex items-center gap-1.5 rounded-md text-2xl transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-400/35"
+      href="/"
+    >
       <div
         aria-hidden="true"
-        className="hidden items-center text-lg font-bold tracking-tight sm:flex"
+        className="flex items-center text-lg font-bold tracking-tight"
       >
         <span>Career</span>
         <span className="text-blue-600">.</span>
       </div>
-    </div>
+    </Link>
   );
 }
 

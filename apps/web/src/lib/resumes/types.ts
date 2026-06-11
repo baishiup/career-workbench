@@ -15,7 +15,6 @@ type ResumeFunctionRow = {
   document_json: ResumeDocument;
   id: string;
   source_type: string;
-  status: string;
   style_json: ResumeStyleConfig;
   title: string;
   updated_at: string;
@@ -50,9 +49,16 @@ type ApplyResumeToProfileResponse = {
   resume_id: string;
 };
 
+type ResumeGenerateResponse = {
+  status: "ok";
+  provider: "dify";
+  resume: ResumeFunctionRow;
+};
+
 export type {
   ApplyResumeToProfileResponse,
   CompleteOnboardingWithResumeResponse,
+  ResumeGenerateResponse,
   ResumeFunctionFile,
   ResumeFunctionRow,
   ResumeListRow,

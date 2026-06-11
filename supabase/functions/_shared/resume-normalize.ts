@@ -6,6 +6,10 @@
  */
 
 export type {
+  ProfileDraft,
+} from "../../../packages/domain/src/profile/types.ts";
+
+export type {
   AIParsedResumeDraft,
 } from "../../../packages/domain/src/resume/parse.ts";
 
@@ -16,6 +20,10 @@ export type {
   DefaultResumeStyleConfigOptions,
   ProfileDraftToResumeDocumentOptions,
 } from "../../../packages/domain/src/resume/normalize.ts";
+
+export type {
+  ResumeDocument,
+} from "../../../packages/domain/src/resume/types.ts";
 
 export {
   aiParsedResumeDraftToProfileDraft,

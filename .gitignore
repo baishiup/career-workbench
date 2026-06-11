@@ -4,6 +4,8 @@ out
 dist
 coverage
 *.tsbuildinfo
+.cache
+supabase/.temp
 
 .env
 .env.*

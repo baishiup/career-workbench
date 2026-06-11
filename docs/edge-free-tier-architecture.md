@@ -16,7 +16,7 @@ career-workbench/
 
   packages/
     shared/              # 共享类型和 schema
-    resume/              # 简历领域契约
+    domain/              # 简历/Profile/JD 领域模型与匹配规则
     ai/                  # prompt 契约、mock provider、输出 schema
     db/                  # Supabase client / repository 边界
 

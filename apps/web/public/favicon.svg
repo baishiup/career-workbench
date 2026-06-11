@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Career Workbench">
+  <rect width="64" height="64" rx="14" fill="#ffffff"/>
+  <defs>
+    <linearGradient id="faviconGradient" x1="9" x2="55" y1="8" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1268ff"/>
+      <stop offset="1" stop-color="#16b981"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#faviconGradient)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 7.5 53.2 19.8v24.4L32 56.5 10.8 44.2V19.8L32 7.5Z" stroke-width="6"/>
+    <path d="M39.4 20.8H27.8a8.4 8.4 0 0 0-8.4 8.4v5.6a8.4 8.4 0 0 0 8.4 8.4h11.6" stroke-width="6"/>
+    <path d="m34.8 35.1 4.7 4.7 9.4-10.7" stroke-width="6"/>
+  </g>
+</svg>

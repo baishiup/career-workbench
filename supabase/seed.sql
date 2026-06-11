@@ -23,7 +23,6 @@ insert into public.job_descriptions (
   summary,
   imported_by,
   import_method,
-  import_status,
   is_active
 ) values
   (
@@ -55,7 +54,6 @@ insert into public.job_descriptions (
     '面向商家增长和结账转化的前端岗位，适合突出组件系统、复杂表单和产品指标经验。',
     'Admin demo',
     'manual_text',
-    'parsed',
     true
   ),
   (
@@ -87,7 +85,6 @@ insert into public.job_descriptions (
     '偏成熟业务系统的前端岗位，匹配复杂表单、可靠交付和可访问性证据。',
     'Admin demo',
     'manual_text',
-    'parsed',
     true
   ),
   (
@@ -119,7 +116,6 @@ insert into public.job_descriptions (
     'AI 产品前端岗位，方向高度相关，但级别偏高，需要更强架构和负责人证据。',
     'Admin demo',
     'screenshot',
-    'needs_review',
     true
   ),
   (
@@ -151,7 +147,6 @@ insert into public.job_descriptions (
     '前端平台方向匹配度稳定，适合把组件系统、工程化和文档能力作为主线。',
     'Admin demo',
     'manual_text',
-    'parse_failed',
     true
   )
 on conflict (id) do nothing;

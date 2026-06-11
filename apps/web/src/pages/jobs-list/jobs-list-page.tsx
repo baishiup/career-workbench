@@ -49,7 +49,9 @@ export function JobsListPage() {
       setJobs(result.jobs);
       setMode(result.mode);
     } catch (error) {
-      setLoadError(error instanceof Error ? error.message : "读取职位列表失败。");
+      setLoadError(
+        error instanceof Error ? error.message : "读取职位列表失败。",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -76,9 +78,7 @@ export function JobsListPage() {
               </Chip>
             ) : null}
           </div>
-          <p className="text-sm text-slate-500">
-            管理导入的职位和匹配度。
-          </p>
+          <p className="text-sm text-slate-500">管理导入的职位和匹配度。</p>
         </div>
         {isAdmin ? (
           <Button

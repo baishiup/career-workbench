@@ -10,6 +10,7 @@
       "apply-resume-to-profile",
       "complete-onboarding-with-resume",
       "job-match",
+      "resume-generate",
       "tests",
       "upload-resume"
     ]
@@ -20,6 +21,7 @@
       "apply-resume-to-profile",
       "complete-onboarding-with-resume",
       "job-match",
+      "resume-generate",
       "tests",
       "upload-resume"
     ]

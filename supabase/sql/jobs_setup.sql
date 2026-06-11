@@ -24,7 +24,6 @@ create table if not exists public.job_descriptions (
   summary text,
   imported_by text,
   import_method text not null default 'manual_text',
-  import_status text not null default 'parsed',
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -88,9 +87,6 @@ alter table public.job_descriptions
   add column if not exists import_method text not null default 'manual_text';
 
 alter table public.job_descriptions
-  add column if not exists import_status text not null default 'parsed';
-
-alter table public.job_descriptions
   add column if not exists is_active boolean not null default true;
 
 alter table public.job_descriptions
@@ -130,13 +126,6 @@ alter table public.job_descriptions
   add constraint job_descriptions_import_method_check
   check (import_method in ('manual_form', 'manual_text', 'screenshot'));
 
-alter table public.job_descriptions
-  drop constraint if exists job_descriptions_import_status_check;
-
-alter table public.job_descriptions
-  add constraint job_descriptions_import_status_check
-  check (import_status in ('parsed', 'needs_review', 'parse_failed'));
-
 create index if not exists job_descriptions_active_created_idx
   on public.job_descriptions (is_active, created_at desc);
 
@@ -161,9 +150,6 @@ comment on table public.job_descriptions is
 
 comment on column public.job_descriptions.import_method is
   'How the job entered the system: manual_form, manual_text, or screenshot.';
-
-comment on column public.job_descriptions.import_status is
-  'Parse pipeline state: parsed, needs_review, or parse_failed.';
 
 comment on column public.job_descriptions.is_active is
   'Inactive jobs are hidden from user-facing lists but kept for audit.';

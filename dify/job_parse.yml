@@ -1,17 +1,17 @@
 app:
   description: 把管理员粘贴的 JD 文本或职位截图解析成对齐 job_descriptions 表的结构化字段。
   icon: 💼
-  icon_background: '#E0F2FE'
+  icon_background: "#E0F2FE"
   icon_type: emoji
   mode: workflow
   name: job_parse
   use_icon_as_answer_icon: false
 dependencies:
-- current_identifier: null
-  type: marketplace
-  value:
-    marketplace_plugin_unique_identifier: langgenius/gemini:0.8.4@23aed1fa4d2c8015337bd18efa28b3dccf5b7309a83b1501541fb7358518faec
-    version: null
+  - current_identifier: null
+    type: marketplace
+    value:
+      marketplace_plugin_unique_identifier: langgenius/gemini:0.8.4@23aed1fa4d2c8015337bd18efa28b3dccf5b7309a83b1501541fb7358518faec
+      version: null
 kind: app
 version: 0.6.0
 workflow:
@@ -20,15 +20,15 @@ workflow:
   features:
     file_upload:
       allowed_file_extensions:
-      - .JPG
-      - .JPEG
-      - .PNG
-      - .WEBP
+        - .JPG
+        - .JPEG
+        - .PNG
+        - .WEBP
       allowed_file_types:
-      - image
+        - image
       allowed_file_upload_methods:
-      - local_file
-      - remote_url
+        - local_file
+        - remote_url
       enabled: false
       fileUploadConfig:
         attachment_image_file_size_limit: 2
@@ -45,10 +45,10 @@ workflow:
         enabled: false
         number_limits: 5
         transfer_methods:
-        - local_file
-        - remote_url
+          - local_file
+          - remote_url
       number_limits: 5
-    opening_statement: ''
+    opening_statement: ""
     retriever_resource:
       enabled: false
     sensitive_word_avoidance:
@@ -60,349 +60,350 @@ workflow:
       enabled: false
     text_to_speech:
       enabled: false
-      language: ''
-      voice: ''
+      language: ""
+      voice: ""
   graph:
     edges:
-    - data:
-        isInLoop: false
-        sourceType: start
-        targetType: llm
-      id: 1781000000001-source-1781000000002-target
-      selected: false
-      source: '1781000000001'
-      sourceHandle: source
-      target: '1781000000002'
-      targetHandle: target
-      type: custom
-      zIndex: 0
-    - data:
-        isInLoop: false
-        sourceType: llm
-        targetType: code
-      id: 1781000000002-source-1781000000003-target
-      selected: false
-      source: '1781000000002'
-      sourceHandle: source
-      target: '1781000000003'
-      targetHandle: target
-      type: custom
-      zIndex: 0
-    - data:
-        isInLoop: false
-        sourceType: code
-        targetType: end
-      id: 1781000000003-source-1781000000004-target
-      selected: false
-      source: '1781000000003'
-      sourceHandle: source
-      target: '1781000000004'
-      targetHandle: target
-      type: custom
-      zIndex: 0
+      - data:
+          isInLoop: false
+          sourceType: start
+          targetType: llm
+        id: 1781000000001-source-1781000000002-target
+        selected: false
+        source: "1781000000001"
+        sourceHandle: source
+        target: "1781000000002"
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInLoop: false
+          sourceType: llm
+          targetType: code
+        id: 1781000000002-source-1781000000003-target
+        selected: false
+        source: "1781000000002"
+        sourceHandle: source
+        target: "1781000000003"
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInLoop: false
+          sourceType: code
+          targetType: end
+        id: 1781000000003-source-1781000000004-target
+        selected: false
+        source: "1781000000003"
+        sourceHandle: source
+        target: "1781000000004"
+        targetHandle: target
+        type: custom
+        zIndex: 0
     nodes:
-    - data:
-        desc: 粘贴 JD 文本或上传职位截图，至少提供一个。
+      - data:
+          desc: 粘贴 JD 文本或上传职位截图，至少提供一个。
+          selected: false
+          title: 用户输入
+          type: start
+          variables:
+            - hide: false
+              hint: ""
+              label: jd_text
+              max_length: 48000
+              options: []
+              placeholder: ""
+              required: false
+              type: paragraph
+              variable: jd_text
+            - allowed_file_extensions: []
+              allowed_file_types:
+                - image
+              allowed_file_upload_methods:
+                - local_file
+                - remote_url
+              hide: false
+              hint: ""
+              label: jd_screenshots
+              max_length: 5
+              options: []
+              placeholder: ""
+              required: false
+              type: file-list
+              variable: jd_screenshots
+        height: 137
+        id: "1781000000001"
+        position:
+          x: -280
+          y: 240
+        positionAbsolute:
+          x: -280
+          y: 240
         selected: false
-        title: 用户输入
-        type: start
-        variables:
-        - hide: false
-          hint: ''
-          label: jd_text
-          max_length: 48000
-          options: []
-          placeholder: ''
-          required: false
-          type: paragraph
-          variable: jd_text
-        - allowed_file_extensions: []
-          allowed_file_types:
-          - image
-          allowed_file_upload_methods:
-          - local_file
-          - remote_url
-          hide: false
-          hint: ''
-          label: jd_screenshots
-          max_length: 5
-          options: []
-          placeholder: ''
-          required: false
-          type: file-list
-          variable: jd_screenshots
-      height: 137
-      id: '1781000000001'
-      position:
-        x: -280
-        y: 240
-      positionAbsolute:
-        x: -280
-        y: 240
-      selected: false
-      sourcePosition: right
-      targetPosition: left
-      type: custom
-      width: 242
-    - data:
-        context:
-          enabled: false
-          variable_selector: []
-        desc: 从 JD 文本和/或职位截图抽取结构化职位字段。Gemini 兼容版不在 schema 中使用 nullable union。
-        model:
-          completion_params:
-            temperature: 0
-            thinking_mode: false
-          mode: chat
-          name: gemini-2.5-flash
-          provider: langgenius/gemini/google
-        prompt_template:
-        - id: a1f3c2d4-0001-4abc-8def-job-parse-sys
-          role: system
-          text: '你是一个严格的职位描述（JD）信息抽取器。输入可能是 JD 纯文本、职位页面截图，或两者同时存在。只抽取输入中明确出现的信息，不推测、不补全、不润色。
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 从 JD 文本和/或职位截图抽取结构化职位字段。Gemini 兼容版不在 schema 中使用 nullable union。
+          model:
+            completion_params:
+              temperature: 0
+              thinking_mode: false
+            mode: chat
+            name: gemini-2.5-flash
+            provider: langgenius/gemini/google
+          prompt_template:
+            - id: a1f3c2d4-0001-4abc-8def-job-parse-sys
+              role: system
+              text:
+                '你是一个严格的职位描述（JD）信息抽取器。输入可能是 JD 纯文本、职位页面截图，或两者同时存在。只抽取输入中明确出现的信息，不推测、不补全、不润色。
 
 
-            输入处理规则：
+                输入处理规则：
 
-            1. 文本和截图同时提供时，以文本为主、截图作为补充；两者冲突时以文本为准，并在 parse_warnings 中说明冲突。
+                1. 文本和截图同时提供时，以文本为主、截图作为补充；两者冲突时以文本为准，并在 parse_warnings 中说明冲突。
 
-            2. 多张截图按顺序视为同一个职位页面的连续片段。
+                2. 多张截图按顺序视为同一个职位页面的连续片段。
 
-            3. 截图模糊、被截断或关键字段（如薪资、地点、年限）不可见时，对应字段填空字符串 ""，并在 parse_warnings 中说明。
-
-
-            输出要求：
-
-            1. 只输出 JSON 对象，必须符合 Structured Output JSON Schema。
-
-            2. 缺失的字符串字段填空字符串 ""；数组字段缺失时填 []。不要输出 null，后续 Code 节点会把空字符串归一化为 null。
-
-            3. remote_status 只能是 remote / hybrid / onsite 之一，无法判断时填 ""。
-
-            4. job_type 只能是 full_time / contract / part_time 之一，无法判断时填 ""。
-
-            5. posted_at 用 YYYY-MM-DD；只能确定相对时间（如 "3 days ago"）或无法确定时填 ""，并在 parse_warnings
-            中保留原始表述。
-
-            6. required_skills 是 JD 明确要求的技能；preferred_skills 是加分项（nice to have / preferred）；不要互相混入。技能用原文拼写，单个技能不超过
-            40 字。
-
-            7. responsibilities 和 requirements 按原文顺序输出，每条不超过 120 字，各最多 12 条。
-
-            8. summary 用不超过 80 字的中文概括该职位（这是唯一允许生成的字段）。
-
-            9. source_platform 只在输入中明确出现来源（如 LinkedIn 页面特征、招聘网站名）时填写，否则填 ""。
-
-            '
-        - id: a1f3c2d4-0002-4abc-8def-job-parse-usr
-          role: user
-          text: '请解析以下职位描述。JD 文本（可能为空，为空时以截图为准）：
+                3. 截图模糊、被截断或关键字段（如薪资、地点、年限）不可见时，对应字段填空字符串 ""，并在 parse_warnings 中说明。
 
 
-            {{#1781000000001.jd_text#}}
+                输出要求：
 
-            '
+                1. 只输出 JSON 对象，必须符合 Structured Output JSON Schema。
+
+                2. 缺失的字符串字段填空字符串 ""；数组字段缺失时填 []。不要输出 null，后续 Code 节点会把空字符串归一化为 null。
+
+                3. remote_status 只能是 remote / hybrid / onsite 之一，无法判断时填 ""。
+
+                4. job_type 只能是 full_time / contract / part_time 之一，无法判断时填 ""。
+
+                5. posted_at 用 YYYY-MM-DD；只能确定相对时间（如 "3 days ago"）或无法确定时填 ""，并在 parse_warnings
+                中保留原始表述。
+
+                6. required_skills 是 JD 明确要求的技能；preferred_skills 是加分项（nice to have / preferred）；不要互相混入。技能用原文拼写，单个技能不超过
+                40 字。
+
+                7. responsibilities 和 requirements 按原文顺序输出，每条不超过 120 字，各最多 12 条。
+
+                8. summary 用不超过 80 字的中文概括该职位（这是唯一允许生成的字段）。
+
+                9. source_platform 只在输入中明确出现来源（如 LinkedIn 页面特征、招聘网站名）时填写，否则填 ""。
+
+                '
+            - id: a1f3c2d4-0002-4abc-8def-job-parse-usr
+              role: user
+              text: "请解析以下职位描述。JD 文本（可能为空，为空时以截图为准）：
+
+
+                {{#1781000000001.jd_text#}}
+
+                "
+          selected: false
+          structured_output:
+            schema:
+              properties:
+                company:
+                  type: string
+                company_stage:
+                  type: string
+                job_type:
+                  type: string
+                location:
+                  type: string
+                parse_warnings:
+                  items:
+                    type: string
+                  type: array
+                posted_at:
+                  type: string
+                preferred_skills:
+                  items:
+                    type: string
+                  type: array
+                remote_status:
+                  type: string
+                required_skills:
+                  items:
+                    type: string
+                  type: array
+                requirements:
+                  items:
+                    type: string
+                  type: array
+                responsibilities:
+                  items:
+                    type: string
+                  type: array
+                salary_range:
+                  type: string
+                schema_version:
+                  enum:
+                    - job.parse.v1
+                  type: string
+                seniority:
+                  type: string
+                source_platform:
+                  type: string
+                summary:
+                  type: string
+                title:
+                  type: string
+                years_required:
+                  type: string
+              required:
+                - schema_version
+                - source_platform
+                - company
+                - title
+                - company_stage
+                - location
+                - remote_status
+                - job_type
+                - seniority
+                - years_required
+                - required_skills
+                - preferred_skills
+                - responsibilities
+                - requirements
+                - salary_range
+                - posted_at
+                - summary
+                - parse_warnings
+              type: object
+          structured_output_enabled: true
+          title: LLM Vision 解析
+          type: llm
+          vision:
+            configs:
+              detail: high
+              variable_selector:
+                - "1781000000001"
+                - jd_screenshots
+            enabled: true
+        height: 148
+        id: "1781000000002"
+        position:
+          x: 60
+          y: 240
+        positionAbsolute:
+          x: 60
+          y: 240
         selected: false
-        structured_output:
-          schema:
-            properties:
-              company:
-                type: string
-              company_stage:
-                type: string
-              job_type:
-                type: string
-              location:
-                type: string
-              parse_warnings:
-                items:
-                  type: string
-                type: array
-              posted_at:
-                type: string
-              preferred_skills:
-                items:
-                  type: string
-                type: array
-              remote_status:
-                type: string
-              required_skills:
-                items:
-                  type: string
-                type: array
-              requirements:
-                items:
-                  type: string
-                type: array
-              responsibilities:
-                items:
-                  type: string
-                type: array
-              salary_range:
-                type: string
-              schema_version:
-                enum:
-                - job.parse.v1
-                type: string
-              seniority:
-                type: string
-              source_platform:
-                type: string
-              summary:
-                type: string
-              title:
-                type: string
-              years_required:
-                type: string
-            required:
-            - schema_version
-            - source_platform
-            - company
-            - title
-            - company_stage
-            - location
-            - remote_status
-            - job_type
-            - seniority
-            - years_required
-            - required_skills
-            - preferred_skills
-            - responsibilities
-            - requirements
-            - salary_range
-            - posted_at
-            - summary
-            - parse_warnings
-            type: object
-        structured_output_enabled: true
-        title: LLM Vision 解析
-        type: llm
-        vision:
-          configs:
-            detail: high
-            variable_selector:
-            - '1781000000001'
-            - jd_screenshots
-          enabled: true
-      height: 148
-      id: '1781000000002'
-      position:
-        x: 60
-        y: 240
-      positionAbsolute:
-        x: 60
-        y: 240
-      selected: false
-      sourcePosition: right
-      targetPosition: left
-      type: custom
-      width: 242
-    - data:
-        code: |
-          function main({ raw_json }) {
-            const source = String(raw_json || "").trim();
-            const jsonText = source
-              .replace(/^```(?:json)?\s*/i, "")
-              .replace(/\s*```$/i, "");
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+      - data:
+          code: |
+            function main({ raw_json }) {
+              const source = String(raw_json || "").trim();
+              const jsonText = source
+                .replace(/^```(?:json)?\s*/i, "")
+                .replace(/\s*```$/i, "");
 
-            let parsed;
-            try {
-              parsed = JSON.parse(jsonText);
-            } catch (error) {
-              return { normalized_json: jsonText };
-            }
-
-            const warnings = Array.isArray(parsed.parse_warnings)
-              ? parsed.parse_warnings
-              : [];
-            const remoteValues = ["remote", "hybrid", "onsite"];
-            const jobTypeValues = ["full_time", "contract", "part_time"];
-
-            if (parsed.remote_status && !remoteValues.includes(parsed.remote_status)) {
-              warnings.push(
-                "远程状态 \"" + parsed.remote_status + "\" 无法识别，已置空待人工确认。"
-              );
-              parsed.remote_status = "";
-            }
-
-            if (parsed.job_type && !jobTypeValues.includes(parsed.job_type)) {
-              warnings.push(
-                "岗位类型 \"" + parsed.job_type + "\" 无法识别，已置空待人工确认。"
-              );
-              parsed.job_type = "";
-            }
-
-            parsed.parse_warnings = warnings;
-
-            function normalize(value) {
-              if (Array.isArray(value)) {
-                return value.map(normalize);
+              let parsed;
+              try {
+                parsed = JSON.parse(jsonText);
+              } catch (error) {
+                return { normalized_json: jsonText };
               }
 
-              if (value && typeof value === "object") {
-                return Object.fromEntries(
-                  Object.entries(value).map(([key, child]) => [key, normalize(child)])
+              const warnings = Array.isArray(parsed.parse_warnings)
+                ? parsed.parse_warnings
+                : [];
+              const remoteValues = ["remote", "hybrid", "onsite"];
+              const jobTypeValues = ["full_time", "contract", "part_time"];
+
+              if (parsed.remote_status && !remoteValues.includes(parsed.remote_status)) {
+                warnings.push(
+                  "远程状态 \"" + parsed.remote_status + "\" 无法识别，已置空待人工确认。"
                 );
+                parsed.remote_status = "";
               }
 
-              return value === "" ? null : value;
-            }
+              if (parsed.job_type && !jobTypeValues.includes(parsed.job_type)) {
+                warnings.push(
+                  "岗位类型 \"" + parsed.job_type + "\" 无法识别，已置空待人工确认。"
+                );
+                parsed.job_type = "";
+              }
 
-            return {
-              normalized_json: JSON.stringify(normalize(parsed))
-            };
-          }
-        code_language: javascript
-        desc: 校验枚举字段并把空字符串归一化为后端期望的 null。
-        outputs:
-          normalized_json:
-            children: null
-            type: string
+              parsed.parse_warnings = warnings;
+
+              function normalize(value) {
+                if (Array.isArray(value)) {
+                  return value.map(normalize);
+                }
+
+                if (value && typeof value === "object") {
+                  return Object.fromEntries(
+                    Object.entries(value).map(([key, child]) => [key, normalize(child)])
+                  );
+                }
+
+                return value === "" ? null : value;
+              }
+
+              return {
+                normalized_json: JSON.stringify(normalize(parsed))
+              };
+            }
+          code_language: javascript
+          desc: 校验枚举字段并把空字符串归一化为后端期望的 null。
+          outputs:
+            normalized_json:
+              children: null
+              type: string
+          selected: false
+          title: 输出归一化
+          type: code
+          variables:
+            - value_selector:
+                - "1781000000002"
+                - text
+              variable: raw_json
+        height: 96
+        id: "1781000000003"
+        position:
+          x: 400
+          y: 240
+        positionAbsolute:
+          x: 400
+          y: 240
         selected: false
-        title: 输出归一化
-        type: code
-        variables:
-        - value_selector:
-          - '1781000000002'
-          - text
-          variable: raw_json
-      height: 96
-      id: '1781000000003'
-      position:
-        x: 400
-        y: 240
-      positionAbsolute:
-        x: 400
-        y: 240
-      selected: false
-      sourcePosition: right
-      targetPosition: left
-      type: custom
-      width: 242
-    - data:
-        desc: 生成最终内容
-        outputs:
-        - value_selector:
-          - '1781000000003'
-          - normalized_json
-          value_type: string
-          variable: text
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+      - data:
+          desc: 生成最终内容
+          outputs:
+            - value_selector:
+                - "1781000000003"
+                - normalized_json
+              value_type: string
+              variable: text
+          selected: false
+          title: Output
+          type: end
+        height: 116
+        id: "1781000000004"
+        position:
+          x: 740
+          y: 240
+        positionAbsolute:
+          x: 740
+          y: 240
         selected: false
-        title: Output
-        type: end
-      height: 116
-      id: '1781000000004'
-      position:
-        x: 740
-        y: 240
-      positionAbsolute:
-        x: 740
-        y: 240
-      selected: false
-      sourcePosition: right
-      targetPosition: left
-      type: custom
-      width: 242
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
     viewport:
       x: -400
       y: 200

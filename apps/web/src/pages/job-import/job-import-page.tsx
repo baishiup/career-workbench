@@ -1,15 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Button, Card, Chip, ListBox, Select, TextArea } from "@heroui/react";
 import {
-  ArrowLeft,
-  ImagePlus,
-  Loader2,
-  Save,
-  Sparkles,
-  X,
-} from "lucide-react";
+  Alert,
+  Button,
+  Card,
+  Chip,
+  ListBox,
+  Select,
+  TextArea,
+} from "@heroui/react";
+import { ArrowLeft, ImagePlus, Loader2, Save, Sparkles, X } from "lucide-react";
 
 import Link from "@/components/router-link";
 import { panelClassName } from "@/components/workbench/surface-classes";
@@ -24,14 +25,12 @@ import {
 } from "@/lib/jobs/api";
 import {
   importMethodLabels,
-  importStatusLabels,
   jobTypeLabels,
   remoteStatusLabels,
 } from "@/lib/jobs/labels";
 import type {
   JobEmploymentType,
   JobImportMethod,
-  JobImportStatus,
   JobRecord,
   JobRemoteStatus,
 } from "@/lib/jobs/types";
@@ -61,7 +60,6 @@ type JobFormState = {
   postedAt: string;
   summary: string;
   importMethod: JobImportMethod;
-  importStatus: JobImportStatus;
 };
 
 const emptyForm: JobFormState = {
@@ -83,7 +81,6 @@ const emptyForm: JobFormState = {
   postedAt: "",
   summary: "",
   importMethod: "manual_form",
-  importStatus: "parsed",
 };
 
 export function JobImportPage({ jobId }: { jobId?: string }) {
@@ -218,17 +215,14 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
       setForm((current) =>
         applyParsedDraft(current, response.parsed, {
           importMethod: attemptMethod,
-          importStatus: warnings.length > 0 ? "needs_review" : "parsed",
         }),
       );
       setParseWarnings(warnings);
     } catch (error) {
       setParseError(error instanceof Error ? error.message : "解析失败。");
-      // 失败可降级为手动填写；默认状态记 parse_failed，admin 可在表单里改。
       setForm((current) => ({
         ...current,
         importMethod: attemptMethod,
-        importStatus: "parse_failed",
       }));
     } finally {
       setIsParsing(false);
@@ -252,9 +246,10 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
           profile.fullName ??
           "admin",
       });
-      const saved = isEditMode && jobId
-        ? await updateJob(jobId, input)
-        : await createJob(input);
+      const saved =
+        isEditMode && jobId
+          ? await updateJob(jobId, input)
+          : await createJob(input);
 
       navigateTo(`/jobs/${saved.id}`);
     } catch (error) {
@@ -278,7 +273,8 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
           {isEditMode ? "编辑职位" : "导入职位"}
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          粘贴 JD 文本或上传截图由 AI 解析预填，也可以直接手动填写；保存前请人工确认。
+          粘贴 JD 文本或上传截图由 AI
+          解析预填，也可以直接手动填写；保存前请人工确认。
         </p>
       </div>
 
@@ -548,17 +544,6 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
               options={importMethodLabels}
               value={form.importMethod}
             />
-            <SelectField
-              label="导入状态"
-              onChange={(importStatus) =>
-                setForm((c) => ({
-                  ...c,
-                  importStatus: importStatus as JobImportStatus,
-                }))
-              }
-              options={importStatusLabels}
-              value={form.importStatus}
-            />
           </div>
 
           {existingJob && !existingJob.isActive ? (
@@ -749,14 +734,13 @@ function jobToFormState(job: JobRecord): JobFormState {
     postedAt: job.postedAt ?? "",
     summary: job.summary ?? "",
     importMethod: job.importMethod,
-    importStatus: job.importStatus,
   };
 }
 
 function applyParsedDraft(
   current: JobFormState,
   parsed: JobParseDraft,
-  meta: { importMethod: JobImportMethod; importStatus: JobImportStatus },
+  meta: { importMethod: JobImportMethod },
 ): JobFormState {
   return {
     ...current,
@@ -777,7 +761,6 @@ function applyParsedDraft(
     postedAt: parsed.posted_at ?? current.postedAt,
     summary: parsed.summary ?? current.summary,
     importMethod: meta.importMethod,
-    importStatus: meta.importStatus,
   };
 }
 
@@ -805,7 +788,6 @@ function formStateToDraftInput(
     summary: emptyToNull(form.summary),
     importedBy: meta.importedBy,
     importMethod: form.importMethod,
-    importStatus: form.importStatus,
   };
 }
 

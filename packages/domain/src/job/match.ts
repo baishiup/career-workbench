@@ -82,7 +82,10 @@ const labelThresholds = {
  * 让 "ReactJS" 与 "React"、"Node.js" 与 "NodeJS" 互相命中。
  */
 function normalizeSkill(raw: string): string {
-  const compact = raw.trim().toLowerCase().replace(/[\s./_-]+/g, "");
+  const compact = raw
+    .trim()
+    .toLowerCase()
+    .replace(/[\s./_-]+/g, "");
   return skillAliasDictionary[compact] ?? compact;
 }
 
@@ -145,8 +148,9 @@ function computeProfileYears(work: WorkItem[], now: Date = new Date()): number {
       // 同月入职离职也算 1 个月经验。
       return { start, end: end + 1 };
     })
-    .filter((interval): interval is { start: number; end: number } =>
-      interval !== null,
+    .filter(
+      (interval): interval is { start: number; end: number } =>
+        interval !== null,
     )
     .sort((a, b) => a.start - b.start);
 
@@ -267,7 +271,10 @@ function computeRuleMatch(
 
   dimensions.push({
     weight: dimensionWeights.remote,
-    score: remotePreferenceScore(profile.preferences.openToRemote, job.remoteStatus),
+    score: remotePreferenceScore(
+      profile.preferences.openToRemote,
+      job.remoteStatus,
+    ),
   });
 
   const totalWeight = dimensions.reduce((sum, item) => sum + item.weight, 0);

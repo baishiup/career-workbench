@@ -200,13 +200,13 @@ createdAt:
 
 ## Dify Workflow / Chatflow 映射
 
-| 业务任务 | taskType | Dify 类型 | workflow key | 主要输出 | Career Workbench 写入 |
-|---|---|---|---|---|---|
-| 简历解析 | `resume_parse` | Workflow + Document Extractor | `resume.profile.normalize.v1` | profile draft、证据来源 | `ProfileVersion` draft、`AiRun`、`AiRunEvent`、`ExternalAiRun` |
-| JD 解析 | `match_analysis` 前置步骤 | Workflow | `job.jd.parse.v1` | 结构化 JD 要求 | `JobDescription` structured fields、`AiRunEvent` |
-| 匹配分析 | `match_analysis` | Workflow | `match.report.generate.v1` | 匹配分数、缺口、风险、证据 | `MatchReport`、`AiRun`、`AiRunEvent`、`ExternalAiRun` |
-| 定制简历生成 | `resume_generation` | Workflow | `resume.tailor.generate.v1` | target resume draft、生成理由 | `ResumeVersion`、`ResumeChangeLog`、`AiRun`、`AiRunEvent`、`ExternalAiRun` |
-| 简历修改建议 | `resume_chat` | Chatflow | `resume.suggestion.review.v1` | 自然语言回复、结构化 patch | `ResumeConversation`、`ResumePatch`、`AiRun`、`AiRunEvent`、`ExternalAiRun` |
+| 业务任务     | taskType                  | Dify 类型                     | workflow key                  | 主要输出                      | Career Workbench 写入                                                       |
+| ------------ | ------------------------- | ----------------------------- | ----------------------------- | ----------------------------- | --------------------------------------------------------------------------- |
+| 简历解析     | `resume_parse`            | Workflow + Document Extractor | `resume.profile.normalize.v1` | profile draft、证据来源       | `ProfileVersion` draft、`AiRun`、`AiRunEvent`、`ExternalAiRun`              |
+| JD 解析      | `match_analysis` 前置步骤 | Workflow                      | `job.jd.parse.v1`             | 结构化 JD 要求                | `JobDescription` structured fields、`AiRunEvent`                            |
+| 匹配分析     | `match_analysis`          | Workflow                      | `match.report.generate.v1`    | 匹配分数、缺口、风险、证据    | `MatchReport`、`AiRun`、`AiRunEvent`、`ExternalAiRun`                       |
+| 定制简历生成 | `resume_generation`       | Workflow                      | `resume.tailor.generate.v1`   | target resume draft、生成理由 | `ResumeVersion`、`ResumeChangeLog`、`AiRun`、`AiRunEvent`、`ExternalAiRun`  |
+| 简历修改建议 | `resume_chat`             | Chatflow                      | `resume.suggestion.review.v1` | 自然语言回复、结构化 patch    | `ResumeConversation`、`ResumePatch`、`AiRun`、`AiRunEvent`、`ExternalAiRun` |
 
 Dify 输出要求：
 

@@ -61,9 +61,7 @@ function TextAreaField({
 }) {
   return (
     <label className={cn("flex flex-col gap-1.5", className)}>
-      <span className="text-sm font-semibold text-slate-500">
-        {label}
-      </span>
+      <span className="text-sm font-semibold text-slate-500">{label}</span>
       <TextArea
         fullWidth
         onChange={(event) => onChange(event.target.value)}

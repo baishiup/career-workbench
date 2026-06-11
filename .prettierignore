@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.cache
+.git
+supabase/.temp
+
+deno.lock
+pnpm-lock.yaml
+
+supabase/functions

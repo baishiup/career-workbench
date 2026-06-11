@@ -74,9 +74,7 @@ function PersonalForm({
           onChange={(value) => onPersonalChange("city", value)}
         />
         <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-semibold text-slate-500">
-            工作类型
-          </span>
+          <span className="text-sm font-semibold text-slate-500">工作类型</span>
           <Select
             aria-label="工作类型"
             fullWidth
@@ -137,7 +135,10 @@ function PersonalForm({
         </div>
 
         {customFields.map((field) => (
-          <div className="grid gap-2 md:grid-cols-[180px_minmax(0,1fr)_auto]" key={field.id}>
+          <div
+            className="grid gap-2 md:grid-cols-[180px_minmax(0,1fr)_auto]"
+            key={field.id}
+          >
             <Input
               aria-label="字段名"
               fullWidth

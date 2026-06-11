@@ -62,7 +62,10 @@ function ResumeCanvasPreview({
           width: pageSize.width,
         }}
       >
-        <header className="mb-4 border-b pb-3" style={{ borderColor: style.colors.border }}>
+        <header
+          className="mb-4 border-b pb-3"
+          style={{ borderColor: style.colors.border }}
+        >
           <h2
             className="font-semibold"
             style={{
@@ -74,12 +77,17 @@ function ResumeCanvasPreview({
           </h2>
           {document.target?.title || document.target?.company ? (
             <p className="mt-1" style={{ color: style.colors.mutedText }}>
-              {[document.target.title, document.target.company].filter(Boolean).join(" / ")}
+              {[document.target.title, document.target.company]
+                .filter(Boolean)
+                .join(" / ")}
             </p>
           ) : null}
         </header>
 
-        <div className="flex flex-col" style={{ gap: style.spacing.sectionSpacing }}>
+        <div
+          className="flex flex-col"
+          style={{ gap: style.spacing.sectionSpacing }}
+        >
           {document.sections
             .filter((section) => section.visible)
             .map((section) => (
@@ -124,7 +132,9 @@ function PreviewSection({
     <section
       className={cn(
         "group relative -mx-2 rounded-lg border px-2 py-2 transition",
-        isActive || isHovered ? "border-blue-400/70 bg-blue-50/55" : "border-transparent",
+        isActive || isHovered
+          ? "border-blue-400/70 bg-blue-50/55"
+          : "border-transparent",
       )}
       onClick={() => onSectionSelect(section.id)}
       onMouseEnter={() => setHoveredSectionId(section.id)}
@@ -155,7 +165,10 @@ function PreviewSection({
         </h3>
       ) : null}
 
-      <div className="flex flex-col" style={{ gap: style.spacing.blockSpacing }}>
+      <div
+        className="flex flex-col"
+        style={{ gap: style.spacing.blockSpacing }}
+      >
         {section.blocks.map((block) => (
           <PreviewBlock block={block} key={block.id} style={style} />
         ))}
@@ -174,11 +187,19 @@ function PreviewBlock({
   if (block.kind === "text" || block.kind === "paragraph") {
     return (
       <p
-        className={cn(block.kind === "text" ? "font-medium" : "whitespace-pre-wrap")}
-        style={{ color: block.kind === "text" ? style.colors.text : style.colors.mutedText }}
+        className={cn(
+          block.kind === "text" ? "font-medium" : "whitespace-pre-wrap",
+        )}
+        style={{
+          color:
+            block.kind === "text" ? style.colors.text : style.colors.mutedText,
+        }}
       >
         {block.label ? (
-          <span className="mr-1 font-semibold" style={{ color: style.colors.text }}>
+          <span
+            className="mr-1 font-semibold"
+            style={{ color: style.colors.text }}
+          >
             {block.label}:
           </span>
         ) : null}

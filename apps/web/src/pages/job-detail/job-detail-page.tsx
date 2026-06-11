@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Card, Chip, ProgressBar } from "@heroui/react";
+import {
+  Button,
+  Card,
+  Chip,
+  Drawer,
+  ProgressBar,
+  useOverlayState,
+} from "@heroui/react";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowLeft,
@@ -21,6 +28,7 @@ import {
   RefreshCw,
   Sparkles,
   Target,
+  X,
 } from "lucide-react";
 
 import Link from "@/components/router-link";
@@ -41,14 +49,17 @@ import {
 } from "@/lib/jobs/labels";
 import type { JobRecord } from "@/lib/jobs/types";
 import { useProfileDraft } from "@/lib/profile/use-profile-draft";
+import { generateTargetJobResume } from "@/lib/resumes/api";
+import type { ResumeFunctionRow } from "@/lib/resumes/types";
 import {
   computeRuleMatch,
   hasMatchableProfile,
   type RuleMatchResult,
 } from "@career-workbench/domain";
 
+import { ResumeEditorWorkspace } from "@/pages/resume-detail/components/resume-editor-workspace";
 import { MatchReportCard } from "./components/match-report-card";
-import { useMatchReport } from "./use-match-report";
+import { useMatchReport, type UseMatchReportResult } from "./use-match-report";
 
 export function JobDetailPage({ jobId }: { jobId: string }) {
   const isAdmin = useAuthStore((state) => Boolean(state.profile?.isAdmin));
@@ -57,6 +68,10 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isToggling, setIsToggling] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
+  const [isGeneratingResume, setIsGeneratingResume] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [generatedResume, setGeneratedResume] =
+    useState<ResumeFunctionRow | null>(null);
   const { profile, isLoading: isProfileLoading } = useProfileDraft();
 
   const ruleMatch = useMemo(() => {
@@ -71,7 +86,41 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
 
   const handleRunAnalysis = () => {
     if (ruleMatch && !matchReport.isRunning) {
+      setGenerateError(null);
       void matchReport.runAnalysis(ruleMatch);
+    }
+  };
+
+  const canGenerateResume =
+    matchReport.report?.status === "succeeded" && !matchReport.isStale;
+
+  const handleGenerateResume = async () => {
+    setGenerateError(null);
+    setGeneratedResume(null);
+
+    if (!ruleMatch) {
+      navigateTo("/profile");
+      return;
+    }
+
+    if (!canGenerateResume) {
+      if (!matchReport.isRunning) {
+        await matchReport.runAnalysis(ruleMatch);
+      }
+      return;
+    }
+
+    setIsGeneratingResume(true);
+
+    try {
+      const result = await generateTargetJobResume(jobId);
+      setGeneratedResume(result.resume);
+    } catch (error) {
+      setGenerateError(
+        error instanceof Error ? error.message : "生成定制简历失败。",
+      );
+    } finally {
+      setIsGeneratingResume(false);
     }
   };
 
@@ -83,7 +132,9 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
       const result = await getJob(jobId);
       setJob(result.job);
     } catch (error) {
-      setLoadError(error instanceof Error ? error.message : "读取职位详情失败。");
+      setLoadError(
+        error instanceof Error ? error.message : "读取职位详情失败。",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -92,6 +143,10 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
   useEffect(() => {
     void loadJob();
   }, [loadJob]);
+
+  useEffect(() => {
+    setGeneratedResume(null);
+  }, [jobId]);
 
   if (isLoading) {
     return (
@@ -157,244 +212,315 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
   };
 
   return (
-    <section className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-4 py-5 lg:px-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link
-          className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900"
-          href="/jobs"
-        >
-          <ArrowLeft aria-hidden="true" className="size-4" />
-          返回职位列表
-        </Link>
-
-        {isAdmin ? (
-          <div className="flex items-center gap-2">
-            <Button
-              onPress={() => navigateTo(`/jobs/${job.id}/edit`)}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              <Pencil className="size-4" />
-              编辑职位
-            </Button>
-            <Button
-              isDisabled={isToggling}
-              onPress={() => void handleToggleActive()}
-              size="sm"
-              type="button"
-              variant={job.isActive ? "danger-soft" : "secondary"}
-            >
-              {isToggling ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Power className="size-4" />
-              )}
-              {job.isActive ? "停用职位" : "启用职位"}
-            </Button>
-          </div>
-        ) : null}
-      </div>
-
-      {toggleError ? (
-        <p className="text-sm text-red-600">{toggleError}</p>
-      ) : null}
-
-      <div
-        className={cn(
-          panelClassName,
-          "grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_260px]",
-        )}
-      >
-        <div className="flex min-w-0 gap-4">
-          <div
-            className={cn(
-              "flex size-14 shrink-0 items-center justify-center rounded-xl text-lg font-bold text-white",
-              logo.className,
-            )}
+    <>
+      <section className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-4 py-5 lg:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link
+            className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900"
+            href="/jobs"
           >
-            {logo.text}
-          </div>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              {job.sourcePlatform ? (
-                <Chip size="sm" variant="soft">{job.sourcePlatform}</Chip>
-              ) : null}
-              {!job.isActive ? (
-                <Chip color="default" size="sm" variant="soft">
-                  已停用
-                </Chip>
-              ) : null}
-              {job.postedAt ? (
-                <Chip color="default" size="sm" variant="secondary">
-                  发布于 {job.postedAt}
-                </Chip>
-              ) : null}
+            <ArrowLeft aria-hidden="true" className="size-4" />
+            返回职位列表
+          </Link>
+
+          {isAdmin ? (
+            <div className="flex items-center gap-2">
+              <Button
+                onPress={() => navigateTo(`/jobs/${job.id}/edit`)}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                <Pencil className="size-4" />
+                编辑职位
+              </Button>
+              <Button
+                isDisabled={isToggling}
+                onPress={() => void handleToggleActive()}
+                size="sm"
+                type="button"
+                variant={job.isActive ? "danger-soft" : "secondary"}
+              >
+                {isToggling ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Power className="size-4" />
+                )}
+                {job.isActive ? "停用职位" : "启用职位"}
+              </Button>
             </div>
-            <h1 className="mt-2 text-2xl font-semibold leading-tight tracking-tight">
-              {job.title}
-            </h1>
-            <p className="mt-1 text-sm text-slate-500">
-              {job.company}
-              {job.companyStage ? ` / ${job.companyStage}` : null}
-            </p>
-            {job.summary ? (
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
-                {job.summary}
-              </p>
-            ) : null}
-          </div>
+          ) : null}
         </div>
 
-        <MatchScorePanel
-          isProfileLoading={isProfileLoading}
-          isRunningAnalysis={matchReport.isRunning}
-          match={ruleMatch}
-          onRunAnalysis={handleRunAnalysis}
-        />
-      </div>
+        {toggleError ? (
+          <p className="text-sm text-red-600">{toggleError}</p>
+        ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <main className="flex min-w-0 flex-col gap-4">
-          <Card className={panelClassName}>
-            <Card.Header>
-              <Card.Title>职位概览</Card.Title>
-              <Card.Description>
-                管理员导入后的结构化 JD 字段。
-              </Card.Description>
-              {job.sourceUrl ? (
-                <div className="ml-auto">
-                  <a
-                    className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-400/35"
-                    href={job.sourceUrl}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    <ExternalLink data-icon="inline-start" />
-                    原始链接
-                  </a>
-                </div>
+        <div
+          className={cn(
+            panelClassName,
+            "grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_260px]",
+          )}
+        >
+          <div className="flex min-w-0 gap-4">
+            <div
+              className={cn(
+                "flex size-14 shrink-0 items-center justify-center rounded-xl text-lg font-bold text-white",
+                logo.className,
+              )}
+            >
+              {logo.text}
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                {job.sourcePlatform ? (
+                  <Chip size="sm" variant="soft">
+                    {job.sourcePlatform}
+                  </Chip>
+                ) : null}
+                {!job.isActive ? (
+                  <Chip color="default" size="sm" variant="soft">
+                    已停用
+                  </Chip>
+                ) : null}
+                {job.postedAt ? (
+                  <Chip color="default" size="sm" variant="secondary">
+                    发布于 {job.postedAt}
+                  </Chip>
+                ) : null}
+              </div>
+              <h1 className="mt-2 text-2xl font-semibold leading-tight tracking-tight">
+                {job.title}
+              </h1>
+              <p className="mt-1 text-sm text-slate-500">
+                {job.company}
+                {job.companyStage ? ` / ${job.companyStage}` : null}
+              </p>
+              {job.summary ? (
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
+                  {job.summary}
+                </p>
               ) : null}
-            </Card.Header>
-            <Card.Content className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              <Fact icon={MapPin} label="地点" value={job.location ?? "未提供"} />
-              <Fact
-                icon={Globe2}
-                label="远程状态"
-                value={remoteStatusLabels[job.remoteStatus]}
-              />
-              <Fact
-                icon={BriefcaseBusiness}
-                label="岗位类型"
-                value={jobTypeLabels[job.jobType]}
-              />
-              <Fact
-                icon={GraduationCap}
-                label="级别"
-                value={job.seniority ?? "未提供"}
-              />
-              <Fact
-                icon={CalendarDays}
-                label="年限要求"
-                value={job.yearsRequired ?? "未提供"}
-              />
-              <Fact
-                icon={Building2}
-                label="薪资范围"
-                value={job.salaryRange ?? "未公开"}
-              />
-            </Card.Content>
-          </Card>
-
-          <div className="grid gap-4 xl:grid-cols-2">
-            <TextListCard
-              icon={Target}
-              items={job.responsibilities}
-              title="职责描述"
-            />
-            <TextListCard
-              icon={FileText}
-              items={job.requirements}
-              title="任职要求"
-            />
+            </div>
           </div>
 
-          <Card className={panelClassName}>
-            <Card.Header>
-              <Card.Title>技能标签</Card.Title>
-              <Card.Description>
-                必备技能和加分技能会进入后续匹配分析输入。
-              </Card.Description>
-            </Card.Header>
-            <Card.Content className="grid gap-4 md:grid-cols-2">
-              <SkillGroup
-                items={job.requiredSkills}
-                title="必备技能"
-                tone="required"
-              />
-              <SkillGroup
-                items={job.preferredSkills}
-                title="加分技能"
-                tone="preferred"
-              />
-            </Card.Content>
-          </Card>
-        </main>
-
-        <aside className="flex min-w-0 flex-col gap-4">
-          <MatchReportCard
-            canRun={Boolean(ruleMatch)}
-            matchReport={matchReport}
-            onRun={handleRunAnalysis}
+          <MatchScorePanel
+            generationActionLabel={getGenerationActionLabel({
+              canGenerateResume,
+              isGeneratingResume,
+              isLoadingReport: matchReport.isLoading,
+              isRunningAnalysis: matchReport.isRunning,
+              reportStatus: matchReport.report?.status ?? null,
+              reportStale: matchReport.isStale,
+            })}
+            isGeneratingResume={isGeneratingResume}
+            isGenerationActionDisabled={
+              matchReport.isLoading ||
+              matchReport.isRunning ||
+              isGeneratingResume
+            }
+            isProfileLoading={isProfileLoading}
+            isRunningAnalysis={matchReport.isRunning}
+            match={ruleMatch}
+            onGenerateResume={() => void handleGenerateResume()}
+            onRunAnalysis={handleRunAnalysis}
           />
+        </div>
 
-          <Card className={panelClassName}>
-            <Card.Header>
-              <Card.Title>生成状态</Card.Title>
-              <Card.Description>演示入口，不调用真实 AI。</Card.Description>
-            </Card.Header>
-            <Card.Content className="flex flex-col gap-3">
-              <div className={cn(softPanelClassName, "p-3")}>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2
-                    aria-hidden="true"
-                    className="mt-0.5 size-4 shrink-0 text-emerald-600"
-                  />
-                  <div>
-                    <p className="text-sm font-medium">
-                      target job resume draft
-                    </p>
-                    <p className="mt-1 text-sm leading-5 text-slate-500">
-                      当前仅展示占位状态。后续任务接入 resume_generate
-                      后，该动作会基于匹配报告生成定制简历。
-                    </p>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <main className="flex min-w-0 flex-col gap-4">
+            <Card className={panelClassName}>
+              <Card.Header>
+                <Card.Title>职位概览</Card.Title>
+                <Card.Description>
+                  管理员导入后的结构化 JD 字段。
+                </Card.Description>
+                {job.sourceUrl ? (
+                  <div className="ml-auto">
+                    <a
+                      className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-400/35"
+                      href={job.sourceUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      <ExternalLink data-icon="inline-start" />
+                      原始链接
+                    </a>
                   </div>
-                </div>
-              </div>
-              <Button fullWidth type="button" variant="primary">
-                <Sparkles data-icon="inline-start" />
-                生成 target job 简历
-              </Button>
-            </Card.Content>
-          </Card>
+                ) : null}
+              </Card.Header>
+              <Card.Content className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <Fact
+                  icon={MapPin}
+                  label="地点"
+                  value={job.location ?? "未提供"}
+                />
+                <Fact
+                  icon={Globe2}
+                  label="远程状态"
+                  value={remoteStatusLabels[job.remoteStatus]}
+                />
+                <Fact
+                  icon={BriefcaseBusiness}
+                  label="岗位类型"
+                  value={jobTypeLabels[job.jobType]}
+                />
+                <Fact
+                  icon={GraduationCap}
+                  label="级别"
+                  value={job.seniority ?? "未提供"}
+                />
+                <Fact
+                  icon={CalendarDays}
+                  label="年限要求"
+                  value={job.yearsRequired ?? "未提供"}
+                />
+                <Fact
+                  icon={Building2}
+                  label="薪资范围"
+                  value={job.salaryRange ?? "未公开"}
+                />
+              </Card.Content>
+            </Card>
 
-          <Card className={panelClassName}>
-            <Card.Header>
-              <Card.Title>导入元数据</Card.Title>
-              {job.importedBy ? (
-                <Card.Description>{job.importedBy}</Card.Description>
-              ) : null}
-            </Card.Header>
-            <Card.Content className="grid gap-2 text-sm">
-              <MetaRow
-                label="导入方式"
-                value={importMethodLabels[job.importMethod]}
+            <div className="grid gap-4 xl:grid-cols-2">
+              <TextListCard
+                icon={Target}
+                items={job.responsibilities}
+                title="职责描述"
               />
-            </Card.Content>
-          </Card>
-        </aside>
-      </div>
-    </section>
+              <TextListCard
+                icon={FileText}
+                items={job.requirements}
+                title="任职要求"
+              />
+            </div>
+
+            <Card className={panelClassName}>
+              <Card.Header>
+                <Card.Title>技能标签</Card.Title>
+                <Card.Description>
+                  必备技能和加分技能会进入后续匹配分析输入。
+                </Card.Description>
+              </Card.Header>
+              <Card.Content className="grid gap-4 md:grid-cols-2">
+                <SkillGroup
+                  items={job.requiredSkills}
+                  title="必备技能"
+                  tone="required"
+                />
+                <SkillGroup
+                  items={job.preferredSkills}
+                  title="加分技能"
+                  tone="preferred"
+                />
+              </Card.Content>
+            </Card>
+          </main>
+
+          <aside className="flex min-w-0 flex-col gap-4">
+            <MatchReportCard
+              canRun={Boolean(ruleMatch)}
+              matchReport={matchReport}
+              onRun={handleRunAnalysis}
+            />
+
+            <TargetResumeCard
+              canGenerateResume={canGenerateResume}
+              canRunAnalysis={Boolean(ruleMatch)}
+              generateError={generateError}
+              isGeneratingResume={isGeneratingResume}
+              matchReport={matchReport}
+              onGenerate={() => void handleGenerateResume()}
+              onOpenProfile={() => navigateTo("/profile")}
+            />
+
+            <Card className={panelClassName}>
+              <Card.Header>
+                <Card.Title>导入元数据</Card.Title>
+                {job.importedBy ? (
+                  <Card.Description>{job.importedBy}</Card.Description>
+                ) : null}
+              </Card.Header>
+              <Card.Content className="grid gap-2 text-sm">
+                <MetaRow
+                  label="导入方式"
+                  value={importMethodLabels[job.importMethod]}
+                />
+              </Card.Content>
+            </Card>
+          </aside>
+        </div>
+      </section>
+      <GeneratedResumeDrawer
+        onClose={() => setGeneratedResume(null)}
+        open={Boolean(generatedResume)}
+        resume={generatedResume}
+      />
+    </>
+  );
+}
+
+function GeneratedResumeDrawer({
+  onClose,
+  open,
+  resume,
+}: {
+  onClose: () => void;
+  open: boolean;
+  resume: ResumeFunctionRow | null;
+}) {
+  const drawerState = useOverlayState({
+    isOpen: open,
+    onOpenChange: (nextOpen) => {
+      if (!nextOpen) {
+        onClose();
+      }
+    },
+  });
+
+  return (
+    <Drawer state={drawerState}>
+      <Drawer.Backdrop isDismissable>
+        <Drawer.Content className="justify-end" placement="right">
+          <Drawer.Dialog className="flex h-dvh w-[min(1280px,100vw)] max-w-[100vw] flex-col border-l border-slate-200 bg-white p-0 shadow-2xl sm:w-[min(1280px,96vw)]">
+            <Drawer.Header className="shrink-0 flex-row items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
+              <div className="min-w-0">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Drawer.Heading className="truncate text-lg font-semibold">
+                    {resume?.title ?? "定制简历"}
+                  </Drawer.Heading>
+                  <Chip color="default" size="sm" variant="soft">
+                    本地联动
+                  </Chip>
+                </div>
+                <p className="mt-1 text-sm font-normal text-slate-500">
+                  当前修改只存在于侧滑编辑器内，离开后会丢弃，不写入 Supabase。
+                </p>
+              </div>
+              <Button
+                aria-label="关闭简历编辑器"
+                isIconOnly
+                onPress={onClose}
+                type="button"
+                variant="tertiary"
+              >
+                <X className="size-4" />
+              </Button>
+            </Drawer.Header>
+            <Drawer.Body className="min-h-0 flex-1 overflow-hidden bg-slate-100 p-4 text-slate-900">
+              {resume ? (
+                <ResumeEditorWorkspace
+                  className="h-full"
+                  key={resume.id}
+                  resume={resume}
+                />
+              ) : null}
+            </Drawer.Body>
+          </Drawer.Dialog>
+        </Drawer.Content>
+      </Drawer.Backdrop>
+    </Drawer>
   );
 }
 
@@ -414,14 +540,22 @@ function DetailShell({ children }: { children: React.ReactNode }) {
 }
 
 function MatchScorePanel({
+  generationActionLabel,
+  isGeneratingResume,
+  isGenerationActionDisabled,
   isProfileLoading,
   isRunningAnalysis,
   match,
+  onGenerateResume,
   onRunAnalysis,
 }: {
+  generationActionLabel: string;
+  isGeneratingResume: boolean;
+  isGenerationActionDisabled: boolean;
   isProfileLoading: boolean;
   isRunningAnalysis: boolean;
   match: RuleMatchResult | null;
+  onGenerateResume: () => void;
   onRunAnalysis: () => void;
 }) {
   if (isProfileLoading) {
@@ -448,7 +582,11 @@ function MatchScorePanel({
             完善 Profile 的技能或工作经历后，这里会实时计算匹配分。
           </p>
         </div>
-        <Button onPress={() => navigateTo("/profile")} type="button" variant="secondary">
+        <Button
+          onPress={() => navigateTo("/profile")}
+          type="button"
+          variant="secondary"
+        >
           去完善 Profile
         </Button>
       </div>
@@ -482,13 +620,197 @@ function MatchScorePanel({
           )}
           {isRunningAnalysis ? "分析中…" : "运行分析"}
         </Button>
-        <Button type="button" variant="primary">
-          <Sparkles data-icon="inline-start" />
-          生成简历
+        <Button
+          isDisabled={isGenerationActionDisabled}
+          onPress={onGenerateResume}
+          type="button"
+          variant="primary"
+        >
+          {isGeneratingResume ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Sparkles data-icon="inline-start" />
+          )}
+          {generationActionLabel}
         </Button>
       </div>
     </div>
   );
+}
+
+function TargetResumeCard({
+  canGenerateResume,
+  canRunAnalysis,
+  generateError,
+  isGeneratingResume,
+  matchReport,
+  onGenerate,
+  onOpenProfile,
+}: {
+  canGenerateResume: boolean;
+  canRunAnalysis: boolean;
+  generateError: string | null;
+  isGeneratingResume: boolean;
+  matchReport: UseMatchReportResult;
+  onGenerate: () => void;
+  onOpenProfile: () => void;
+}) {
+  const actionLabel = getGenerationActionLabel({
+    canGenerateResume,
+    isGeneratingResume,
+    isLoadingReport: matchReport.isLoading,
+    isRunningAnalysis: matchReport.isRunning,
+    reportStatus: matchReport.report?.status ?? null,
+    reportStale: matchReport.isStale,
+  });
+  const isBusy =
+    isGeneratingResume || matchReport.isLoading || matchReport.isRunning;
+
+  return (
+    <Card className={panelClassName}>
+      <Card.Header>
+        <Card.Title>定制简历</Card.Title>
+        <Card.Description>{getGenerationDescription()}</Card.Description>
+      </Card.Header>
+      <Card.Content className="flex flex-col gap-3">
+        <div className={cn(softPanelClassName, "p-3")}>
+          <div className="flex items-start gap-2">
+            {canGenerateResume ? (
+              <CheckCircle2
+                aria-hidden="true"
+                className="mt-0.5 size-4 shrink-0 text-emerald-600"
+              />
+            ) : (
+              <Sparkles
+                aria-hidden="true"
+                className="mt-0.5 size-4 shrink-0 text-blue-600"
+              />
+            )}
+            <div>
+              <p className="text-sm font-medium">
+                {canGenerateResume ? "可生成草稿" : "需要匹配分析"}
+              </p>
+              <p className="mt-1 text-sm leading-5 text-slate-500">
+                {getGenerationBodyText()}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {generateError ? (
+          <p className="text-sm leading-5 text-red-600">{generateError}</p>
+        ) : null}
+
+        {canRunAnalysis ? (
+          <Button
+            fullWidth
+            isDisabled={isBusy}
+            onPress={onGenerate}
+            type="button"
+            variant="primary"
+          >
+            {isBusy ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Sparkles data-icon="inline-start" />
+            )}
+            {actionLabel}
+          </Button>
+        ) : (
+          <Button
+            fullWidth
+            onPress={onOpenProfile}
+            type="button"
+            variant="primary"
+          >
+            去完善 Profile
+          </Button>
+        )}
+      </Card.Content>
+    </Card>
+  );
+
+  function getGenerationDescription() {
+    if (isGeneratingResume) {
+      return "正在调用 resume_generate";
+    }
+
+    if (matchReport.isLoading) {
+      return "正在检查匹配报告";
+    }
+
+    if (canGenerateResume) {
+      return "基于最新匹配报告";
+    }
+
+    return "生成前需要新鲜报告";
+  }
+
+  function getGenerationBodyText() {
+    if (!canRunAnalysis) {
+      return "完善 Profile 的技能或工作经历后，先运行匹配分析，再生成定制简历。";
+    }
+
+    if (matchReport.isLoading) {
+      return "正在读取已有匹配报告。";
+    }
+
+    if (!matchReport.report || matchReport.report.status === "pending") {
+      return "先运行匹配分析，生成会复用分析里的命中证据、能力缺口和风险表达。";
+    }
+
+    if (matchReport.report.status === "failed") {
+      return "上次匹配分析失败，需要先重试分析。";
+    }
+
+    if (matchReport.isStale) {
+      return "Profile 或职位已更新，需要重新分析后再生成。";
+    }
+
+    return "将基于当前 Profile、结构化 JD 和匹配报告生成 target job 简历草稿。";
+  }
+}
+
+function getGenerationActionLabel({
+  canGenerateResume,
+  isGeneratingResume,
+  isLoadingReport,
+  isRunningAnalysis,
+  reportStatus,
+  reportStale,
+}: {
+  canGenerateResume: boolean;
+  isGeneratingResume: boolean;
+  isLoadingReport: boolean;
+  isRunningAnalysis: boolean;
+  reportStatus: string | null;
+  reportStale: boolean;
+}) {
+  if (isGeneratingResume) {
+    return "生成中…";
+  }
+
+  if (isLoadingReport) {
+    return "检查报告…";
+  }
+
+  if (isRunningAnalysis) {
+    return "分析中…";
+  }
+
+  if (canGenerateResume) {
+    return "生成简历";
+  }
+
+  if (reportStatus === "succeeded" && reportStale) {
+    return "重新分析后生成";
+  }
+
+  if (reportStatus === "failed") {
+    return "重试分析";
+  }
+
+  return "先运行分析";
 }
 
 function Fact({
@@ -502,7 +824,10 @@ function Fact({
 }) {
   return (
     <div className={cn(softPanelClassName, "flex min-w-0 gap-3 p-3")}>
-      <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-blue-600" />
+      <Icon
+        aria-hidden="true"
+        className="mt-0.5 size-4 shrink-0 text-blue-600"
+      />
       <div className="min-w-0">
         <p className="text-xs font-medium text-slate-500">{label}</p>
         <p className="mt-1 truncate text-sm font-medium">{value}</p>
@@ -586,4 +911,3 @@ function MetaRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-

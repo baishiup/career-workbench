@@ -1,0 +1,280 @@
+app:
+  description: 基于 Profile、结构化 JD 和最新 match report 生成 target job ResumeDocument 草稿。
+  icon: ✨
+  icon_background: "#DBEAFE"
+  icon_type: emoji
+  mode: workflow
+  name: resume_generate
+  use_icon_as_answer_icon: false
+dependencies:
+  - current_identifier: null
+    type: marketplace
+    value:
+      marketplace_plugin_unique_identifier: langgenius/gemini:0.8.4@23aed1fa4d2c8015337bd18efa28b3dccf5b7309a83b1501541fb7358518faec
+      version: null
+kind: app
+version: 0.6.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ""
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ""
+      voice: ""
+  graph:
+    edges:
+      - data:
+          isInLoop: false
+          sourceType: start
+          targetType: llm
+        id: 1791000000001-source-1791000000002-target
+        selected: false
+        source: "1791000000001"
+        sourceHandle: source
+        target: "1791000000002"
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInLoop: false
+          sourceType: llm
+          targetType: code
+        id: 1791000000002-source-1791000000003-target
+        selected: false
+        source: "1791000000002"
+        sourceHandle: source
+        target: "1791000000003"
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInLoop: false
+          sourceType: code
+          targetType: end
+        id: 1791000000003-source-1791000000004-target
+        selected: false
+        source: "1791000000003"
+        sourceHandle: source
+        target: "1791000000004"
+        targetHandle: target
+        type: custom
+        zIndex: 0
+    nodes:
+      - data:
+          desc: Edge Function 传入 Profile、结构化 JD 和最新 match report，均为 JSON 字符串。
+          selected: false
+          title: 用户输入
+          type: start
+          variables:
+            - hide: false
+              hint: ""
+              label: profile_json
+              max_length: 48000
+              options: []
+              placeholder: ""
+              required: true
+              type: paragraph
+              variable: profile_json
+            - hide: false
+              hint: ""
+              label: job_json
+              max_length: 48000
+              options: []
+              placeholder: ""
+              required: true
+              type: paragraph
+              variable: job_json
+            - hide: false
+              hint: ""
+              label: match_report_json
+              max_length: 24000
+              options: []
+              placeholder: ""
+              required: true
+              type: paragraph
+              variable: match_report_json
+        height: 137
+        id: "1791000000001"
+        position:
+          x: -280
+          y: 240
+        positionAbsolute:
+          x: -280
+          y: 240
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 生成可编辑 ResumeDocument，只使用 Profile 中已有事实。
+          model:
+            completion_params:
+              temperature: 0
+              thinking_mode: false
+            mode: chat
+            name: gemini-2.5-flash
+            provider: langgenius/gemini/google
+          prompt_template:
+            - id: 1791000000002-system
+              role: system
+              text:
+                '你是一个求职简历定制器。输入是候选人 Profile（JSON）、结构化职位描述（JSON）和最新匹配分析（JSON）。
+
+
+                你的职责是生成一份面向该职位的 ResumeDocument 草稿，用于后续人工编辑。你可以重排 section、筛选技能、改写 summary 和 bullet 表达，但必须严格基于 Profile 中已有事实。禁止虚构公司、项目、学历、时间、技能、证书、指标、人数、金额或任何 Profile 中不存在的经历。
+
+
+                输出要求：
+
+                1. 只输出 JSON 对象，不要输出 markdown。
+
+                2. 必须是 ResumeDocument：包含 title、locale、target、sections。
+
+                3. locale 固定为 "zh-CN"。
+
+                4. target 至少包含 company 和 title；jobId 可为空，后端会补齐。
+
+                5. sections 使用以下 kind：personal、summary、skills、work、projects、education、custom。
+
+                6. block 使用以下 kind：text、paragraph、bulletList、tagList、dateRange、linkList。
+
+                7. 每个 section、block、bullet、link 都必须有稳定 id。
+
+                8. summary 和 bullets 要围绕 JD 与 match report 叙事强化相关经验，但不要夸大。
+
+                9. 如果某个 JD 要求 Profile 没有证据，不要把它写成已掌握；可以在 summary 或 bullet 中如实表述相近经验。
+
+                10. 输出应尽量简洁，适合一页简历初稿。
+
+                '
+            - id: 1791000000002-user
+              role: user
+              text: "候选人 Profile（JSON）：
+
+
+                {{#1791000000001.profile_json#}}
+
+
+                结构化职位描述（JSON）：
+
+
+                {{#1791000000001.job_json#}}
+
+
+                最新匹配分析（JSON）：
+
+
+                {{#1791000000001.match_report_json#}}
+
+                "
+          selected: false
+          structured_output:
+            schema:
+              properties:
+                locale:
+                  type: string
+                sections:
+                  items:
+                    type: object
+                  type: array
+                target:
+                  type: object
+                title:
+                  type: string
+              required:
+                - title
+                - locale
+                - target
+                - sections
+              type: object
+          structured_output_enabled: true
+          title: LLM 生成简历
+          type: llm
+          vision:
+            enabled: false
+        height: 148
+        id: "1791000000002"
+        position:
+          x: 60
+          y: 240
+        positionAbsolute:
+          x: 60
+          y: 240
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+      - data:
+          code: "function main({ llm_output }) {\n  let value = llm_output;\n  if (typeof value === 'string') {\n    value = value.trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/i, '');\n    value = JSON.parse(value);\n  }\n  if (!value || typeof value !== 'object' || !Array.isArray(value.sections)) {\n    throw new Error('ResumeDocument is invalid');\n  }\n  return { text: JSON.stringify(value) };\n}\n"
+          code_language: javascript
+          desc: 归一化 LLM 输出，最终 text 必须是 ResumeDocument JSON 字符串。
+          outputs:
+            text:
+              children: null
+              type: string
+          selected: false
+          title: 输出归一化
+          type: code
+          variables:
+            - value_selector:
+                - "1791000000002"
+                - text
+              variable: llm_output
+        height: 90
+        id: "1791000000003"
+        position:
+          x: 400
+          y: 240
+        positionAbsolute:
+          x: 400
+          y: 240
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+      - data:
+          desc: ""
+          outputs:
+            - value_selector:
+                - "1791000000003"
+                - text
+              variable: text
+          selected: false
+          title: 结束
+          type: end
+        height: 90
+        id: "1791000000004"
+        position:
+          x: 740
+          y: 240
+        positionAbsolute:
+          x: 740
+          y: 240
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+    viewport:
+      x: 0
+      y: 0
+      zoom: 1

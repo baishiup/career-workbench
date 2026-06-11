@@ -12,7 +12,9 @@ import {
 import type { AiChatMessage } from "@/components/ai-chat/types";
 
 function ResumeAiChatTab() {
-  const [messages, setMessages] = useState<AiChatMessage[]>(initialAiChatMessages);
+  const [messages, setMessages] = useState<AiChatMessage[]>(
+    initialAiChatMessages,
+  );
   const [isRunning, setIsRunning] = useState(false);
 
   function runSuccess(input: string) {

@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Checkbox, Input, ListBox, Select, TextArea } from "@heroui/react";
+import {
+  Button,
+  Checkbox,
+  Input,
+  ListBox,
+  Select,
+  TextArea,
+} from "@heroui/react";
 import type {
   ResumeBlock,
   ResumeBlockKind,
@@ -12,7 +19,14 @@ import type {
   ResumeSectionKind,
   ResumeTagListBlock,
 } from "@career-workbench/domain";
-import { ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  EyeOff,
+  Plus,
+  Trash2,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -97,7 +111,10 @@ function ResumeFormEditor({
       visible: true,
     };
 
-    onDocumentChange({ ...document, sections: [...document.sections, section] });
+    onDocumentChange({
+      ...document,
+      sections: [...document.sections, section],
+    });
     onSectionFocus(section.id);
   }
 
@@ -197,7 +214,9 @@ function SectionEditor({
     <section
       className={cn(
         "rounded-xl border bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]",
-        isSelected ? "border-blue-400 ring-3 ring-blue-400/20" : "border-slate-200",
+        isSelected
+          ? "border-blue-400 ring-3 ring-blue-400/20"
+          : "border-slate-200",
       )}
       onFocus={onFocus}
     >
@@ -477,14 +496,19 @@ function LinkListEditor({
   return (
     <div className="flex flex-col gap-2">
       {block.links.map((link) => (
-        <div className="grid gap-2 md:grid-cols-[160px_minmax(0,1fr)_auto]" key={link.id}>
+        <div
+          className="grid gap-2 md:grid-cols-[160px_minmax(0,1fr)_auto]"
+          key={link.id}
+        >
           <Input
             fullWidth
             onChange={(event) =>
               onUpdate({
                 ...block,
                 links: block.links.map((item) =>
-                  item.id === link.id ? { ...item, label: event.target.value } : item,
+                  item.id === link.id
+                    ? { ...item, label: event.target.value }
+                    : item,
                 ),
               })
             }
@@ -498,7 +522,9 @@ function LinkListEditor({
               onUpdate({
                 ...block,
                 links: block.links.map((item) =>
-                  item.id === link.id ? { ...item, url: event.target.value } : item,
+                  item.id === link.id
+                    ? { ...item, url: event.target.value }
+                    : item,
                 ),
               })
             }
@@ -523,7 +549,10 @@ function LinkListEditor({
         onPress={() =>
           onUpdate({
             ...block,
-            links: [...block.links, { id: createId("link"), label: "", url: "" }],
+            links: [
+              ...block.links,
+              { id: createId("link"), label: "", url: "" },
+            ],
           })
         }
         size="sm"

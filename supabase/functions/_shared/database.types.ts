@@ -36,7 +36,6 @@ export type Database = {
           id: string;
           source_context_json: unknown;
           source_type: string;
-          status: string;
           style_json: unknown;
           title: string;
           updated_at: string | null;
@@ -47,7 +46,6 @@ export type Database = {
           document_json: unknown;
           source_context_json?: unknown;
           source_type: string;
-          status: string;
           style_json: unknown;
           title: string;
           updated_at?: string | null;
@@ -58,7 +56,6 @@ export type Database = {
           document_json?: unknown;
           source_context_json?: unknown;
           source_type?: string;
-          status?: string;
           style_json?: unknown;
           title?: string;
           updated_at?: string | null;

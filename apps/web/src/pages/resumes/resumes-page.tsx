@@ -7,14 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  Alert,
-  Button,
-  Dropdown,
-  Input,
-  Table,
-  Toast,
-} from "@heroui/react";
+import { Alert, Button, Dropdown, Input, Table, Toast } from "@heroui/react";
 import {
   ChevronDown,
   Download,
@@ -37,10 +30,7 @@ import {
   renameResume,
   uploadResume,
 } from "@/lib/resumes/api";
-import type {
-  ResumeFunctionRow,
-  ResumeListRow,
-} from "@/lib/resumes/types";
+import type { ResumeFunctionRow, ResumeListRow } from "@/lib/resumes/types";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 const sourceTypeLabels: Record<string, string> = {
@@ -51,6 +41,7 @@ const sourceTypeLabels: Record<string, string> = {
 };
 
 type MoreAction = "apply-profile" | "delete" | "export" | "rename";
+type ProfileDialogSource = "manual" | "upload";
 
 export function ResumesPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -58,14 +49,18 @@ export function ResumesPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
-  const [renameDialogRow, setRenameDialogRow] =
-    useState<ResumeListRow | null>(null);
+  const [renameDialogRow, setRenameDialogRow] = useState<ResumeListRow | null>(
+    null,
+  );
   const [renameTitle, setRenameTitle] = useState("");
   const [renamingResumeId, setRenamingResumeId] = useState<string | null>(null);
   const [profileDialogRow, setProfileDialogRow] =
     useState<ResumeListRow | null>(null);
-  const [applyingProfileResumeId, setApplyingProfileResumeId] =
-    useState<string | null>(null);
+  const [profileDialogSource, setProfileDialogSource] =
+    useState<ProfileDialogSource>("manual");
+  const [applyingProfileResumeId, setApplyingProfileResumeId] = useState<
+    string | null
+  >(null);
   const [deletingResumeId, setDeletingResumeId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -123,6 +118,8 @@ export function ResumesPage() {
         ...currentRows.filter((row) => row.id !== nextRow.id),
       ]);
       Toast.toast.success("简历上传并解析完成。");
+      setProfileDialogSource("upload");
+      setProfileDialogRow(nextRow);
     } catch (error) {
       console.error("[upload-resume error]", error);
       const errorMessage = getErrorMessage(error, "简历上传失败。");
@@ -143,6 +140,7 @@ export function ResumesPage() {
     }
 
     if (nextAction === "apply-profile") {
+      setProfileDialogSource("manual");
       setProfileDialogRow(row);
       return;
     }
@@ -177,7 +175,7 @@ export function ResumesPage() {
       const nextRow = await renameResume(renameDialogRow.id, nextTitle);
 
       setRows((currentRows) =>
-        currentRows.map((row) => row.id === nextRow.id ? nextRow : row),
+        currentRows.map((row) => (row.id === nextRow.id ? nextRow : row)),
       );
       setRenameDialogRow(null);
       Toast.toast.success("简历名称已更新。");
@@ -197,13 +195,18 @@ export function ResumesPage() {
 
     try {
       await applyResumeToProfile(profileDialogRow.id);
-      setProfileDialogRow(null);
+      closeProfileDialog();
       Toast.toast.success("已用这份简历更新 profile。");
     } catch (error) {
       Toast.toast.danger(getErrorMessage(error, "更新 profile 失败。"));
     } finally {
       setApplyingProfileResumeId(null);
     }
+  }
+
+  function closeProfileDialog() {
+    setProfileDialogRow(null);
+    setProfileDialogSource("manual");
   }
 
   async function handleDeleteResume(row: ResumeListRow) {
@@ -238,15 +241,23 @@ export function ResumesPage() {
     profileDialogRow && applyingProfileResumeId === profileDialogRow.id,
   );
   const isRenameTitleValid = renameTitle.trim().length > 0;
+  const profileDialogTitle =
+    profileDialogSource === "upload"
+      ? "是否用新上传的简历更新 profile？"
+      : "更新到 profile";
+  const profileDialogDescription =
+    profileDialogSource === "upload"
+      ? `「${profileDialogRow?.title ?? "这份简历"}」已上传并解析完成。确认后会用这份简历的解析数据覆盖当前用户 profile。`
+      : `确认后会用「${profileDialogRow?.title ?? "这份简历"}」的解析数据覆盖当前用户 profile。`;
+  const profileDialogCancelLabel =
+    profileDialogSource === "upload" ? "暂不更新" : "取消";
 
   return (
     <section className="mx-auto flex w-full max-w-[1440px] flex-col gap-5 px-4 py-5 lg:px-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">简历</h1>
-          <p className="text-sm text-slate-500">
-            管理已上传的基础简历。
-          </p>
+          <p className="text-sm text-slate-500">管理已上传的基础简历。</p>
         </div>
         <input
           accept=".pdf,.doc,.docx,.rtf"
@@ -366,9 +377,7 @@ export function ResumesPage() {
                                   textValue="更新到 profile"
                                 >
                                   <MenuItemContent
-                                    icon={
-                                      <UserRoundCheck className="size-4" />
-                                    }
+                                    icon={<UserRoundCheck className="size-4" />}
                                     label="更新到 profile"
                                   />
                                 </Dropdown.Item>
@@ -469,22 +478,21 @@ export function ResumesPage() {
         <DialogShell
           closeLabel="关闭更新 profile 确认弹窗"
           isCloseDisabled={isProfileApplying}
-          onClose={() => setProfileDialogRow(null)}
-          title="更新到 profile"
+          onClose={closeProfileDialog}
+          title={profileDialogTitle}
         >
           <div className="flex flex-col gap-4">
             <p className="text-sm leading-6 text-slate-600">
-              确认后会用「{profileDialogRow.title}」的解析数据覆盖当前用户
-              profile。这个操作会写入 Supabase。
+              {profileDialogDescription}这个操作会写入 Supabase。
             </p>
             <div className="flex justify-end gap-2 border-t border-slate-200 pt-4">
               <Button
                 isDisabled={isProfileApplying}
-                onPress={() => setProfileDialogRow(null)}
+                onPress={closeProfileDialog}
                 type="button"
                 variant="tertiary"
               >
-                取消
+                {profileDialogCancelLabel}
               </Button>
               <Button
                 isDisabled={isProfileApplying}

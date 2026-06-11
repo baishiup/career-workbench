@@ -17,7 +17,10 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import { panelClassName, softPanelClassName } from "@/components/workbench/surface-classes";
+import {
+  panelClassName,
+  softPanelClassName,
+} from "@/components/workbench/surface-classes";
 import { cn } from "@/lib/utils";
 
 import type { UseMatchReportResult } from "../use-match-report";

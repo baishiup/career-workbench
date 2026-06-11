@@ -33,7 +33,6 @@ const mockJobs: JobRecord[] = [
       "面向商家增长和结账转化的前端岗位，适合突出组件系统、复杂表单和产品指标经验。",
     importedBy: "Admin demo",
     importMethod: "manual_text",
-    importStatus: "parsed",
     isActive: true,
     match: {
       score: 98,
@@ -86,7 +85,6 @@ const mockJobs: JobRecord[] = [
     summary: "偏成熟业务系统的前端岗位，匹配复杂表单、可靠交付和可访问性证据。",
     importedBy: "Admin demo",
     importMethod: "manual_text",
-    importStatus: "parsed",
     isActive: true,
     match: {
       score: 89,
@@ -138,7 +136,6 @@ const mockJobs: JobRecord[] = [
       "AI 产品前端岗位，方向高度相关，但级别偏高，需要更强架构和负责人证据。",
     importedBy: "Admin demo",
     importMethod: "screenshot",
-    importStatus: "needs_review",
     isActive: true,
     match: {
       score: 88,
@@ -193,7 +190,6 @@ const mockJobs: JobRecord[] = [
       "前端平台方向匹配度稳定，适合把组件系统、工程化和文档能力作为主线。",
     importedBy: "Admin demo",
     importMethod: "manual_text",
-    importStatus: "parse_failed",
     isActive: true,
     match: {
       score: 82,
@@ -208,9 +204,7 @@ const mockJobs: JobRecord[] = [
         "缺少明确测试覆盖率、组件文档或设计 token 产出指标。",
         "在线教育领域经验不明显。",
       ],
-      risks: [
-        "导入状态为解析失败可重试，当前 JD 内容来自人工校正 mock，真实流程需复核。",
-      ],
+      risks: ["当前 JD 内容来自人工校正 mock，真实流程需复核。"],
       runId: "mock-job-match-datacamp-001",
       provider: "mock",
       generatedAt: "2026-06-06 09:36",

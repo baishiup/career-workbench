@@ -1,7 +1,6 @@
 import type {
   JobEmploymentType,
   JobImportMethod,
-  JobImportStatus,
   JobRemoteStatus,
 } from "@/lib/jobs/types";
 
@@ -15,12 +14,6 @@ const jobTypeLabels: Record<JobEmploymentType, string> = {
   contract: "合同",
   full_time: "全职",
   part_time: "兼职",
-};
-
-const importStatusLabels: Record<JobImportStatus, string> = {
-  needs_review: "待人工确认",
-  parse_failed: "解析失败",
-  parsed: "已解析",
 };
 
 const importMethodLabels: Record<JobImportMethod, string> = {
@@ -50,10 +43,4 @@ function getJobLogo(company: string) {
   return { className: logoPalette[hash], text };
 }
 
-export {
-  getJobLogo,
-  importMethodLabels,
-  importStatusLabels,
-  jobTypeLabels,
-  remoteStatusLabels,
-};
+export { getJobLogo, importMethodLabels, jobTypeLabels, remoteStatusLabels };

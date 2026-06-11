@@ -1,16 +1,19 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Button, Checkbox, Input, Tag, TagGroup, TextArea } from "@heroui/react";
+import {
+  Button,
+  Checkbox,
+  Input,
+  Tag,
+  TagGroup,
+  TextArea,
+} from "@heroui/react";
 import { Plus, X } from "lucide-react";
 
 import { skillSuggestions } from "@/pages/profile/data";
 import type { EducationItem, WorkItem } from "@career-workbench/domain";
-import {
-  DateField,
-  TextAreaField,
-  TextField,
-} from "./profile-fields";
+import { DateField, TextAreaField, TextField } from "./profile-fields";
 import { SortableEditorCard } from "./sortable-editor-card";
 
 function EducationForm({
@@ -240,9 +243,7 @@ function WorkBulletList({
       <div className="flex flex-col gap-2">
         {item.bullets.map((bullet, bulletIndex) => (
           <div className="flex items-start gap-2" key={bulletIndex}>
-            <span className="pt-2 text-sm font-semibold text-slate-500">
-              •
-            </span>
+            <span className="pt-2 text-sm font-semibold text-slate-500">•</span>
             <TextArea
               className="min-h-10 py-2"
               fullWidth
