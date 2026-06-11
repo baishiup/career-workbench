@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Button, Chip } from "@heroui/react";
+import { Button, Chip, Tabs } from "@heroui/react";
 import {
   Code2,
   GraduationCap,
@@ -8,7 +8,11 @@ import {
   UserRound,
 } from "lucide-react";
 
-import { PillTabs } from "@/components/workbench/pill-tabs";
+import {
+  pillTabClassName,
+  pillTabIndicatorClassName,
+  pillTabListClassName,
+} from "@/components/workbench/surface-classes";
 import { drawerOrder, sectionMeta } from "@/pages/profile/data";
 import type { ProfileIcon, ProfileSection } from "@/pages/profile/types";
 import type { ProfileDraft } from "@career-workbench/domain";
@@ -184,16 +188,34 @@ function ProfileSectionTabs({
 }) {
   return (
     <nav className="sticky top-14 z-10 bg-slate-100 py-2">
-      <PillTabs
-        activeValue={activeSection}
-        items={drawerOrder.map((section) => ({
-          activeIcon: sectionMeta[section].icon,
-          href: `#profile-${section}`,
-          label: sectionMeta[section].label,
-          value: section,
-        }))}
-        onValueChange={onSectionChange}
-      />
+      <Tabs
+        onSelectionChange={(key) => {
+          const section = String(key) as ProfileSection;
+          onSectionChange(section);
+          document
+            .getElementById(`profile-${section}`)
+            ?.scrollIntoView({ block: "start" });
+        }}
+        selectedKey={activeSection}
+      >
+        <Tabs.ListContainer>
+          <Tabs.List aria-label="资料分区" className={pillTabListClassName}>
+            {drawerOrder.map((section) => {
+              const Icon = sectionMeta[section].icon;
+
+              return (
+                <Tabs.Tab className={pillTabClassName} id={section} key={section}>
+                  {activeSection === section ? (
+                    <Icon aria-hidden="true" className="size-4" />
+                  ) : null}
+                  <span>{sectionMeta[section].label}</span>
+                  <Tabs.Indicator className={pillTabIndicatorClassName} />
+                </Tabs.Tab>
+              );
+            })}
+          </Tabs.List>
+        </Tabs.ListContainer>
+      </Tabs>
     </nav>
   );
 }

@@ -24,9 +24,9 @@ const importStatusLabels: Record<JobImportStatus, string> = {
 };
 
 const importMethodLabels: Record<JobImportMethod, string> = {
-  job_url: "职位链接",
-  manual_text: "手动粘贴 JD",
-  screenshot: "截图导入",
+  manual_form: "手动填写",
+  manual_text: "粘贴 JD 解析",
+  screenshot: "截图解析",
 };
 
 const logoPalette = [

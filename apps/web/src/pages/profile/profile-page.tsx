@@ -4,7 +4,7 @@ import { emptyProfile } from "@/pages/profile/data";
 import {
   fetchProfileFromSupabase,
   saveProfileToSupabase,
-} from "@/pages/profile/supabase-profile";
+} from "@/lib/profile/api";
 import type { ProfileSection } from "@/pages/profile/types";
 import { useAuthStore } from "@/lib/auth-store";
 import type { ProfileDraft } from "@career-workbench/domain";

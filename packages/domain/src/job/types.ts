@@ -6,8 +6,8 @@
  * logo 派生）和本地 fixture，它们跟随 feature 归属。
  */
 
-/** 职位进入系统的方式：手动粘贴 JD、职位链接或截图导入。 */
-type JobImportMethod = "manual_text" | "job_url" | "screenshot";
+/** 职位进入系统的方式：手动表单填写、粘贴 JD 文本解析或截图解析。 */
+type JobImportMethod = "manual_form" | "manual_text" | "screenshot";
 
 /** JD 解析流水线状态：已解析、待人工确认或解析失败可重试。 */
 type JobImportStatus = "parsed" | "needs_review" | "parse_failed";
@@ -42,6 +42,8 @@ type JobDescription = {
   importedBy: string | null;
   importMethod: JobImportMethod;
   importStatus: JobImportStatus;
+  /** 停用职位仅 admin 可见，用于编辑或重新启用。 */
+  isActive: boolean;
 };
 
 export type {

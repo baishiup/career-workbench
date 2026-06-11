@@ -1,17 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@heroui/react";
+import { Button, Tabs } from "@heroui/react";
 import type { User } from "@supabase/supabase-js";
 import { ChevronDown, LogOut } from "lucide-react";
 
-import { PillTabs, type PillTabItem } from "@/components/workbench/pill-tabs";
+import type { WorkbenchNavItem } from "@/components/workbench/nav-items";
+import {
+  pillTabClassName,
+  pillTabIndicatorClassName,
+  pillTabListClassName,
+} from "@/components/workbench/surface-classes";
 import type { AuthProfile } from "@/lib/auth-store";
 import { useAuthStore } from "@/lib/auth-store";
-import { usePathname } from "@/lib/router";
+import { navigateTo, usePathname } from "@/lib/router";
 import { cn } from "@/lib/utils";
 
-function TopNav({ items }: { items: Array<PillTabItem<string>> }) {
+function TopNav({ items }: { items: WorkbenchNavItem[] }) {
   const pathname = usePathname();
   const profile = useAuthStore((state) => state.profile);
   const signOut = useAuthStore((state) => state.signOut);
@@ -36,7 +41,37 @@ function TopNav({ items }: { items: Array<PillTabItem<string>> }) {
 
         <nav className="flex justify-start lg:justify-center">
           {activeValue ? (
-            <PillTabs activeValue={activeValue} items={items} />
+            <Tabs
+              onSelectionChange={(key) => {
+                const item = items.find((entry) => entry.value === String(key));
+
+                if (item && item.href !== pathname) {
+                  navigateTo(item.href);
+                }
+              }}
+              selectedKey={activeValue}
+            >
+              <Tabs.ListContainer>
+                <Tabs.List aria-label="工作台导航" className={pillTabListClassName}>
+                  {items.map((item) => {
+                    const Icon =
+                      activeValue === item.value ? item.activeIcon : item.icon;
+
+                    return (
+                      <Tabs.Tab
+                        className={pillTabClassName}
+                        id={item.value}
+                        key={item.value}
+                      >
+                        <Icon aria-hidden="true" className="size-4" />
+                        <span>{item.label}</span>
+                        <Tabs.Indicator className={pillTabIndicatorClassName} />
+                      </Tabs.Tab>
+                    );
+                  })}
+                </Tabs.List>
+              </Tabs.ListContainer>
+            </Tabs>
           ) : null}
         </nav>
 

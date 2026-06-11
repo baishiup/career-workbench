@@ -124,6 +124,7 @@ Dify 是 AI 编排层，不是业务主库。
 
 - 前端不直接调用 Dify。
 - Edge Functions 读取最小必要输入后调用 Dify。
+- 每个 Dify workflow 对应独立 App 和 API Key，命名见 `supabase/.env.example` 与 `dify/README.md`（如 `DIFY_RESUME_PARSE_API_KEY`、`DIFY_JOB_PARSE_API_KEY`）。
 - Dify 输出必须转成结构化业务结果或待采纳 patch。
 - Dify 的 `workflow_run_id`、`conversation_id`、`message_id` 只保存为外部引用。
 - Dify 不能直接修改 `ResumeVersion`。
@@ -138,7 +139,7 @@ MVP 数据层分两步：
 关键枚举约定：
 
 - Resume source：`manual_upload`、`target_job`。
-- Job import method：`manual_text`、`job_url`、`screenshot`、`browser_extract`。
+- Job import method：`manual_form`、`manual_text`、`screenshot`（链接不自动抓取，`source_url` 仅作元数据手动填写）。
 - Change actor：`user`、`ai`、`system`。
 - AI orchestrator：`mock`、`dify`、`openai_compatible`。
 - AI run status：`created`、`running`、`waiting_external`、`completed`、`failed`、`cancelled`。

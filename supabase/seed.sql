@@ -54,7 +54,7 @@ insert into public.job_descriptions (
     now() - interval '11 hours',
     '面向商家增长和结账转化的前端岗位，适合突出组件系统、复杂表单和产品指标经验。',
     'Admin demo',
-    'job_url',
+    'manual_text',
     'parsed',
     true
   ),

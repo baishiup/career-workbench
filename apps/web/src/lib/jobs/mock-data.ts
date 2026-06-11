@@ -32,8 +32,9 @@ const mockJobs: JobRecord[] = [
     summary:
       "面向商家增长和结账转化的前端岗位，适合突出组件系统、复杂表单和产品指标经验。",
     importedBy: "Admin demo",
-    importMethod: "job_url",
+    importMethod: "manual_text",
     importStatus: "parsed",
+    isActive: true,
     match: {
       score: 98,
       label: "强匹配",
@@ -86,6 +87,7 @@ const mockJobs: JobRecord[] = [
     importedBy: "Admin demo",
     importMethod: "manual_text",
     importStatus: "parsed",
+    isActive: true,
     match: {
       score: 89,
       label: "强匹配",
@@ -137,6 +139,7 @@ const mockJobs: JobRecord[] = [
     importedBy: "Admin demo",
     importMethod: "screenshot",
     importStatus: "needs_review",
+    isActive: true,
     match: {
       score: 88,
       label: "可冲刺",
@@ -191,6 +194,7 @@ const mockJobs: JobRecord[] = [
     importedBy: "Admin demo",
     importMethod: "manual_text",
     importStatus: "parse_failed",
+    isActive: true,
     match: {
       score: 82,
       label: "需补证据",

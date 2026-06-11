@@ -394,6 +394,9 @@ verify_jwt = false
 [functions.apply-resume-to-profile]
 verify_jwt = false
 
+[functions.job-parse]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

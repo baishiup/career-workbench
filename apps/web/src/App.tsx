@@ -6,6 +6,7 @@ import { TopNav } from "@/components/workbench/top-nav";
 import { LoginPage } from "@/pages/login/login-page";
 import { JobsListPage } from "@/pages/jobs-list/jobs-list-page";
 import { JobDetailPage } from "@/pages/job-detail/job-detail-page";
+import { JobImportPage } from "@/pages/job-import/job-import-page";
 import { OnboardingFlow } from "@/pages/onboarding/onboarding-flow";
 import { ProfilePage } from "@/pages/profile/profile-page";
 import { ResumeDetailPage } from "@/pages/resume-detail/resume-detail-page";
@@ -127,6 +128,16 @@ function WorkbenchShell({ children }: { children: ReactNode }) {
 function renderWorkbenchRoute(pathname: string) {
   if (pathname === "/jobs") {
     return <JobsListPage />;
+  }
+
+  if (pathname === "/jobs/new") {
+    return <JobImportPage />;
+  }
+
+  const jobEditMatch = pathname.match(/^\/jobs\/([^/]+)\/edit$/);
+
+  if (jobEditMatch) {
+    return <JobImportPage jobId={decodeURIComponent(jobEditMatch[1])} />;
   }
 
   const jobMatch = pathname.match(/^\/jobs\/([^/]+)$/);

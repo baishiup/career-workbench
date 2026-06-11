@@ -59,8 +59,18 @@ career-workbench/
 ```txt
 apps/web
   -> upload-resume / complete-onboarding-with-resume Edge Function
-  -> Edge Function 中转 PDF 给 Dify resume-parse Workflow
+  -> Edge Function 中转 PDF 给 Dify resume-parse Workflow（DIFY_RESUME_PARSE_API_KEY）
   -> 写入 profiles / resumes，或返回 profile candidate 等待用户确认
+```
+
+## Admin 职位导入流程
+
+```txt
+apps/web（admin）
+  -> job-parse Edge Function（DIFY_JOB_PARSE_API_KEY）
+  -> Dify job_parse Workflow（JD 文本和/或职位截图，vision 一步解析）
+  -> 前端导入表单预填 + 人工确认
+  -> 直接写 job_descriptions（RLS 限 is_admin）
 ```
 
 MVP 里先不做 signed upload URL 和 resume_files 表。只有文件需要长期保存、支持大文件或异步解析时，再重新设计 Storage 直传流程。
@@ -90,18 +100,22 @@ Edge Function 调 Dify 时遵守：
 - `upload-resume`：简历列表上传入口，接收 PDF、调用 Dify、创建 `resumes`，返回 `profile_candidate`，不覆盖 Profile。
 - `complete-onboarding-with-resume`：Onboarding 上传入口，接收 PDF 和 preferences，调用 Dify，覆盖 `profiles.profile_data`，创建 base resume，并完成 onboarding。
 - `apply-resume-to-profile`：用户确认后，把某份 resume 保存的 `ai_parsed_draft_json` 重新归一化并覆盖 Profile。
+- `job-parse`：admin 粘贴 JD 文本或上传职位截图，调用 Dify `job_parse` workflow，返回结构化职位草稿供导入表单预填（不落库）。
 
 当前共享代码：
 
 - `_shared/cors.ts`：CORS 与 JSON response helper。
-- `_shared/auth.ts`：认证 helper 占位，后续要替换为真实 Supabase Auth 校验。
+- `_shared/auth.ts`：Supabase Auth 校验；`job-parse` 额外检查 `users.is_admin`。
 - `_shared/resume-normalize.ts`：Edge Function 到 `packages/domain` 归一化逻辑的桥接。
-- `_shared/dify-resume-parse.ts`：Dify 文件上传、Workflow 调用和 `AIParsedResumeDraft` 提取。
+- `_shared/dify-resume-parse.ts`：简历 Dify 文件上传、Workflow 调用和 `AIParsedResumeDraft` 提取（`DIFY_RESUME_PARSE_API_KEY`）。
+- `_shared/dify-job-parse.ts`：职位 JD 解析 Dify 调用和 `JobParseDraft` 提取（`DIFY_JOB_PARSE_API_KEY`）。
+
+Dify 环境变量（见 `supabase/.env.example`）：每个 workflow 独立 key；`DIFY_BASE_URL`、`DIFY_USER` 共用。旧名 `DIFY_API_KEY` 已改为 `DIFY_RESUME_PARSE_API_KEY`。
 
 已删除未实现的空壳函数。后续只有在对应业务真正开始实施时，再新增函数：
 
-- JD 匹配分析。
-- 定向简历生成。
+- JD 匹配分析（`DIFY_JOB_MATCH_API_KEY`）。
+- 定向简历生成（`DIFY_RESUME_GENERATE_API_KEY`）。
 
 实现规则：
 
@@ -119,7 +133,7 @@ Edge Function 调 Dify 时遵守：
 - 上传文件限制保持较小，例如简历限制在 5-10 MB。
 - Dify/真实 AI 只对 allowlist 账号开放，直到隐私和计费边界稳定。
 - 本地 fixture 只保存 sample 数据，不保存私有真实简历。
-- 没有真实必要前，不做 OCR、服务端浏览器渲染和批处理任务。
+- 没有真实必要前，不做独立 OCR 服务、服务端浏览器渲染和批处理任务（职位截图走 Dify vision，不算独立 OCR）。
 
 ## 部署说明
 
@@ -136,6 +150,9 @@ supabase db push
 supabase functions deploy upload-resume
 supabase functions deploy complete-onboarding-with-resume
 supabase functions deploy apply-resume-to-profile
+supabase functions deploy job-parse
 ```
+
+Dify workflow 导入与 API Key 配置见 [dify/README.md](../dify/README.md)；本地 env 模板见 [supabase/.env.example](../supabase/.env.example)。
 
 后续新增 Edge Function 后，再补充对应部署命令。

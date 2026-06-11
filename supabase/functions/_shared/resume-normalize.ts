@@ -1,13 +1,13 @@
 /**
- * Edge Function 到 packages/resume 的归一化桥接。
+ * Edge Function 到 packages/domain resume 模块的归一化桥接。
  *
- * 真实实现仍放在 packages/resume；Edge Function 只通过这个相对路径桥接，
+ * 真实实现仍放在 packages/domain；Edge Function 只通过这个相对路径桥接，
  * 避免业务函数里复制 AIParsedResumeDraft -> ProfileDraft -> ResumeDocument 逻辑。
  */
 
 export type {
   AIParsedResumeDraft,
-} from "../../../packages/resume/src/parse.ts";
+} from "../../../packages/domain/src/resume/parse.ts";
 
 export type {
   AIParsedResumeDraftToProfileOptions,
@@ -15,11 +15,11 @@ export type {
   BuildBaseResumeFromAIParsedDraftOptions,
   DefaultResumeStyleConfigOptions,
   ProfileDraftToResumeDocumentOptions,
-} from "../../../packages/resume/src/normalize.ts";
+} from "../../../packages/domain/src/resume/normalize.ts";
 
 export {
   aiParsedResumeDraftToProfileDraft,
   buildBaseResumeFromAIParsedDraft,
   createDefaultResumeStyleConfig,
   profileDraftToBaseResumeDocument,
-} from "../../../packages/resume/src/normalize.ts";
+} from "../../../packages/domain/src/resume/normalize.ts";

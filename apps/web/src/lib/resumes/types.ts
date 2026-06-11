@@ -50,15 +50,9 @@ type ApplyResumeToProfileResponse = {
   resume_id: string;
 };
 
-type ResumeFunctionErrorDetails = {
-  status?: number;
-  details?: unknown;
-};
-
 export type {
   ApplyResumeToProfileResponse,
   CompleteOnboardingWithResumeResponse,
-  ResumeFunctionErrorDetails,
   ResumeFunctionFile,
   ResumeFunctionRow,
   ResumeListRow,

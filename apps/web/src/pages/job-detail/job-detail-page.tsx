@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Card, Chip, ProgressBar } from "@heroui/react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -16,7 +16,9 @@ import {
   GraduationCap,
   Loader2,
   MapPin,
+  Pencil,
   PlayCircle,
+  Power,
   RefreshCw,
   ShieldAlert,
   Sparkles,
@@ -28,9 +30,11 @@ import {
   panelClassName,
   softPanelClassName,
 } from "@/components/workbench/surface-classes";
+import { useAuthStore } from "@/lib/auth-store";
+import { navigateTo } from "@/lib/router";
 import { cn } from "@/lib/utils";
 
-import { getJob } from "@/lib/jobs/api";
+import { getJob, setJobActive } from "@/lib/jobs/api";
 import {
   getJobLogo,
   importMethodLabels,
@@ -39,11 +43,29 @@ import {
   remoteStatusLabels,
 } from "@/lib/jobs/labels";
 import type { JobRecord } from "@/lib/jobs/types";
+import { useProfileDraft } from "@/lib/profile/use-profile-draft";
+import {
+  computeRuleMatch,
+  hasMatchableProfile,
+  type RuleMatchResult,
+} from "@career-workbench/domain";
 
 export function JobDetailPage({ jobId }: { jobId: string }) {
+  const isAdmin = useAuthStore((state) => Boolean(state.profile?.isAdmin));
   const [job, setJob] = useState<JobRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isToggling, setIsToggling] = useState(false);
+  const [toggleError, setToggleError] = useState<string | null>(null);
+  const { profile, isLoading: isProfileLoading } = useProfileDraft();
+
+  const ruleMatch = useMemo(() => {
+    if (!job || isProfileLoading || !hasMatchableProfile(profile)) {
+      return null;
+    }
+
+    return computeRuleMatch(profile, job);
+  }, [job, profile, isProfileLoading]);
 
   const loadJob = useCallback(async () => {
     setIsLoading(true);
@@ -110,15 +132,65 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
 
   const logo = getJobLogo(job.company);
 
+  const handleToggleActive = async () => {
+    setIsToggling(true);
+    setToggleError(null);
+
+    try {
+      const updated = await setJobActive(job.id, !job.isActive);
+      setJob(updated);
+    } catch (error) {
+      setToggleError(
+        error instanceof Error ? error.message : "切换职位状态失败。",
+      );
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
   return (
     <section className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-4 py-5 lg:px-6">
-      <Link
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900"
-        href="/jobs"
-      >
-        <ArrowLeft aria-hidden="true" className="size-4" />
-        返回职位列表
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link
+          className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900"
+          href="/jobs"
+        >
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          返回职位列表
+        </Link>
+
+        {isAdmin ? (
+          <div className="flex items-center gap-2">
+            <Button
+              onPress={() => navigateTo(`/jobs/${job.id}/edit`)}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <Pencil className="size-4" />
+              编辑职位
+            </Button>
+            <Button
+              isDisabled={isToggling}
+              onPress={() => void handleToggleActive()}
+              size="sm"
+              type="button"
+              variant={job.isActive ? "danger-soft" : "secondary"}
+            >
+              {isToggling ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Power className="size-4" />
+              )}
+              {job.isActive ? "停用职位" : "启用职位"}
+            </Button>
+          </div>
+        ) : null}
+      </div>
+
+      {toggleError ? (
+        <p className="text-sm text-red-600">{toggleError}</p>
+      ) : null}
 
       <div
         className={cn(
@@ -141,6 +213,11 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
                 <Chip size="sm" variant="soft">{job.sourcePlatform}</Chip>
               ) : null}
               <ImportStatusBadge status={job.importStatus} />
+              {!job.isActive ? (
+                <Chip color="default" size="sm" variant="soft">
+                  已停用
+                </Chip>
+              ) : null}
               {job.postedAt ? (
                 <Chip color="default" size="sm" variant="secondary">
                   发布于 {job.postedAt}
@@ -162,7 +239,7 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
           </div>
         </div>
 
-        <MatchScorePanel job={job} />
+        <MatchScorePanel isProfileLoading={isProfileLoading} match={ruleMatch} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -324,27 +401,40 @@ function DetailShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function MatchScorePanel({ job }: { job: JobRecord }) {
-  if (!job.match) {
+function MatchScorePanel({
+  isProfileLoading,
+  match,
+}: {
+  isProfileLoading: boolean;
+  match: RuleMatchResult | null;
+}) {
+  if (isProfileLoading) {
     return (
       <div className="flex flex-col gap-3 rounded-xl bg-slate-900 p-4 text-white">
         <div>
-          <p className="text-sm text-white/75">匹配分</p>
+          <p className="text-sm text-white/75">规则匹配分</p>
           <p className="mt-2 text-4xl font-semibold">—</p>
           <p className="mt-1 text-sm font-medium text-white/75">
-            规则匹配分功能开发中
+            正在加载 Profile…
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <Button isDisabled type="button" variant="secondary">
-            <PlayCircle data-icon="inline-start" />
-            运行分析
-          </Button>
-          <Button isDisabled type="button" variant="primary">
-            <Sparkles data-icon="inline-start" />
-            生成简历
-          </Button>
+      </div>
+    );
+  }
+
+  if (!match) {
+    return (
+      <div className="flex flex-col gap-3 rounded-xl bg-slate-900 p-4 text-white">
+        <div>
+          <p className="text-sm text-white/75">规则匹配分</p>
+          <p className="mt-2 text-4xl font-semibold">—</p>
+          <p className="mt-1 text-sm font-medium text-white/75">
+            完善 Profile 的技能或工作经历后，这里会实时计算匹配分。
+          </p>
         </div>
+        <Button onPress={() => navigateTo("/profile")} type="button" variant="secondary">
+          去完善 Profile
+        </Button>
       </div>
     );
   }
@@ -352,11 +442,16 @@ function MatchScorePanel({ job }: { job: JobRecord }) {
   return (
     <div className="flex flex-col gap-3 rounded-xl bg-blue-600 p-4 text-white">
       <div>
-        <p className="text-sm text-white/75">Mock 匹配分</p>
-        <p className="mt-2 text-4xl font-semibold">{job.match.score}%</p>
-        <p className="mt-1 text-sm font-medium">{job.match.label}</p>
+        <p className="text-sm text-white/75">规则匹配分</p>
+        <p className="mt-2 text-4xl font-semibold">{match.score}%</p>
+        <p className="mt-1 text-sm font-medium">{match.label}</p>
       </div>
-      <ProgressBar color="success" size="sm" value={job.match.score} />
+      <ProgressBar color="success" size="sm" value={match.score} />
+      {match.breakdown.missingRequiredSkills.length > 0 ? (
+        <p className="text-xs leading-5 text-white/75">
+          缺少必备技能：{match.breakdown.missingRequiredSkills.join("、")}
+        </p>
+      ) : null}
       <div className="grid grid-cols-2 gap-2">
         <Button type="button" variant="secondary">
           <PlayCircle data-icon="inline-start" />
@@ -381,8 +476,7 @@ function MatchAnalysisCard({ job }: { job: JobRecord }) {
         </Card.Header>
         <Card.Content>
           <p className="text-sm leading-6 text-slate-500">
-            规则匹配分和 AI
-            叙事分析将在后续任务接入。届时这里会展示命中证据、能力缺口和风险表达。
+            AI 叙事分析将在后续任务接入。届时这里会展示命中证据、能力缺口和风险表达。
           </p>
         </Card.Content>
       </Card>

@@ -1,3 +1,4 @@
+import { invokeEdgeFunction } from "@/lib/edge-functions";
 import { getSupabaseClient } from "@/lib/supabase";
 import { mockJobs } from "@/lib/jobs/mock-data";
 import type {
@@ -19,6 +20,59 @@ class JobsApiError extends Error {
     this.details = details;
   }
 }
+
+/** job-parse Edge Function 返回的结构化职位草稿（snake_case 对齐 Dify 输出）。 */
+type JobParseDraft = {
+  schema_version: "job.parse.v1";
+  source_platform: string | null;
+  company: string | null;
+  title: string | null;
+  company_stage: string | null;
+  location: string | null;
+  remote_status: JobRemoteStatus | null;
+  job_type: JobEmploymentType | null;
+  seniority: string | null;
+  years_required: string | null;
+  required_skills: string[];
+  preferred_skills: string[];
+  responsibilities: string[];
+  requirements: string[];
+  salary_range: string | null;
+  posted_at: string | null;
+  summary: string | null;
+  parse_warnings: string[];
+};
+
+type JobParseResponse = {
+  status: "ok";
+  provider: "dify";
+  parsed: JobParseDraft;
+  parse_warnings: string[];
+};
+
+/** admin 创建/编辑职位时的输入；id 与时间戳由数据库管理。 */
+type JobDraftInput = {
+  sourcePlatform: string | null;
+  sourceUrl: string | null;
+  company: string;
+  title: string;
+  companyStage: string | null;
+  location: string | null;
+  remoteStatus: JobRemoteStatus;
+  jobType: JobEmploymentType;
+  seniority: string | null;
+  yearsRequired: string | null;
+  requiredSkills: string[];
+  preferredSkills: string[];
+  responsibilities: string[];
+  requirements: string[];
+  salaryRange: string | null;
+  postedAt: string | null;
+  summary: string | null;
+  importedBy: string | null;
+  importMethod: JobImportMethod;
+  importStatus: JobImportStatus;
+};
 
 type JobDescriptionRow = {
   id: string;
@@ -42,10 +96,11 @@ type JobDescriptionRow = {
   imported_by: string | null;
   import_method: JobImportMethod;
   import_status: JobImportStatus;
+  is_active: boolean;
 };
 
 const jobSelectColumns =
-  "id,source_platform,source_url,company,title,company_stage,location,remote_status,job_type,seniority,years_required,required_skills,preferred_skills,responsibilities,requirements,salary_range,posted_at,summary,imported_by,import_method,import_status";
+  "id,source_platform,source_url,company,title,company_stage,location,remote_status,job_type,seniority,years_required,required_skills,preferred_skills,responsibilities,requirements,salary_range,posted_at,summary,imported_by,import_method,import_status,is_active";
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -54,13 +109,14 @@ async function listJobs(): Promise<{ jobs: JobRecord[]; mode: JobsDataMode }> {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    return { jobs: mockJobs, mode: "mock" };
+    // mock 模式没有 admin，本地直接过滤掉停用职位。
+    return { jobs: mockJobs.filter((job) => job.isActive), mode: "mock" };
   }
 
+  // 可见性交给 RLS：普通用户只放行启用职位，admin 能读到停用职位。
   const { data, error } = await supabase
     .from("job_descriptions")
     .select(jobSelectColumns)
-    .eq("is_active", true)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -93,7 +149,6 @@ async function getJob(
     .from("job_descriptions")
     .select(jobSelectColumns)
     .eq("id", jobId)
-    .eq("is_active", true)
     .maybeSingle();
 
   if (error) {
@@ -103,6 +158,129 @@ async function getJob(
   return {
     job: data ? mapJobRow(data as JobDescriptionRow) : null,
     mode: "supabase",
+  };
+}
+
+async function createJob(input: JobDraftInput): Promise<JobRecord> {
+  const supabase = requireSupabase("创建职位");
+
+  const { data, error } = await supabase
+    .from("job_descriptions")
+    .insert(toJobRowPayload(input))
+    .select(jobSelectColumns)
+    .single();
+
+  if (error) {
+    throw new JobsApiError(error.message, error);
+  }
+
+  return mapJobRow(data as JobDescriptionRow);
+}
+
+async function updateJob(
+  jobId: string,
+  input: JobDraftInput,
+): Promise<JobRecord> {
+  const supabase = requireSupabase("编辑职位");
+
+  const { data, error } = await supabase
+    .from("job_descriptions")
+    .update({
+      ...toJobRowPayload(input),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", jobId)
+    .select(jobSelectColumns)
+    .maybeSingle();
+
+  if (error) {
+    throw new JobsApiError(error.message, error);
+  }
+
+  if (!data) {
+    throw new JobsApiError("没有找到这个职位，或没有编辑权限。");
+  }
+
+  return mapJobRow(data as JobDescriptionRow);
+}
+
+async function setJobActive(
+  jobId: string,
+  isActive: boolean,
+): Promise<JobRecord> {
+  const supabase = requireSupabase(isActive ? "启用职位" : "停用职位");
+
+  const { data, error } = await supabase
+    .from("job_descriptions")
+    .update({
+      is_active: isActive,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", jobId)
+    .select(jobSelectColumns)
+    .maybeSingle();
+
+  if (error) {
+    throw new JobsApiError(error.message, error);
+  }
+
+  if (!data) {
+    throw new JobsApiError("没有找到这个职位，或没有操作权限。");
+  }
+
+  return mapJobRow(data as JobDescriptionRow);
+}
+
+/** 调 job-parse Edge Function 解析 JD 文本和/或截图，仅 admin 可用。 */
+async function parseJobDescription(input: {
+  jdText?: string;
+  screenshots?: File[];
+}): Promise<JobParseResponse> {
+  const formData = new FormData();
+
+  if (input.jdText?.trim()) {
+    formData.append("jd_text", input.jdText.trim());
+  }
+
+  for (const screenshot of input.screenshots ?? []) {
+    formData.append("screenshots", screenshot, screenshot.name);
+  }
+
+  return invokeEdgeFunction<JobParseResponse>("job-parse", formData);
+}
+
+function requireSupabase(action: string) {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    throw new JobsApiError(`Supabase 未配置，无法${action}。`);
+  }
+
+  return supabase;
+}
+
+function toJobRowPayload(input: JobDraftInput) {
+  return {
+    company: input.company,
+    company_stage: input.companyStage,
+    import_method: input.importMethod,
+    import_status: input.importStatus,
+    imported_by: input.importedBy,
+    job_type: input.jobType,
+    location: input.location,
+    posted_at: input.postedAt,
+    preferred_skills: input.preferredSkills,
+    remote_status: input.remoteStatus,
+    required_skills: input.requiredSkills,
+    requirements: input.requirements,
+    responsibilities: input.responsibilities,
+    salary_range: input.salaryRange,
+    seniority: input.seniority,
+    source_platform: input.sourcePlatform,
+    source_url: input.sourceUrl,
+    summary: input.summary,
+    title: input.title,
+    years_required: input.yearsRequired,
   };
 }
 
@@ -129,8 +307,17 @@ function mapJobRow(row: JobDescriptionRow): JobRecord {
     importedBy: row.imported_by,
     importMethod: row.import_method,
     importStatus: row.import_status,
+    isActive: row.is_active,
   };
 }
 
-export { getJob, JobsApiError, listJobs };
-export type { JobsDataMode };
+export {
+  createJob,
+  getJob,
+  JobsApiError,
+  listJobs,
+  parseJobDescription,
+  setJobActive,
+  updateJob,
+};
+export type { JobDraftInput, JobParseDraft, JobParseResponse, JobsDataMode };

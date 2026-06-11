@@ -67,10 +67,14 @@ class DifyResumeParseError extends Error {
 async function parseResumeWithDify(file: File): Promise<DifyResumeParseResult> {
   validateResumeFile(file);
 
-  const difyApiKey = Deno.env.get("DIFY_API_KEY")?.trim();
+  const difyApiKey = Deno.env.get("DIFY_RESUME_PARSE_API_KEY")?.trim();
 
   if (!difyApiKey) {
-    throw new DifyResumeParseError("Missing DIFY_API_KEY", 500, "config");
+    throw new DifyResumeParseError(
+      "Missing DIFY_RESUME_PARSE_API_KEY",
+      500,
+      "config",
+    );
   }
 
   const difyBaseUrl = normalizeBaseUrl(

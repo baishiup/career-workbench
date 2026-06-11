@@ -10,6 +10,8 @@ type AuthProfile = {
   fullName: string | null;
   hasCompletedOnboarding: boolean;
   id: string;
+  /** admin 才能导入/编辑/停用职位；置位只在数据库手动完成。 */
+  isAdmin: boolean;
 };
 
 type UserRow = {
@@ -18,6 +20,7 @@ type UserRow = {
   full_name: string | null;
   has_completed_onboarding: boolean;
   id: string;
+  is_admin: boolean;
 };
 
 type PasswordSignUpResult = {
@@ -75,10 +78,11 @@ function toProfile(row: UserRow): AuthProfile {
     fullName: row.full_name,
     hasCompletedOnboarding: row.has_completed_onboarding,
     id: row.id,
+    isAdmin: row.is_admin,
   };
 }
 
-function createUserPayload(user: User): UserRow {
+function createUserPayload(user: User): Omit<UserRow, "is_admin"> {
   return {
     avatar_url: getAvatarUrl(user),
     email: user.email ?? null,
@@ -110,7 +114,7 @@ async function ensureUser(user: User) {
 
   const { data: existingUser, error: selectError } = await supabase
     .from("users")
-    .select("id,email,full_name,avatar_url,has_completed_onboarding")
+    .select("id,email,full_name,avatar_url,has_completed_onboarding,is_admin")
     .eq("id", user.id)
     .maybeSingle<UserRow>();
 
@@ -125,7 +129,7 @@ async function ensureUser(user: User) {
   const { data: createdUser, error: insertError } = await supabase
     .from("users")
     .upsert(createUserPayload(user), { onConflict: "id" })
-    .select("id,email,full_name,avatar_url,has_completed_onboarding")
+    .select("id,email,full_name,avatar_url,has_completed_onboarding,is_admin")
     .single<UserRow>();
 
   if (insertError) {
@@ -195,7 +199,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
       .from("users")
       .update(updatePayload)
       .eq("id", user.id)
-      .select("id,email,full_name,avatar_url,has_completed_onboarding")
+      .select("id,email,full_name,avatar_url,has_completed_onboarding,is_admin")
       .single<UserRow>();
 
     if (error) {

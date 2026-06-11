@@ -1,7 +1,8 @@
 "use client";
 
+import type { ComponentType, SVGProps } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Chip } from "@heroui/react";
+import { Alert, Chip, Tabs } from "@heroui/react";
 import {
   createDefaultResumeStyleConfig,
   type ResumeDocument,
@@ -16,7 +17,11 @@ import {
 } from "lucide-react";
 
 import Link from "@/components/router-link";
-import { PillTabs, type PillTabItem } from "@/components/workbench/pill-tabs";
+import {
+  pillTabClassName,
+  pillTabIndicatorClassName,
+  pillTabListClassName,
+} from "@/components/workbench/surface-classes";
 import { getResume } from "@/lib/resumes/api";
 import type { ResumeFunctionRow } from "@/lib/resumes/types";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -28,7 +33,13 @@ import { ResumeStyleEditor } from "./components/resume-style-editor";
 
 type EditorTab = "editor" | "style" | "ai";
 
-const tabItems: Array<PillTabItem<EditorTab>> = [
+type EditorTabItem = {
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  label: string;
+  value: EditorTab;
+};
+
+const tabItems: EditorTabItem[] = [
   { icon: FilePenLine, label: "editor", value: "editor" },
   { icon: SlidersHorizontal, label: "style editor", value: "style" },
   { icon: MessageSquareText, label: "AI 对话", value: "ai" },
@@ -180,11 +191,26 @@ function ResumeEditorWorkspace({ resume }: { resume: ResumeFunctionRow }) {
 
       <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
         <div className="shrink-0 border-b border-slate-200 bg-slate-100/80 px-4 py-3">
-          <PillTabs
-            activeValue={activeTab}
-            items={tabItems}
-            onValueChange={setActiveTab}
-          />
+          <Tabs
+            onSelectionChange={(key) => setActiveTab(String(key) as EditorTab)}
+            selectedKey={activeTab}
+          >
+            <Tabs.ListContainer>
+              <Tabs.List aria-label="简历编辑工具" className={pillTabListClassName}>
+                {tabItems.map((item) => (
+                  <Tabs.Tab
+                    className={pillTabClassName}
+                    id={item.value}
+                    key={item.value}
+                  >
+                    <item.icon aria-hidden="true" className="size-4" />
+                    <span>{item.label}</span>
+                    <Tabs.Indicator className={pillTabIndicatorClassName} />
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+            </Tabs.ListContainer>
+          </Tabs>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
           {activeTab === "editor" ? (

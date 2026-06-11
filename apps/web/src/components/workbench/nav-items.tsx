@@ -1,14 +1,14 @@
 import { BriefcaseBusiness, FileText, UserRound } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 
-import type { PillTabItem } from "@/components/workbench/pill-tabs";
-
 type NavIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
-type WorkbenchNavItem = PillTabItem<string> & {
+type WorkbenchNavItem = {
   activeIcon: NavIcon;
   href: string;
   icon: NavIcon;
+  label: string;
+  value: string;
 };
 
 const workbenchNavItems: WorkbenchNavItem[] = [
@@ -81,3 +81,4 @@ function UserSolidIcon(props: SVGProps<SVGSVGElement>) {
 }
 
 export { workbenchNavItems };
+export type { WorkbenchNavItem };

@@ -1,6 +1,6 @@
 import { BriefcaseBusiness, Code2, GraduationCap, UserRound } from "lucide-react";
 
-import type { ProfileDraft } from "@career-workbench/domain";
+import { emptyProfile } from "@/lib/profile/empty-profile";
 import type { ProfileIcon, ProfileSection } from "./types";
 
 const sectionMeta: Record<
@@ -43,33 +43,6 @@ const drawerOrder: ProfileSection[] = [
   "work",
   "skills",
 ];
-
-const emptyProfile: ProfileDraft = {
-  personal: {
-    firstName: "",
-    lastName: "",
-    headline: "",
-    email: "",
-    phone: "",
-    city: "",
-    targetRegion: "",
-    linkedin: "",
-    github: "",
-    portfolio: "",
-    customFields: [],
-  },
-  preferences: {
-    jobFunction: "",
-    jobTypes: [],
-    location: "",
-    openToRemote: true,
-    workAuthorization: [],
-  },
-  education: [],
-  work: [],
-  projects: [],
-  skills: [],
-};
 
 export {
   drawerOrder,

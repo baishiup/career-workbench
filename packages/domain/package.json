@@ -12,7 +12,10 @@
   },
   "scripts": {
     "check": "echo \"@career-workbench/domain scaffold placeholder: no source checks yet\"",
-    "test": "echo \"@career-workbench/domain scaffold placeholder: no tests yet\"",
+    "test": "vitest run",
     "build": "echo \"@career-workbench/domain scaffold placeholder: no build output yet\""
+  },
+  "devDependencies": {
+    "vitest": "^4.1.8"
   }
 }

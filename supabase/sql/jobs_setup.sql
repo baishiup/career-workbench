@@ -120,9 +120,15 @@ alter table public.job_descriptions
 alter table public.job_descriptions
   drop constraint if exists job_descriptions_import_method_check;
 
+-- Legacy enum migration: job_url rows fold into manual_text (link scraping is
+-- out of scope) so re-running this file stays idempotent on older databases.
+update public.job_descriptions
+  set import_method = 'manual_text'
+  where import_method = 'job_url';
+
 alter table public.job_descriptions
   add constraint job_descriptions_import_method_check
-  check (import_method in ('manual_text', 'job_url', 'screenshot'));
+  check (import_method in ('manual_form', 'manual_text', 'screenshot'));
 
 alter table public.job_descriptions
   drop constraint if exists job_descriptions_import_status_check;
@@ -154,7 +160,7 @@ comment on table public.job_descriptions is
   'Admin-imported job postings with structured JD fields. Read-only for normal users; write policies arrive with the admin import task.';
 
 comment on column public.job_descriptions.import_method is
-  'How the job entered the system: manual_text, job_url, or screenshot.';
+  'How the job entered the system: manual_form, manual_text, or screenshot.';
 
 comment on column public.job_descriptions.import_status is
   'Parse pipeline state: parsed, needs_review, or parse_failed.';

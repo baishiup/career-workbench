@@ -1,4 +1,10 @@
-import { emptyProfile } from "@/pages/profile/data";
+/**
+ * Profile 的 Supabase 读写。
+ *
+ * Profile 页和职位匹配（规则匹配分）共用，归属 lib/profile。
+ */
+
+import { emptyProfile } from "@/lib/profile/empty-profile";
 import { getSupabaseClient } from "@/lib/supabase";
 import type { ProfileDraft } from "@career-workbench/domain";
 

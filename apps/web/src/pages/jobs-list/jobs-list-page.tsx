@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Chip, Input, Table, Toast } from "@heroui/react";
+import { Button, Chip, Input, Table } from "@heroui/react";
 import { ArrowRight, Import, Loader2, RefreshCw, Search } from "lucide-react";
 
 import Link from "@/components/router-link";
+import { useAuthStore } from "@/lib/auth-store";
+import { navigateTo } from "@/lib/router";
 import { cn } from "@/lib/utils";
 
 import { listJobs, type JobsDataMode } from "@/lib/jobs/api";
@@ -15,6 +17,13 @@ import {
   remoteStatusLabels,
 } from "@/lib/jobs/labels";
 import type { JobRecord, JobRemoteStatus } from "@/lib/jobs/types";
+import { useProfileDraft } from "@/lib/profile/use-profile-draft";
+import {
+  computeRuleMatch,
+  hasMatchableProfile,
+  type ProfileDraft,
+  type RuleMatchLabel,
+} from "@career-workbench/domain";
 
 const remoteStatusOptions: JobRemoteStatus[] = ["remote", "hybrid", "onsite"];
 
@@ -30,12 +39,16 @@ const importStatusColors: Record<
 };
 
 export function JobsListPage() {
+  const isAdmin = useAuthStore((state) => Boolean(state.profile?.isAdmin));
   const [jobs, setJobs] = useState<JobRecord[]>([]);
   const [mode, setMode] = useState<JobsDataMode>("supabase");
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [remoteFilter, setRemoteFilter] = useState<RemoteStatusFilter>(null);
+  const { profile, isLoading: isProfileLoading } = useProfileDraft();
+  const matchProfile =
+    !isProfileLoading && hasMatchableProfile(profile) ? profile : null;
 
   const loadJobs = useCallback(async () => {
     setIsLoading(true);
@@ -77,14 +90,16 @@ export function JobsListPage() {
             管理导入的职位、解析状态和匹配度。
           </p>
         </div>
-        <Button
-          onPress={() => Toast.toast.info("开发中")}
-          type="button"
-          variant="primary"
-        >
-          <Import className="size-4" />
-          导入职位
-        </Button>
+        {isAdmin ? (
+          <Button
+            onPress={() => navigateTo("/jobs/new")}
+            type="button"
+            variant="primary"
+          >
+            <Import className="size-4" />
+            导入职位
+          </Button>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -157,7 +172,13 @@ export function JobsListPage() {
                 <Table.Column>操作</Table.Column>
               </Table.Header>
               <Table.Body items={filteredJobs}>
-                {(job) => <JobRow job={job} />}
+                {(job) => (
+                  <JobRow
+                    isProfileLoading={isProfileLoading}
+                    job={job}
+                    matchProfile={matchProfile}
+                  />
+                )}
               </Table.Body>
             </Table.Content>
           </Table.ScrollContainer>
@@ -196,7 +217,15 @@ export function JobsListPage() {
   );
 }
 
-function JobRow({ job }: { job: JobRecord }) {
+function JobRow({
+  isProfileLoading,
+  job,
+  matchProfile,
+}: {
+  isProfileLoading: boolean;
+  job: JobRecord;
+  matchProfile: ProfileDraft | null;
+}) {
   const logo = getJobLogo(job.company);
 
   return (
@@ -212,7 +241,14 @@ function JobRow({ job }: { job: JobRecord }) {
             {logo.text}
           </span>
           <div className="min-w-0">
-            <p className="truncate font-medium text-slate-900">{job.title}</p>
+            <div className="flex items-center gap-2">
+              <p className="truncate font-medium text-slate-900">{job.title}</p>
+              {!job.isActive ? (
+                <Chip color="default" size="sm" variant="soft">
+                  已停用
+                </Chip>
+              ) : null}
+            </div>
             <p className="truncate text-sm text-slate-500">
               {job.company}
               {job.companyStage ? ` · ${compactStage(job.companyStage)}` : null}
@@ -237,20 +273,11 @@ function JobRow({ job }: { job: JobRecord }) {
         </Chip>
       </Table.Cell>
       <Table.Cell>
-        {job.match ? (
-          <span
-            className={cn(
-              "inline-flex rounded-full px-2.5 py-1 text-sm font-semibold",
-              matchPillClassName(job.match.score),
-            )}
-          >
-            {job.match.score}%
-          </span>
-        ) : (
-          <span className="text-sm text-slate-400" title="规则匹配分功能开发中">
-            —
-          </span>
-        )}
+        <MatchScoreCell
+          isProfileLoading={isProfileLoading}
+          job={job}
+          matchProfile={matchProfile}
+        />
       </Table.Cell>
       <Table.Cell>
         <Link
@@ -301,12 +328,56 @@ function compactStage(stage: string) {
   return stage.split("·").at(-1)?.trim() ?? stage;
 }
 
-function matchPillClassName(score: number) {
-  if (score >= 95) {
+function MatchScoreCell({
+  isProfileLoading,
+  job,
+  matchProfile,
+}: {
+  isProfileLoading: boolean;
+  job: JobRecord;
+  matchProfile: ProfileDraft | null;
+}) {
+  if (isProfileLoading) {
+    return (
+      <span className="text-sm text-slate-400" title="正在加载 Profile">
+        —
+      </span>
+    );
+  }
+
+  if (!matchProfile) {
+    return (
+      <Link
+        className="text-sm font-medium text-blue-600 hover:underline"
+        href="/profile"
+        title="完善 Profile 后即可看到规则匹配分"
+      >
+        完善 Profile
+      </Link>
+    );
+  }
+
+  const match = computeRuleMatch(matchProfile, job);
+
+  return (
+    <span
+      className={cn(
+        "inline-flex rounded-full px-2.5 py-1 text-sm font-semibold",
+        matchPillClassName(match.label),
+      )}
+      title={match.label}
+    >
+      {match.score}%
+    </span>
+  );
+}
+
+function matchPillClassName(label: RuleMatchLabel) {
+  if (label === "强匹配") {
     return "bg-blue-600/10 text-blue-600";
   }
 
-  if (score >= 85) {
+  if (label === "可冲刺") {
     return "bg-emerald-600/10 text-emerald-600";
   }
 

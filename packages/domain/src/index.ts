@@ -89,3 +89,16 @@ export type {
   JobImportStatus,
   JobRemoteStatus,
 } from "./job/types";
+export {
+  computeProfileYears,
+  computeRuleMatch,
+  hasMatchableProfile,
+  matchLabelForScore,
+  normalizeSkill,
+  parseYearsRequired,
+} from "./job/match";
+export type {
+  RuleMatchBreakdown,
+  RuleMatchLabel,
+  RuleMatchResult,
+} from "./job/match";
