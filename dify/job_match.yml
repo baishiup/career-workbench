@@ -1,0 +1,319 @@
+app:
+  description: 基于 Profile、结构化 JD 和规则匹配结果输出叙事分析（evidence / gaps / risks / ai_note），不输出分数。
+  icon: 🧭
+  icon_background: '#EDE9FE'
+  icon_type: emoji
+  mode: workflow
+  name: job_match
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/gemini:0.8.4@23aed1fa4d2c8015337bd18efa28b3dccf5b7309a83b1501541fb7358518faec
+    version: null
+kind: app
+version: 0.6.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: llm
+      id: 1786000000001-source-1786000000002-target
+      selected: false
+      source: '1786000000001'
+      sourceHandle: source
+      target: '1786000000002'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: 1786000000002-source-1786000000003-target
+      selected: false
+      source: '1786000000002'
+      sourceHandle: source
+      target: '1786000000003'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: end
+      id: 1786000000003-source-1786000000004-target
+      selected: false
+      source: '1786000000003'
+      sourceHandle: source
+      target: '1786000000004'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: Edge Function 传入 Profile、结构化 JD 和规则匹配结果，均为 JSON 字符串。
+        selected: false
+        title: 用户输入
+        type: start
+        variables:
+        - hide: false
+          hint: ''
+          label: profile_json
+          max_length: 48000
+          options: []
+          placeholder: ''
+          required: true
+          type: paragraph
+          variable: profile_json
+        - hide: false
+          hint: ''
+          label: job_json
+          max_length: 48000
+          options: []
+          placeholder: ''
+          required: true
+          type: paragraph
+          variable: job_json
+        - hide: false
+          hint: ''
+          label: rule_match_json
+          max_length: 8000
+          options: []
+          placeholder: ''
+          required: true
+          type: paragraph
+          variable: rule_match_json
+      height: 137
+      id: '1786000000001'
+      position:
+        x: -280
+        y: 240
+      positionAbsolute:
+        x: -280
+        y: 240
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 围绕规则匹配结果生成 evidence / gaps / risks / ai_note 叙事，不打分。
+        model:
+          completion_params:
+            temperature: 0
+            thinking_mode: false
+          mode: chat
+          name: gemini-2.5-flash
+          provider: langgenius/gemini/google
+        prompt_template:
+        - id: b2e4d3f5-0001-4abc-8def-job-match-sys
+          role: system
+          text: '你是一个求职匹配叙事分析器。输入是候选人 Profile（JSON）、结构化职位描述（JSON）和代码规则计算出的匹配结果（JSON，含分数、等级和命中/缺失技能明细）。
+
+
+            你的职责是解释和展开规则匹配结果，不是重新评分。绝对禁止输出任何数字分数、百分比或等级标签；分数永远以规则结果为准。
+
+
+            输出四类叙事，全部使用中文：
+
+            1. evidence（命中证据）：从 Profile 的工作经历、项目、技能中找出能支撑该职位要求的具体事实。每条必须能追溯到 Profile 中的真实内容，不得虚构。最多 5 条，每条不超过 80 字。
+
+            2. gaps（能力缺口）：结合规则结果中的缺失技能和 JD 要求，指出 Profile 缺少或证据不足的部分，并给出可执行的补救方向（如何在简历中补证据、如何如实表述相近经验）。最多 5 条，每条不超过 80 字。
+
+            3. risks（风险表达）：投递或简历表述中需要注意的风险，例如容易被夸大的经验、年限差距、远程协作或语言要求。表达要诚实，不鼓励美化。最多 4 条，每条不超过 80 字。
+
+            4. ai_note（总评叙事）：围绕规则匹配等级展开的整体判断和投递建议，不超过 120 字，不出现具体分数。
+
+
+            输出要求：
+
+            1. 只输出 JSON 对象，必须符合 Structured Output JSON Schema。
+
+            2. schema_version 固定为 "job.match.v1"。
+
+            3. 某一类没有内容时输出空数组，不要编造凑数。
+
+            '
+        - id: b2e4d3f5-0002-4abc-8def-job-match-usr
+          role: user
+          text: '候选人 Profile（JSON）：
+
+
+            {{#1786000000001.profile_json#}}
+
+
+            结构化职位描述（JSON）：
+
+
+            {{#1786000000001.job_json#}}
+
+
+            代码规则匹配结果（JSON，分数与等级以此为准）：
+
+
+            {{#1786000000001.rule_match_json#}}
+
+            '
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              ai_note:
+                type: string
+              evidence:
+                items:
+                  type: string
+                type: array
+              gaps:
+                items:
+                  type: string
+                type: array
+              risks:
+                items:
+                  type: string
+                type: array
+              schema_version:
+                enum:
+                - job.match.v1
+                type: string
+            required:
+            - schema_version
+            - evidence
+            - gaps
+            - risks
+            - ai_note
+            type: object
+        structured_output_enabled: true
+        title: LLM 叙事分析
+        type: llm
+        vision:
+          enabled: false
+      height: 148
+      id: '1786000000002'
+      position:
+        x: 60
+        y: 240
+      positionAbsolute:
+        x: 60
+        y: 240
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: |
+          function main({ raw_json }) {
+            const source = String(raw_json || "").trim();
+            const jsonText = source
+              .replace(/^```(?:json)?\s*/i, "")
+              .replace(/\s*```$/i, "");
+
+            let parsed;
+            try {
+              parsed = JSON.parse(jsonText);
+            } catch (error) {
+              return { normalized_json: jsonText };
+            }
+
+            function toStringList(value) {
+              if (!Array.isArray(value)) {
+                return [];
+              }
+              return value
+                .filter((item) => typeof item === "string" && item.trim())
+                .map((item) => item.trim());
+            }
+
+            return {
+              normalized_json: JSON.stringify({
+                schema_version: "job.match.v1",
+                evidence: toStringList(parsed.evidence),
+                gaps: toStringList(parsed.gaps),
+                risks: toStringList(parsed.risks),
+                ai_note: typeof parsed.ai_note === "string" ? parsed.ai_note.trim() : ""
+              })
+            };
+          }
+        code_language: javascript
+        desc: 兜底解析 code fence，并把叙事字段归一化成稳定形状。
+        outputs:
+          normalized_json:
+            children: null
+            type: string
+        selected: false
+        title: 输出归一化
+        type: code
+        variables:
+        - value_selector:
+          - '1786000000002'
+          - text
+          variable: raw_json
+      height: 96
+      id: '1786000000003'
+      position:
+        x: 400
+        y: 240
+      positionAbsolute:
+        x: 400
+        y: 240
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: 生成最终内容
+        outputs:
+        - value_selector:
+          - '1786000000003'
+          - normalized_json
+          value_type: string
+          variable: text
+        selected: false
+        title: Output
+        type: end
+      height: 116
+      id: '1786000000004'
+      position:
+        x: 740
+        y: 240
+      positionAbsolute:
+        x: 740
+        y: 240
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: -400
+      y: 200
+      zoom: 0.8
+  rag_pipeline_variables: []

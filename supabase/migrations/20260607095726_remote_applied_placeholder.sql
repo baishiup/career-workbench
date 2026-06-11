@@ -1,0 +1,2 @@
+-- Placeholder: this migration was applied directly to the remote database
+-- before local migration tracking started. Schema lives in supabase/sql/.

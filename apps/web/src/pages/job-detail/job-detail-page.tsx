@@ -5,7 +5,6 @@ import { Button, Card, Chip, ProgressBar } from "@heroui/react";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowLeft,
-  BadgeCheck,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
@@ -20,7 +19,6 @@ import {
   PlayCircle,
   Power,
   RefreshCw,
-  ShieldAlert,
   Sparkles,
   Target,
 } from "lucide-react";
@@ -38,7 +36,6 @@ import { getJob, setJobActive } from "@/lib/jobs/api";
 import {
   getJobLogo,
   importMethodLabels,
-  importStatusLabels,
   jobTypeLabels,
   remoteStatusLabels,
 } from "@/lib/jobs/labels";
@@ -49,6 +46,9 @@ import {
   hasMatchableProfile,
   type RuleMatchResult,
 } from "@career-workbench/domain";
+
+import { MatchReportCard } from "./components/match-report-card";
+import { useMatchReport } from "./use-match-report";
 
 export function JobDetailPage({ jobId }: { jobId: string }) {
   const isAdmin = useAuthStore((state) => Boolean(state.profile?.isAdmin));
@@ -66,6 +66,14 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
 
     return computeRuleMatch(profile, job);
   }, [job, profile, isProfileLoading]);
+
+  const matchReport = useMatchReport(jobId);
+
+  const handleRunAnalysis = () => {
+    if (ruleMatch && !matchReport.isRunning) {
+      void matchReport.runAnalysis(ruleMatch);
+    }
+  };
 
   const loadJob = useCallback(async () => {
     setIsLoading(true);
@@ -212,7 +220,6 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
               {job.sourcePlatform ? (
                 <Chip size="sm" variant="soft">{job.sourcePlatform}</Chip>
               ) : null}
-              <ImportStatusBadge status={job.importStatus} />
               {!job.isActive ? (
                 <Chip color="default" size="sm" variant="soft">
                   已停用
@@ -239,7 +246,12 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
           </div>
         </div>
 
-        <MatchScorePanel isProfileLoading={isProfileLoading} match={ruleMatch} />
+        <MatchScorePanel
+          isProfileLoading={isProfileLoading}
+          isRunningAnalysis={matchReport.isRunning}
+          match={ruleMatch}
+          onRunAnalysis={handleRunAnalysis}
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -330,7 +342,11 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
         </main>
 
         <aside className="flex min-w-0 flex-col gap-4">
-          <MatchAnalysisCard job={job} />
+          <MatchReportCard
+            canRun={Boolean(ruleMatch)}
+            matchReport={matchReport}
+            onRun={handleRunAnalysis}
+          />
 
           <Card className={panelClassName}>
             <Card.Header>
@@ -374,10 +390,6 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
                 label="导入方式"
                 value={importMethodLabels[job.importMethod]}
               />
-              <MetaRow
-                label="导入状态"
-                value={importStatusLabels[job.importStatus]}
-              />
             </Card.Content>
           </Card>
         </aside>
@@ -403,10 +415,14 @@ function DetailShell({ children }: { children: React.ReactNode }) {
 
 function MatchScorePanel({
   isProfileLoading,
+  isRunningAnalysis,
   match,
+  onRunAnalysis,
 }: {
   isProfileLoading: boolean;
+  isRunningAnalysis: boolean;
   match: RuleMatchResult | null;
+  onRunAnalysis: () => void;
 }) {
   if (isProfileLoading) {
     return (
@@ -453,9 +469,18 @@ function MatchScorePanel({
         </p>
       ) : null}
       <div className="grid grid-cols-2 gap-2">
-        <Button type="button" variant="secondary">
-          <PlayCircle data-icon="inline-start" />
-          运行分析
+        <Button
+          isDisabled={isRunningAnalysis}
+          onPress={onRunAnalysis}
+          type="button"
+          variant="secondary"
+        >
+          {isRunningAnalysis ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <PlayCircle data-icon="inline-start" />
+          )}
+          {isRunningAnalysis ? "分析中…" : "运行分析"}
         </Button>
         <Button type="button" variant="primary">
           <Sparkles data-icon="inline-start" />
@@ -463,62 +488,6 @@ function MatchScorePanel({
         </Button>
       </div>
     </div>
-  );
-}
-
-function MatchAnalysisCard({ job }: { job: JobRecord }) {
-  if (!job.match) {
-    return (
-      <Card className={panelClassName}>
-        <Card.Header>
-          <Card.Title>匹配分析</Card.Title>
-          <Card.Description>尚未运行 AI 分析</Card.Description>
-        </Card.Header>
-        <Card.Content>
-          <p className="text-sm leading-6 text-slate-500">
-            AI 叙事分析将在后续任务接入。届时这里会展示命中证据、能力缺口和风险表达。
-          </p>
-        </Card.Content>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className={panelClassName}>
-      <Card.Header>
-        <Card.Title>匹配分析</Card.Title>
-        <Card.Description>
-          {job.match.provider} · {job.match.runId}
-        </Card.Description>
-        <div className="ml-auto">
-          <Chip color="accent" size="sm" variant="soft">
-            {job.match.generatedAt}
-          </Chip>
-        </div>
-      </Card.Header>
-      <Card.Content className="flex flex-col gap-4">
-        <p className="text-sm leading-6 text-slate-500">{job.match.aiNote}</p>
-        <div className="h-px bg-border" />
-        <MatchSection
-          icon={BadgeCheck}
-          items={job.match.evidence}
-          title="命中证据"
-          tone="success"
-        />
-        <MatchSection
-          icon={ShieldAlert}
-          items={job.match.gaps}
-          title="能力缺口"
-          tone="warning"
-        />
-        <MatchSection
-          icon={ShieldAlert}
-          items={job.match.risks}
-          title="风险表达"
-          tone="muted"
-        />
-      </Card.Content>
-    </Card>
   );
 }
 
@@ -609,42 +578,6 @@ function SkillGroup({
   );
 }
 
-function MatchSection({
-  icon: Icon,
-  items,
-  title,
-  tone,
-}: {
-  icon: LucideIcon;
-  items: string[];
-  title: string;
-  tone: "success" | "warning" | "muted";
-}) {
-  const iconClassName =
-    tone === "success"
-      ? "text-emerald-600"
-      : tone === "warning"
-        ? "text-amber-600"
-        : "text-slate-500";
-
-  return (
-    <div>
-      <div className="flex items-center gap-2">
-        <Icon aria-hidden="true" className={cn("size-4", iconClassName)} />
-        <p className="text-sm font-medium">{title}</p>
-      </div>
-      <ul className="mt-2 space-y-2 text-sm leading-5 text-slate-500">
-        {items.map((item) => (
-          <li className="flex gap-2" key={item}>
-            <span className="mt-2 size-1 shrink-0 rounded-full bg-border" />
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-2 last:border-0 last:pb-0">
@@ -654,26 +587,3 @@ function MetaRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ImportStatusBadge({ status }: { status: JobRecord["importStatus"] }) {
-  if (status === "parsed") {
-    return (
-      <Chip color="success" size="sm" variant="primary">
-        {importStatusLabels[status]}
-      </Chip>
-    );
-  }
-
-  if (status === "needs_review") {
-    return (
-      <Chip color="warning" size="sm" variant="primary">
-        {importStatusLabels[status]}
-      </Chip>
-    );
-  }
-
-  return (
-    <Chip color="danger" size="sm" variant="soft">
-      {importStatusLabels[status]}
-    </Chip>
-  );
-}

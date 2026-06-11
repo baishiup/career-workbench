@@ -102,3 +102,12 @@ export type {
   RuleMatchLabel,
   RuleMatchResult,
 } from "./job/match";
+export {
+  coerceMatchReportNarrative,
+  isMatchReportStale,
+} from "./job/match-report";
+export type {
+  MatchReportFreshnessInput,
+  MatchReportNarrative,
+  MatchReportStatus,
+} from "./job/match-report";

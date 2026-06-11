@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 import { listJobs, type JobsDataMode } from "@/lib/jobs/api";
 import {
   getJobLogo,
-  importStatusLabels,
   jobTypeLabels,
   remoteStatusLabels,
 } from "@/lib/jobs/labels";
@@ -28,15 +27,6 @@ import {
 const remoteStatusOptions: JobRemoteStatus[] = ["remote", "hybrid", "onsite"];
 
 type RemoteStatusFilter = JobRemoteStatus | null;
-
-const importStatusColors: Record<
-  JobRecord["importStatus"],
-  "danger" | "success" | "warning"
-> = {
-  needs_review: "warning",
-  parse_failed: "danger",
-  parsed: "success",
-};
 
 export function JobsListPage() {
   const isAdmin = useAuthStore((state) => Boolean(state.profile?.isAdmin));
@@ -87,7 +77,7 @@ export function JobsListPage() {
             ) : null}
           </div>
           <p className="text-sm text-slate-500">
-            管理导入的职位、解析状态和匹配度。
+            管理导入的职位和匹配度。
           </p>
         </div>
         {isAdmin ? (
@@ -167,7 +157,6 @@ export function JobsListPage() {
                 <Table.Column isRowHeader>职位</Table.Column>
                 <Table.Column>地点 / 方式</Table.Column>
                 <Table.Column>类型</Table.Column>
-                <Table.Column>状态</Table.Column>
                 <Table.Column>匹配度</Table.Column>
                 <Table.Column>操作</Table.Column>
               </Table.Header>
@@ -267,11 +256,6 @@ function JobRow({
         </div>
       </Table.Cell>
       <Table.Cell>{jobTypeLabels[job.jobType]}</Table.Cell>
-      <Table.Cell>
-        <Chip color={importStatusColors[job.importStatus]} size="sm" variant="soft">
-          {importStatusLabels[job.importStatus]}
-        </Chip>
-      </Table.Cell>
       <Table.Cell>
         <MatchScoreCell
           isProfileLoading={isProfileLoading}

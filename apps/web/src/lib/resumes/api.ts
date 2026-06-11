@@ -28,7 +28,7 @@ async function listResumes() {
 
   const { data, error } = await supabase
     .from("resumes")
-    .select("id,title,source_type,status,created_at,updated_at")
+    .select("id,title,source_type,created_at,updated_at")
     .order("updated_at", { ascending: false });
 
   if (error) {
@@ -57,7 +57,7 @@ async function renameResume(resumeId: string, title: string) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", resumeId)
-    .select("id,title,source_type,status,created_at,updated_at")
+    .select("id,title,source_type,created_at,updated_at")
     .single();
 
   if (error) {

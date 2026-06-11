@@ -9,8 +9,9 @@
 import type { JobDescription } from "@career-workbench/domain";
 
 /**
- * Demo-only AI 匹配报告。真实的规则匹配分与 AI 叙事分析
- * 由后续任务（规则匹配分 / match_reports）接入，届时替换此结构。
+ * Demo-only AI 匹配报告，仅 mock fixture 使用。真实叙事分析持久化在
+ * match_reports 表（见 lib/jobs/match-report-api），无 Supabase env 时
+ * match-report-api 会把这里的占位转换成演示报告。
  */
 type MatchReport = {
   score: number;

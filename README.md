@@ -20,7 +20,7 @@ pnpm install
 pnpm dev
 ```
 
-默认进入工作台，不做营销页。产品主路径以 Supabase 登录和业务持久化为目标；mock/fixture 只用于本地开发阶段。
+`/` 是公开落地页，展示产品功能并引导登录/进入工作台。产品主路径以 Supabase 登录和业务持久化为目标；mock/fixture 只用于本地开发阶段。
 
 运行模式约定：
 

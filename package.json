@@ -8,7 +8,7 @@
     "dev:local": "node scripts/dev-local.mjs",
     "dev:remote": "pnpm --filter @career-workbench/web dev:remote",
     "check": "pnpm -r check",
-    "functions:check": "deno check --no-lock --config supabase/functions/deno.json supabase/functions/upload-resume/index.ts supabase/functions/complete-onboarding-with-resume/index.ts supabase/functions/apply-resume-to-profile/index.ts supabase/functions/job-parse/index.ts",
+    "functions:check": "deno check --no-lock --config supabase/functions/deno.json supabase/functions/upload-resume/index.ts supabase/functions/complete-onboarding-with-resume/index.ts supabase/functions/apply-resume-to-profile/index.ts supabase/functions/job-parse/index.ts supabase/functions/job-match/index.ts",
     "functions:fmt:check": "deno fmt --check --config supabase/functions/deno.json supabase/functions",
     "functions:lint": "deno lint --config supabase/functions/deno.json supabase/functions",
     "test": "pnpm -r test",

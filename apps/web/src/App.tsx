@@ -3,6 +3,7 @@ import { useEffect } from "react";
 
 import { workbenchNavItems } from "@/components/workbench/nav-items";
 import { TopNav } from "@/components/workbench/top-nav";
+import { LandingPage } from "@/pages/landing/landing-page";
 import { LoginPage } from "@/pages/login/login-page";
 import { JobsListPage } from "@/pages/jobs-list/jobs-list-page";
 import { JobDetailPage } from "@/pages/job-detail/job-detail-page";
@@ -40,6 +41,11 @@ function App() {
       return;
     }
 
+    // "/" 是公开落地页，不参与登录/onboarding 重定向。
+    if (pathname === "/") {
+      return;
+    }
+
     const isAuthenticated = Boolean(user);
     const canUseWorkbench = !isAuthConfigured || isAuthenticated;
     const hasPassedOnboarding = isAuthConfigured
@@ -52,13 +58,6 @@ function App() {
         navigateTo(nextWorkbenchPath, { replace: true });
       }
 
-      return;
-    }
-
-    if (pathname === "/") {
-      navigateTo(canUseWorkbench ? nextWorkbenchPath : "/login", {
-        replace: true,
-      });
       return;
     }
 
@@ -81,6 +80,11 @@ function App() {
     user,
   ]);
 
+  // 落地页不依赖登录态，直接渲染，避免等待 auth 初始化。
+  if (pathname === "/") {
+    return <LandingPage />;
+  }
+
   if (
     !hasHydrated ||
     (isAuthConfigured && (isAuthLoading || (user && isProfileLoading)))
@@ -102,7 +106,6 @@ function App() {
     : hasCompletedOnboarding;
 
   if (
-    pathname === "/" ||
     requiresLogin ||
     (pathname !== "/onboarding" && !hasPassedOnboarding)
   ) {

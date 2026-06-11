@@ -23,7 +23,7 @@ type ResumeFunctionRow = {
 
 type ResumeListRow = Pick<
   ResumeFunctionRow,
-  "created_at" | "id" | "source_type" | "status" | "title" | "updated_at"
+  "created_at" | "id" | "source_type" | "title" | "updated_at"
 >;
 
 type UploadResumeResponse = {

@@ -10,7 +10,6 @@ import {
 import {
   Alert,
   Button,
-  Chip,
   Dropdown,
   Input,
   Table,
@@ -49,17 +48,6 @@ const sourceTypeLabels: Record<string, string> = {
   manual_created: "手动创建",
   manual_upload: "上传简历",
   target_job: "定向简历",
-};
-
-const statusMeta: Record<
-  string,
-  { color: "danger" | "default" | "success"; label: string }
-> = {
-  archived: { color: "default", label: "已归档" },
-  draft: { color: "default", label: "草稿" },
-  generation_failed: { color: "danger", label: "生成失败" },
-  parse_failed: { color: "danger", label: "解析失败" },
-  ready: { color: "success", label: "已解析" },
 };
 
 type MoreAction = "apply-profile" | "delete" | "export" | "rename";
@@ -257,7 +245,7 @@ export function ResumesPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">简历</h1>
           <p className="text-sm text-slate-500">
-            管理已上传的基础简历和解析状态。
+            管理已上传的基础简历。
           </p>
         </div>
         <input
@@ -308,7 +296,6 @@ export function ResumesPage() {
                 <Table.Header>
                   <Table.Column isRowHeader>简历名称</Table.Column>
                   <Table.Column>来源</Table.Column>
-                  <Table.Column>状态</Table.Column>
                   <Table.Column>更新时间</Table.Column>
                   <Table.Column>操作</Table.Column>
                 </Table.Header>
@@ -327,9 +314,6 @@ export function ResumesPage() {
                       </Table.Cell>
                       <Table.Cell>
                         {sourceTypeLabels[row.source_type] ?? row.source_type}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <StatusChip status={row.status} />
                       </Table.Cell>
                       <Table.Cell>{formatDateTime(row.updated_at)}</Table.Cell>
                       <Table.Cell>
@@ -422,7 +406,7 @@ export function ResumesPage() {
             <div>
               <p className="text-sm font-semibold">还没有简历记录</p>
               <p className="mt-1 text-sm text-slate-500">
-                上传一份基础简历后，这里会显示解析状态、来源和更新时间。
+                上传一份基础简历后，这里会显示来源和更新时间。
               </p>
             </div>
           </div>
@@ -602,25 +586,11 @@ function isRowMutating(
   );
 }
 
-function StatusChip({ status }: { status: string }) {
-  const meta = statusMeta[status] ?? {
-    color: "default" as const,
-    label: status,
-  };
-
-  return (
-    <Chip color={meta.color} size="sm" variant="soft">
-      {meta.label}
-    </Chip>
-  );
-}
-
 function toResumeListRow(row: ResumeFunctionRow): ResumeListRow {
   return {
     created_at: row.created_at,
     id: row.id,
     source_type: row.source_type,
-    status: row.status,
     title: row.title,
     updated_at: row.updated_at,
   };
