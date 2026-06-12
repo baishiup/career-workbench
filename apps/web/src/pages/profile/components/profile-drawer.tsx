@@ -10,11 +10,18 @@ import type {
   JobPreferences,
   PersonalInfo,
   ProfileDraft,
+  ProfileSectionId,
+  ProjectItem,
   WorkItem,
 } from "@career-workbench/domain";
-import type { ProfileSection } from "@/pages/profile/types";
 import { PersonalForm } from "./personal-form";
-import { EducationForm, SkillsForm, WorkForm } from "./profile-forms";
+import {
+  EducationForm,
+  PreferencesForm,
+  ProjectsForm,
+  SkillsForm,
+  WorkForm,
+} from "./profile-forms";
 import { createId } from "@/pages/profile/utils";
 
 function ProfileDrawer({
@@ -36,7 +43,7 @@ function ProfileDrawer({
   open: boolean;
   onSave: () => Promise<void> | void;
   saveError?: string | null;
-  section: ProfileSection;
+  section: ProfileSectionId;
 }) {
   const meta = sectionMeta[section];
   const drawerState = useOverlayState({
@@ -94,8 +101,17 @@ function ProfileDrawer({
     });
   }
 
+  function updateProject(id: string, patch: Partial<ProjectItem>) {
+    onDraftChange({
+      ...draft,
+      projects: draft.projects.map((item) =>
+        item.id === id ? { ...item, ...patch } : item,
+      ),
+    });
+  }
+
   function reorderList(
-    listName: "education" | "work",
+    listName: "education" | "work" | "projects",
     from: number,
     to: number,
   ) {
@@ -151,12 +167,15 @@ function ProfileDrawer({
 
               {section === "personal" ? (
                 <PersonalForm
-                  jobTypes={draft.preferences.jobTypes}
-                  onJobTypesChange={(jobTypes) =>
-                    updatePreferences({ jobTypes })
-                  }
                   onPersonalChange={updatePersonal}
                   personal={draft.personal}
+                />
+              ) : null}
+
+              {section === "preferences" ? (
+                <PreferencesForm
+                  onPreferencesChange={updatePreferences}
+                  preferences={draft.preferences}
                 />
               ) : null}
 
@@ -225,6 +244,39 @@ function ProfileDrawer({
                   onReorder={(from, to) => reorderList("work", from, to)}
                   onUpdate={updateWork}
                   work={draft.work}
+                />
+              ) : null}
+
+              {section === "projects" ? (
+                <ProjectsForm
+                  onAdd={() =>
+                    onDraftChange({
+                      ...draft,
+                      projects: [
+                        ...draft.projects,
+                        {
+                          id: createId("project"),
+                          name: "",
+                          role: "",
+                          startDate: "",
+                          endDate: "",
+                          summary: "",
+                          bullets: [""],
+                          links: [],
+                          technologies: [],
+                        },
+                      ],
+                    })
+                  }
+                  onDelete={(id) =>
+                    onDraftChange({
+                      ...draft,
+                      projects: draft.projects.filter((item) => item.id !== id),
+                    })
+                  }
+                  onReorder={(from, to) => reorderList("projects", from, to)}
+                  onUpdate={updateProject}
+                  projects={draft.projects}
                 />
               ) : null}
 

@@ -29,11 +29,9 @@ type PersonalInfo = {
   email: string;
   phone: string;
   city: string;
-  /** 目标地区；旧字段，保留用于兼容历史草稿。 */
-  targetRegion: string;
   linkedin: string;
   github: string;
-  /** 作品集链接；旧字段，保留用于兼容历史草稿。 */
+  /** 作品集链接，用于简历生成的链接区。 */
   portfolio: string;
   /** 固定字段无法覆盖的信息，统一放在自定义字段里。 */
   customFields: PersonalCustomField[];
@@ -43,12 +41,12 @@ type PersonalInfo = {
 type JobPreferences = {
   jobFunction: string;
   jobTypes: string[];
-  /** 目标地点；旧字段，保留用于兼容历史草稿。 */
-  location: string;
-  /** 是否接受远程；旧字段，保留用于兼容历史草稿。 */
+  /** 是否接受远程，用于岗位匹配打分。 */
   openToRemote: boolean;
-  /** 工作授权或签证相关说明；旧字段，保留用于兼容历史草稿。 */
-  workAuthorization: string[];
+  /** 期望城市。 */
+  targetCity: string;
+  /** 薪资期望，自由文本，例如 "20-30k"。 */
+  salaryExpectation: string;
 };
 
 /** 教育经历条目，可按时间或用户拖拽顺序展示。 */
@@ -110,30 +108,13 @@ type ProfileDraft = {
   skills: string[];
 };
 
-/** 资料事实来源，用于区分手动填写、简历上传、AI 解析或外部导入。 */
-type ProfileFactSource = "manual" | "resume_upload" | "ai_parse" | "import";
-
-/** 可持久化的资料快照，用于后续版本记录、导入记录或回滚。 */
-type ProfileSnapshot = {
-  /** 快照 id，前端本地草稿场景可以为空。 */
-  id?: string;
-  profile: ProfileDraft;
-  source: ProfileFactSource;
-  /** 创建时间，推荐 ISO 字符串。 */
-  createdAt?: string;
-  /** 更新时间，推荐 ISO 字符串。 */
-  updatedAt?: string;
-};
-
 export type {
   EducationItem,
   JobPreferences,
   PersonalCustomField,
   PersonalInfo,
   ProfileDraft,
-  ProfileFactSource,
   ProfileSectionId,
-  ProfileSnapshot,
   ProjectItem,
   WorkItem,
 };

@@ -1,9 +1,8 @@
 "use client";
 
-import { Button, Input, ListBox, Select } from "@heroui/react";
+import { Button, Input } from "@heroui/react";
 import { Plus, X } from "lucide-react";
 
-import { jobTypeOptions } from "@/pages/profile/data";
 import type {
   PersonalCustomField,
   PersonalInfo,
@@ -12,13 +11,9 @@ import { createId } from "@/pages/profile/utils";
 import { TextField } from "./profile-fields";
 
 function PersonalForm({
-  jobTypes,
-  onJobTypesChange,
   onPersonalChange,
   personal,
 }: {
-  jobTypes: string[];
-  onJobTypesChange: (jobTypes: string[]) => void;
   onPersonalChange: <K extends keyof PersonalInfo>(
     key: K,
     value: PersonalInfo[K],
@@ -73,34 +68,6 @@ function PersonalForm({
           value={personal.city}
           onChange={(value) => onPersonalChange("city", value)}
         />
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-semibold text-slate-500">工作类型</span>
-          <Select
-            aria-label="工作类型"
-            fullWidth
-            onSelectionChange={(key) => {
-              onJobTypesChange(key ? [String(key)] : []);
-            }}
-            placeholder="未选择"
-            selectedKey={jobTypes[0] ?? null}
-            variant="secondary"
-          >
-            <Select.Trigger>
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                {jobTypeOptions.map((jobType) => (
-                  <ListBox.Item id={jobType} key={jobType}>
-                    {jobType}
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                ))}
-              </ListBox>
-            </Select.Popover>
-          </Select>
-        </div>
         <TextField
           className="md:col-span-2"
           label="LinkedIn 链接"

@@ -34,12 +34,11 @@ export type {
   PersonalCustomField,
   PersonalInfo,
   ProfileDraft,
-  ProfileFactSource,
   ProfileSectionId,
-  ProfileSnapshot,
   ProjectItem,
   WorkItem,
 } from "./profile/types";
+export { emptyProfile } from "./profile/empty";
 export type {
   ResumeBlock,
   ResumeBlockBase,

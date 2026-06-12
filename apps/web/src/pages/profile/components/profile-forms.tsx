@@ -7,16 +7,90 @@ import {
   ComboBox,
   Input,
   ListBox,
+  Select,
   Tag,
   TagGroup,
   TextArea,
 } from "@heroui/react";
 import { Plus, X } from "lucide-react";
 
-import { skillSuggestions } from "@/pages/profile/data";
-import type { EducationItem, WorkItem } from "@career-workbench/domain";
+import { jobTypeOptions, skillSuggestions } from "@/pages/profile/data";
+import type {
+  EducationItem,
+  JobPreferences,
+  ProjectItem,
+  WorkItem,
+} from "@career-workbench/domain";
 import { DateField, TextAreaField, TextField } from "./profile-fields";
 import { SortableEditorCard } from "./sortable-editor-card";
+
+function PreferencesForm({
+  onPreferencesChange,
+  preferences,
+}: {
+  onPreferencesChange: (patch: Partial<JobPreferences>) => void;
+  preferences: JobPreferences;
+}) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      <TextField
+        className="md:col-span-2"
+        label="求职方向"
+        required
+        value={preferences.jobFunction}
+        onChange={(value) => onPreferencesChange({ jobFunction: value })}
+      />
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-semibold text-slate-500">工作类型</span>
+        <Select
+          aria-label="工作类型"
+          fullWidth
+          onSelectionChange={(key) => {
+            onPreferencesChange({ jobTypes: key ? [String(key)] : [] });
+          }}
+          placeholder="未选择"
+          selectedKey={preferences.jobTypes[0] ?? null}
+          variant="secondary"
+        >
+          <Select.Trigger>
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              {jobTypeOptions.map((jobType) => (
+                <ListBox.Item id={jobType} key={jobType}>
+                  {jobType}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </Select>
+      </div>
+      <TextField
+        label="期望城市"
+        value={preferences.targetCity}
+        onChange={(value) => onPreferencesChange({ targetCity: value })}
+      />
+      <TextField
+        label="薪资期望"
+        value={preferences.salaryExpectation}
+        onChange={(value) => onPreferencesChange({ salaryExpectation: value })}
+      />
+      <Checkbox
+        className="md:col-span-2"
+        isSelected={preferences.openToRemote}
+        onChange={(checked) => onPreferencesChange({ openToRemote: checked })}
+      >
+        <Checkbox.Control>
+          <Checkbox.Indicator />
+        </Checkbox.Control>
+        <Checkbox.Content>接受远程工作</Checkbox.Content>
+      </Checkbox>
+    </div>
+  );
+}
 
 function EducationForm({
   education,
@@ -279,6 +353,153 @@ function WorkBulletList({
   );
 }
 
+function ProjectsForm({
+  onAdd,
+  onDelete,
+  onReorder,
+  onUpdate,
+  projects,
+}: {
+  onAdd: () => void;
+  onDelete: (id: string) => void;
+  onReorder: (from: number, to: number) => void;
+  onUpdate: (id: string, patch: Partial<ProjectItem>) => void;
+  projects: ProjectItem[];
+}) {
+  const dragIndexRef = useRef<number | null>(null);
+
+  return (
+    <div className="flex flex-col gap-4">
+      {projects.map((item, index) => (
+        <SortableEditorCard
+          dragIndexRef={dragIndexRef}
+          index={index}
+          key={item.id}
+          onDelete={() => onDelete(item.id)}
+          onDragEnd={() => {
+            dragIndexRef.current = null;
+          }}
+          onDragStartIndex={(nextIndex) => {
+            dragIndexRef.current = nextIndex;
+          }}
+          onReorder={onReorder}
+          title={`项目经历 ${index + 1}`}
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            <TextField
+              className="md:col-span-2"
+              label="项目名称"
+              required
+              value={item.name}
+              onChange={(value) => onUpdate(item.id, { name: value })}
+            />
+            <TextField
+              label="角色"
+              value={item.role}
+              onChange={(value) => onUpdate(item.id, { role: value })}
+            />
+            <div className="hidden md:block" />
+            <DateField
+              label="开始日期"
+              value={item.startDate}
+              onChange={(value) => onUpdate(item.id, { startDate: value })}
+            />
+            <DateField
+              label="结束日期"
+              value={item.endDate}
+              onChange={(value) => onUpdate(item.id, { endDate: value })}
+            />
+            <TextAreaField
+              className="md:col-span-2"
+              label="项目摘要"
+              value={item.summary}
+              onChange={(value) => onUpdate(item.id, { summary: value })}
+            />
+            <StringListEditor
+              addLabel="添加要点"
+              className="md:col-span-2"
+              onChange={(bullets) => onUpdate(item.id, { bullets })}
+              title="项目要点"
+              values={item.bullets}
+            />
+            <StringListEditor
+              addLabel="添加技术"
+              className="md:col-span-2"
+              onChange={(technologies) => onUpdate(item.id, { technologies })}
+              title="技术栈"
+              values={item.technologies}
+            />
+          </div>
+        </SortableEditorCard>
+      ))}
+      <Button onPress={onAdd} type="button" variant="outline">
+        <Plus className="size-4" />
+        添加项目经历
+      </Button>
+    </div>
+  );
+}
+
+function StringListEditor({
+  addLabel,
+  className,
+  onChange,
+  title,
+  values,
+}: {
+  addLabel: string;
+  className?: string;
+  onChange: (values: string[]) => void;
+  title: string;
+  values: string[];
+}) {
+  return (
+    <div className={className}>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-slate-900">{title}</p>
+        <Button
+          onPress={() => onChange([...values, ""])}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          <Plus className="size-4" />
+          {addLabel}
+        </Button>
+      </div>
+      <div className="flex flex-col gap-2">
+        {values.map((value, index) => (
+          <div className="flex items-start gap-2" key={index}>
+            <span className="pt-2 text-sm font-semibold text-slate-500">•</span>
+            <Input
+              fullWidth
+              onChange={(event) => {
+                const next = [...values];
+                next[index] = event.target.value;
+                onChange(next);
+              }}
+              value={value}
+              variant="secondary"
+            />
+            <Button
+              aria-label="删除"
+              isIconOnly
+              onPress={() =>
+                onChange(values.filter((_, current) => current !== index))
+              }
+              size="sm"
+              type="button"
+              variant="danger-soft"
+            >
+              <X className="size-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SkillsForm({
   onChange,
   skills,
@@ -413,4 +634,4 @@ function SkillInput({
   );
 }
 
-export { EducationForm, SkillsForm, WorkForm };
+export { EducationForm, PreferencesForm, ProjectsForm, SkillsForm, WorkForm };

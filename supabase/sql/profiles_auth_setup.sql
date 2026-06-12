@@ -51,7 +51,6 @@ create table if not exists public.profiles (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users(id) on delete cascade,
   profile_data jsonb not null default '{}'::jsonb,
-  source text not null default 'manual',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint profiles_user_id_unique unique (user_id)
@@ -63,8 +62,9 @@ alter table public.profiles
 alter table public.profiles
   add column if not exists profile_data jsonb not null default '{}'::jsonb;
 
+-- Drop the legacy snapshot-source column; profiles is now a single editable row.
 alter table public.profiles
-  add column if not exists source text not null default 'manual';
+  drop column if exists source;
 
 alter table public.profiles
   add column if not exists created_at timestamptz not null default now();
@@ -99,8 +99,8 @@ begin
       and column_name = 'profile_data'
   ) then
     execute '
-      insert into public.profiles (user_id, profile_data, source, created_at, updated_at)
-      select id, coalesce(profile_data, ''{}''::jsonb), ''legacy_profile_data'', created_at, updated_at
+      insert into public.profiles (user_id, profile_data, created_at, updated_at)
+      select id, coalesce(profile_data, ''{}''::jsonb), created_at, updated_at
       from public.users
       on conflict (user_id) do update
       set profile_data = excluded.profile_data,

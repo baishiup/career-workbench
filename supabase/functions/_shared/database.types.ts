@@ -10,19 +10,16 @@ export type Database = {
       profiles: {
         Row: {
           profile_data: unknown;
-          source: string | null;
           updated_at: string | null;
           user_id: string;
         };
         Insert: {
           profile_data?: unknown;
-          source?: string | null;
           updated_at?: string | null;
           user_id: string;
         };
         Update: {
           profile_data?: unknown;
-          source?: string | null;
           updated_at?: string | null;
           user_id?: string;
         };

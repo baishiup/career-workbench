@@ -19,6 +19,7 @@ import type {
   ResumeSection,
 } from "./types.ts";
 import type { ResumeStyleConfig } from "./style.ts";
+import { emptyProfile } from "../profile/empty.ts";
 
 type AIParsedResumeDraftToProfileOptions = {
   preferences?: Partial<JobPreferences>;
@@ -45,33 +46,6 @@ type BaseResumeBuildResult = {
   style: ResumeStyleConfig;
 };
 
-const emptyProfileDraft: ProfileDraft = {
-  personal: {
-    firstName: "",
-    lastName: "",
-    headline: "",
-    email: "",
-    phone: "",
-    city: "",
-    targetRegion: "",
-    linkedin: "",
-    github: "",
-    portfolio: "",
-    customFields: [],
-  },
-  preferences: {
-    jobFunction: "",
-    jobTypes: [],
-    location: "",
-    openToRemote: false,
-    workAuthorization: [],
-  },
-  education: [],
-  work: [],
-  projects: [],
-  skills: [],
-};
-
 /** 将 AI 原始抽取草稿转换成用户长期 Profile。 */
 function aiParsedResumeDraftToProfileDraft(
   parsed: AIParsedResumeDraft,
@@ -82,9 +56,9 @@ function aiParsedResumeDraftToProfileDraft(
   const preferences = mergePreferences(options.preferences);
 
   return {
-    ...emptyProfileDraft,
+    ...emptyProfile,
     personal: {
-      ...emptyProfileDraft.personal,
+      ...emptyProfile.personal,
       firstName,
       lastName,
       headline:
@@ -628,10 +602,9 @@ function mergePreferences(
   preferences?: Partial<JobPreferences>,
 ): JobPreferences {
   return {
-    ...emptyProfileDraft.preferences,
+    ...emptyProfile.preferences,
     ...preferences,
     jobTypes: cleanStringArray(preferences?.jobTypes ?? []),
-    workAuthorization: cleanStringArray(preferences?.workAuthorization ?? []),
   };
 }
 

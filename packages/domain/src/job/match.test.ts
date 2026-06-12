@@ -22,7 +22,6 @@ function buildProfile(overrides: Partial<ProfileDraft> = {}): ProfileDraft {
       email: "",
       phone: "",
       city: "",
-      targetRegion: "",
       linkedin: "",
       github: "",
       portfolio: "",
@@ -31,9 +30,9 @@ function buildProfile(overrides: Partial<ProfileDraft> = {}): ProfileDraft {
     preferences: {
       jobFunction: "",
       jobTypes: [],
-      location: "",
       openToRemote: true,
-      workAuthorization: [],
+      targetCity: "",
+      salaryExpectation: "",
     },
     education: [],
     work: [],
@@ -229,9 +228,9 @@ describe("computeRuleMatch", () => {
       preferences: {
         jobFunction: "",
         jobTypes: [],
-        location: "",
         openToRemote: true,
-        workAuthorization: [],
+        targetCity: "",
+        salaryExpectation: "",
       },
     });
     const job = buildJob({
@@ -253,9 +252,9 @@ describe("computeRuleMatch", () => {
       preferences: {
         jobFunction: "",
         jobTypes: [],
-        location: "",
         openToRemote: true,
-        workAuthorization: [],
+        targetCity: "",
+        salaryExpectation: "",
       },
     });
     const remoteJob = buildJob({

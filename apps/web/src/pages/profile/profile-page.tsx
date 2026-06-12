@@ -5,9 +5,8 @@ import {
   fetchProfileFromSupabase,
   saveProfileToSupabase,
 } from "@/lib/profile/api";
-import type { ProfileSection } from "@/pages/profile/types";
 import { useAuthStore } from "@/lib/auth-store";
-import type { ProfileDraft } from "@career-workbench/domain";
+import type { ProfileDraft, ProfileSectionId } from "@career-workbench/domain";
 
 import {
   ProfileDisplay,
@@ -25,9 +24,9 @@ export function ProfilePage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [openSection, setOpenSection] = useState<ProfileSection | null>(null);
+  const [openSection, setOpenSection] = useState<ProfileSectionId | null>(null);
   const [activeSection, setActiveSection] =
-    useState<ProfileSection>("personal");
+    useState<ProfileSectionId>("personal");
 
   useEffect(() => {
     if (!isAuthConfigured || !user) {
@@ -78,7 +77,7 @@ export function ProfilePage() {
     };
   }, [isAuthConfigured, user]);
 
-  function openEditor(section: ProfileSection) {
+  function openEditor(section: ProfileSectionId) {
     setSaveError(null);
     setDraft(structuredClone(profile));
     setOpenSection(section);

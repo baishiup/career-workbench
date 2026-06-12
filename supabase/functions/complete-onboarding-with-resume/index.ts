@@ -60,7 +60,6 @@ Deno.serve(async (request) => {
     const { error: profileError } = await auth.supabase.from("profiles").upsert(
       {
         profile_data: built.profile,
-        source: "onboarding_resume_parse",
         updated_at: updatedAt,
         user_id: auth.user.id,
       },

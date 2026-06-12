@@ -16,9 +16,9 @@ import type { JobPreferences, ProfileDraft } from "@career-workbench/domain";
 const defaultPreferences: JobPreferences = {
   jobFunction: "",
   jobTypes: ["全职"],
-  location: "",
   openToRemote: true,
-  workAuthorization: [],
+  targetCity: "",
+  salaryExpectation: "",
 };
 
 export function OnboardingFlow() {

@@ -1,6 +1,13 @@
 import type { ReactNode } from "react";
 import { Button, Chip, Tabs } from "@heroui/react";
-import { Code2, GraduationCap, Pencil, UserRound } from "lucide-react";
+import {
+  Code2,
+  FolderGit2,
+  GraduationCap,
+  Pencil,
+  Target,
+  UserRound,
+} from "lucide-react";
 
 import {
   pillTabClassName,
@@ -8,14 +15,14 @@ import {
   pillTabListClassName,
 } from "@/components/workbench/surface-classes";
 import { drawerOrder, sectionMeta } from "@/pages/profile/data";
-import type { ProfileIcon, ProfileSection } from "@/pages/profile/types";
-import type { ProfileDraft } from "@career-workbench/domain";
+import type { ProfileIcon } from "@/pages/profile/types";
+import type { ProfileDraft, ProfileSectionId } from "@career-workbench/domain";
 
 function ProfileDisplay({
   onEdit,
   profile,
 }: {
-  onEdit: (section: ProfileSection) => void;
+  onEdit: (section: ProfileSectionId) => void;
   profile: ProfileDraft;
 }) {
   const fullName =
@@ -40,6 +47,16 @@ function ProfileDisplay({
             </p>
             <PersonalFieldGrid profile={profile} />
           </div>
+        </ProfileSectionBlock>
+
+        <ProfileSectionBlock
+          description={sectionMeta.preferences.description}
+          icon={Target}
+          id="profile-preferences"
+          onEdit={() => onEdit("preferences")}
+          title={sectionMeta.preferences.label}
+        >
+          <PreferencesFieldGrid profile={profile} />
         </ProfileSectionBlock>
 
         <ProfileSectionBlock
@@ -135,6 +152,62 @@ function ProfileDisplay({
         </ProfileSectionBlock>
 
         <ProfileSectionBlock
+          description={sectionMeta.projects.description}
+          icon={FolderGit2}
+          id="profile-projects"
+          onEdit={() => onEdit("projects")}
+          title={sectionMeta.projects.label}
+        >
+          {profile.projects.length > 0 ? (
+            <TimelineList>
+              {profile.projects.map((item) => (
+                <TimelineItem
+                  key={item.id}
+                  date={formatDateRange(item.startDate, item.endDate)}
+                >
+                  <h3 className="text-base font-semibold">
+                    {item.name || "未填写项目"}
+                  </h3>
+                  {item.role ? (
+                    <p className="text-sm font-medium text-slate-500">
+                      {item.role}
+                    </p>
+                  ) : null}
+                  {item.summary ? (
+                    <p className="mt-2 max-w-4xl text-sm leading-5">
+                      {item.summary}
+                    </p>
+                  ) : null}
+                  {item.bullets.filter(Boolean).length > 0 ? (
+                    <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-sm leading-5 text-slate-500">
+                      {item.bullets.filter(Boolean).map((bullet) => (
+                        <li key={bullet}>{bullet}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {item.technologies.filter(Boolean).length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {item.technologies.filter(Boolean).map((tech) => (
+                        <Chip key={tech} size="sm" variant="secondary">
+                          {tech}
+                        </Chip>
+                      ))}
+                    </div>
+                  ) : null}
+                </TimelineItem>
+              ))}
+            </TimelineList>
+          ) : (
+            <EmptySection
+              actionLabel="添加项目经历"
+              description="添加代表项目、角色、技术栈和成果要点后，简历会有更立体的项目背景。"
+              onAction={() => onEdit("projects")}
+              title="还没有项目经历"
+            />
+          )}
+        </ProfileSectionBlock>
+
+        <ProfileSectionBlock
           description={sectionMeta.skills.description}
           icon={Code2}
           id="profile-skills"
@@ -167,14 +240,14 @@ function ProfileSectionTabs({
   activeSection,
   onSectionChange,
 }: {
-  activeSection: ProfileSection;
-  onSectionChange: (section: ProfileSection) => void;
+  activeSection: ProfileSectionId;
+  onSectionChange: (section: ProfileSectionId) => void;
 }) {
   return (
     <nav className="shrink-0 bg-slate-100 py-2">
       <Tabs
         onSelectionChange={(key) => {
-          const section = String(key) as ProfileSection;
+          const section = String(key) as ProfileSectionId;
           onSectionChange(section);
           document
             .getElementById(`profile-${section}`)
@@ -265,13 +338,36 @@ function PersonalFieldGrid({ profile }: { profile: ProfileDraft }) {
     { label: "城市", value: profile.personal.city },
     { label: "LinkedIn 链接", value: profile.personal.linkedin },
     { label: "GitHub 链接", value: profile.personal.github },
-    { label: "求职方向", value: profile.preferences.jobFunction },
-    { label: "工作类型", value: profile.preferences.jobTypes.join(", ") },
     ...customFields,
   ];
 
   return (
     <div className="mt-5 grid gap-3 rounded-xl bg-slate-100/50 p-4 text-sm md:grid-cols-2 xl:grid-cols-3">
+      {fields.map((field) => (
+        <PersonalField
+          key={field.label}
+          label={field.label}
+          value={field.value}
+        />
+      ))}
+    </div>
+  );
+}
+
+function PreferencesFieldGrid({ profile }: { profile: ProfileDraft }) {
+  const fields = [
+    { label: "求职方向", value: profile.preferences.jobFunction },
+    { label: "工作类型", value: profile.preferences.jobTypes.join(", ") },
+    {
+      label: "接受远程",
+      value: profile.preferences.openToRemote ? "是" : "否",
+    },
+    { label: "期望城市", value: profile.preferences.targetCity },
+    { label: "薪资期望", value: profile.preferences.salaryExpectation },
+  ];
+
+  return (
+    <div className="grid gap-3 rounded-xl bg-slate-100/50 p-4 text-sm md:grid-cols-2 xl:grid-cols-3">
       {fields.map((field) => (
         <PersonalField
           key={field.label}

@@ -51,9 +51,6 @@ function normalizeProfileData(value: unknown): ProfileDraft {
       ...emptyProfile.preferences,
       ...preferences,
       jobTypes: Array.isArray(preferences.jobTypes) ? preferences.jobTypes : [],
-      workAuthorization: Array.isArray(preferences.workAuthorization)
-        ? preferences.workAuthorization
-        : [],
     },
     education: Array.isArray(profile.education) ? profile.education : [],
     work: Array.isArray(profile.work) ? profile.work : [],
@@ -135,7 +132,6 @@ async function saveProfileToSupabase(userId: string, profile: ProfileDraft) {
   const { error } = await supabase.from("profiles").upsert(
     {
       profile_data: profile,
-      source: "manual",
       updated_at: new Date().toISOString(),
       user_id: userId,
     },
