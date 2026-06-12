@@ -12,12 +12,7 @@ import type {
   PersonalCustomField,
   ProfileDraft,
 } from "../profile/types.ts";
-import type {
-  ResumeBlock,
-  ResumeDocument,
-  ResumeEvidenceRef,
-  ResumeSection,
-} from "./types.ts";
+import type { ResumeBlock, ResumeDocument, ResumeSection } from "./types.ts";
 import type { ResumeStyleConfig } from "./style.ts";
 import { emptyProfile } from "../profile/empty.ts";
 
@@ -213,35 +208,11 @@ function buildPersonalSection(profile: ProfileDraft): ResumeSection {
     Boolean(item),
   );
 
-  addTextBlock(blocks, "personal-name", "姓名", fullName, "personal.firstName");
-  addTextBlock(
-    blocks,
-    "personal-headline",
-    "标题",
-    profile.personal.headline,
-    "personal.headline",
-  );
-  addTextBlock(
-    blocks,
-    "personal-email",
-    "邮箱",
-    profile.personal.email,
-    "personal.email",
-  );
-  addTextBlock(
-    blocks,
-    "personal-phone",
-    "电话",
-    profile.personal.phone,
-    "personal.phone",
-  );
-  addTextBlock(
-    blocks,
-    "personal-city",
-    "城市",
-    profile.personal.city,
-    "personal.city",
-  );
+  addTextBlock(blocks, "personal-name", "姓名", fullName);
+  addTextBlock(blocks, "personal-headline", "标题", profile.personal.headline);
+  addTextBlock(blocks, "personal-email", "邮箱", profile.personal.email);
+  addTextBlock(blocks, "personal-phone", "电话", profile.personal.phone);
+  addTextBlock(blocks, "personal-city", "城市", profile.personal.city);
 
   if (links.length > 0) {
     blocks.push({
@@ -249,7 +220,6 @@ function buildPersonalSection(profile: ProfileDraft): ResumeSection {
       kind: "linkList",
       label: "链接",
       links,
-      evidenceRefs: [profileEvidence("personal")],
     });
   }
 
@@ -271,7 +241,6 @@ function buildSummarySection(profile: ProfileDraft): ResumeSection {
     "summary-headline",
     "职业摘要",
     profile.personal.headline,
-    "personal.headline",
     "paragraph",
   );
 
@@ -300,14 +269,13 @@ function buildSkillsSection(profile: ProfileDraft): ResumeSection {
               kind: "tagList",
               label: "技能",
               tags,
-              evidenceRefs: [profileEvidence("skills")],
             },
           ]
         : [],
   };
 }
 
-/** Work section 从 Profile.work 生成，并保留 evidenceRefs 到原字段。 */
+/** Work section 从 Profile.work 生成。 */
 function buildWorkSection(profile: ProfileDraft): ResumeSection {
   return {
     id: "section-work",
@@ -319,29 +287,22 @@ function buildWorkSection(profile: ProfileDraft): ResumeSection {
       const blocks: ResumeBlock[] = [];
       const title = [item.company, item.title].filter(Boolean).join(" · ");
 
-      addTextBlock(blocks, `${prefix}-title`, "职位", title, `work.${index}`);
+      addTextBlock(blocks, `${prefix}-title`, "职位", title);
       addDateRangeBlock(
         blocks,
         `${prefix}-dates`,
         item.startDate,
         item.endDate,
         item.current,
-        `work.${index}`,
       );
       addTextBlock(
         blocks,
         `${prefix}-summary`,
         "摘要",
         item.summary,
-        `work.${index}.summary`,
         "paragraph",
       );
-      addBulletListBlock(
-        blocks,
-        `${prefix}-bullets`,
-        item.bullets,
-        `work.${index}.bullets`,
-      );
+      addBulletListBlock(blocks, `${prefix}-bullets`, item.bullets);
 
       return blocks;
     }),
@@ -360,35 +321,22 @@ function buildProjectsSection(profile: ProfileDraft): ResumeSection {
       const blocks: ResumeBlock[] = [];
       const title = [item.name, item.role].filter(Boolean).join(" · ");
 
-      addTextBlock(
-        blocks,
-        `${prefix}-title`,
-        "项目",
-        title,
-        `projects.${index}`,
-      );
+      addTextBlock(blocks, `${prefix}-title`, "项目", title);
       addDateRangeBlock(
         blocks,
         `${prefix}-dates`,
         item.startDate,
         item.endDate,
         false,
-        `projects.${index}`,
       );
       addTextBlock(
         blocks,
         `${prefix}-summary`,
         "摘要",
         item.summary,
-        `projects.${index}.summary`,
         "paragraph",
       );
-      addBulletListBlock(
-        blocks,
-        `${prefix}-bullets`,
-        item.bullets,
-        `projects.${index}.bullets`,
-      );
+      addBulletListBlock(blocks, `${prefix}-bullets`, item.bullets);
 
       if (item.technologies.length > 0) {
         blocks.push({
@@ -396,7 +344,6 @@ function buildProjectsSection(profile: ProfileDraft): ResumeSection {
           kind: "tagList",
           label: "技术栈",
           tags: cleanStringArray(item.technologies),
-          evidenceRefs: [profileEvidence(`projects.${index}.technologies`)],
         });
       }
 
@@ -419,27 +366,19 @@ function buildEducationSection(profile: ProfileDraft): ResumeSection {
         .filter(Boolean)
         .join(" · ");
 
-      addTextBlock(
-        blocks,
-        `${prefix}-title`,
-        "教育",
-        title,
-        `education.${index}`,
-      );
+      addTextBlock(blocks, `${prefix}-title`, "教育", title);
       addDateRangeBlock(
         blocks,
         `${prefix}-dates`,
         item.startDate,
         item.endDate,
         false,
-        `education.${index}`,
       );
       addTextBlock(
         blocks,
         `${prefix}-description`,
         "说明",
         item.description,
-        `education.${index}.description`,
         "paragraph",
       );
 
@@ -453,7 +392,6 @@ function addTextBlock(
   id: string,
   label: string,
   text: string,
-  fieldPath: string,
   kind: "text" | "paragraph" = "text",
 ) {
   const cleaned = cleanString(text);
@@ -467,7 +405,6 @@ function addTextBlock(
     kind,
     label,
     text: cleaned,
-    evidenceRefs: [profileEvidence(fieldPath)],
   });
 }
 
@@ -477,7 +414,6 @@ function addDateRangeBlock(
   startDate: string,
   endDate: string,
   current: boolean,
-  fieldPath: string,
 ) {
   if (!startDate && !endDate && !current) {
     return;
@@ -490,7 +426,6 @@ function addDateRangeBlock(
     startDate,
     endDate,
     current,
-    evidenceRefs: [profileEvidence(fieldPath)],
   });
 }
 
@@ -498,12 +433,10 @@ function addBulletListBlock(
   blocks: ResumeBlock[],
   id: string,
   bullets: string[],
-  fieldPath: string,
 ) {
   const items = cleanStringArray(bullets).map((text, index) => ({
     id: `${id}-${index + 1}`,
     text,
-    evidenceRefs: [profileEvidence(`${fieldPath}.${index}`)],
   }));
 
   if (items.length === 0) {
@@ -515,15 +448,7 @@ function addBulletListBlock(
     kind: "bulletList",
     label: "要点",
     items,
-    evidenceRefs: [profileEvidence(fieldPath)],
   });
-}
-
-function profileEvidence(fieldPath: string): ResumeEvidenceRef {
-  return {
-    sourceType: "profile",
-    fieldPath,
-  };
 }
 
 function splitFullName(value: string | null) {

@@ -5,8 +5,6 @@
  * 不存用户长期资料；长期资料归 profile.ts。
  */
 
-import type { ResumeStyleConfig } from "./style.ts";
-
 /** 简历第一阶段支持的 section 类型。 */
 type ResumeSectionKind =
   | "personal"
@@ -26,20 +24,11 @@ type ResumeBlockKind =
   | "dateRange"
   | "linkList";
 
-/** 简历内容对应的事实来源，用于 AI 解释、风险提示和对比。 */
-type ResumeEvidenceRef = {
-  sourceType: "profile" | "base_resume" | "job_description" | "manual" | "ai";
-  sourceId?: string;
-  fieldPath?: string;
-  label?: string;
-};
-
-/** 所有简历内容块共享的稳定标识和证据来源字段。 */
+/** 所有简历内容块共享的稳定标识。 */
 type ResumeBlockBase = {
   id: string;
   kind: ResumeBlockKind;
   label?: string;
-  evidenceRefs?: ResumeEvidenceRef[];
 };
 
 /** 单行文本或段落文本内容块。 */
@@ -52,7 +41,6 @@ type ResumeTextBlock = ResumeBlockBase & {
 type ResumeBulletListItem = {
   id: string;
   text: string;
-  evidenceRefs?: ResumeEvidenceRef[];
 };
 
 /** 工作经历、项目经历等区域常用的 bullet 列表内容块。 */
@@ -121,15 +109,6 @@ type ResumeDocument = {
   sections: ResumeSection[];
 };
 
-/** ResumeVersion 的可持久化快照形态，包含正文和样式。 */
-type ResumeVersionSnapshot = {
-  schemaVersion: "resume.snapshot.v1";
-  document: ResumeDocument;
-  style: ResumeStyleConfig;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
 export type {
   ResumeBlock,
   ResumeBlockBase,
@@ -138,7 +117,6 @@ export type {
   ResumeBulletListItem,
   ResumeDateRangeBlock,
   ResumeDocument,
-  ResumeEvidenceRef,
   ResumeLink,
   ResumeLinkListBlock,
   ResumeSection,
@@ -146,5 +124,4 @@ export type {
   ResumeTagListBlock,
   ResumeTargetContext,
   ResumeTextBlock,
-  ResumeVersionSnapshot,
 };

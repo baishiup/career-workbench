@@ -47,7 +47,6 @@ export type {
   ResumeBulletListItem,
   ResumeDateRangeBlock,
   ResumeDocument,
-  ResumeEvidenceRef,
   ResumeLink,
   ResumeLinkListBlock,
   ResumeSection,
@@ -55,30 +54,13 @@ export type {
   ResumeTagListBlock,
   ResumeTargetContext,
   ResumeTextBlock,
-  ResumeVersionSnapshot,
 } from "./resume/types";
-export type {
-  ResumeAppendBlockChange,
-  ResumeChangeActor,
-  ResumeChangeLog,
-  ResumeChangeType,
-  ResumePatch,
-  ResumePatchChange,
-  ResumePatchOperation,
-  ResumePatchStatus,
-  ResumePatchTarget,
-  ResumeRemoveBlockChange,
-  ResumeReorderSectionChange,
-  ResumeReplaceTextChange,
-  ResumeUpdateStyleChange,
-} from "./resume/patch";
 export type {
   ResumeColorConfig,
   ResumePageMargin,
   ResumePageSize,
   ResumeSpacingConfig,
   ResumeStyleConfig,
-  ResumeTemplateConfig,
   ResumeTypographyConfig,
 } from "./resume/style";
 export type {

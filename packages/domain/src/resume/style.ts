@@ -1,8 +1,7 @@
 /**
  * 简历样式配置模型。
  *
- * 这里描述模板、页面、颜色、字体和间距配置，
- * 会和 ResumeDocument 一起组成 ResumeVersionSnapshot。
+ * 这里描述模板、页面、颜色、字体和间距配置，和 ResumeDocument 一起持久化。
  */
 
 /** 简历预览和导出的纸张尺寸。 */
@@ -41,17 +40,7 @@ type ResumeSpacingConfig = {
   itemSpacing: number;
 };
 
-/** 模板版本元信息，用于模板列表、缩略图和默认样式选择。 */
-type ResumeTemplateConfig = {
-  id: string;
-  name: string;
-  version: string;
-  description?: string;
-  previewImageUrl?: string;
-  pageSize: ResumePageSize;
-};
-
-/** 和 ResumeDocument 一起进入 ResumeVersion snapshot 的样式配置。 */
+/** 和 ResumeDocument 一起持久化的样式配置。 */
 type ResumeStyleConfig = {
   templateId: string;
   pageSize: ResumePageSize;
@@ -66,6 +55,5 @@ export type {
   ResumePageSize,
   ResumeSpacingConfig,
   ResumeStyleConfig,
-  ResumeTemplateConfig,
   ResumeTypographyConfig,
 };
