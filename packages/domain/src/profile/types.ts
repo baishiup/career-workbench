@@ -23,8 +23,7 @@ type PersonalCustomField = {
 
 /** 基础个人信息，主要来自手动填写、简历解析或第三方资料导入。 */
 type PersonalInfo = {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   headline: string;
   email: string;
   phone: string;

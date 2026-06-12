@@ -69,7 +69,7 @@ function PreferencesForm({
         </Select>
       </div>
       <TextField
-        label="期望城市"
+        label="期望工作城市"
         value={preferences.targetCity}
         onChange={(value) => onPreferencesChange({ targetCity: value })}
       />

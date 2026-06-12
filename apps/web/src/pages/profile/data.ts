@@ -26,7 +26,7 @@ const sectionMeta: Record<
   },
   preferences: {
     label: "求职偏好",
-    description: "求职方向、工作类型、期望城市和薪资期望。",
+    description: "求职方向、工作类型、期望工作城市和薪资期望。",
     icon: Target,
   },
   education: {

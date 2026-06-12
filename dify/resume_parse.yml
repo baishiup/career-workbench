@@ -211,6 +211,19 @@ workflow:
 
                 9. 无法归类但重要的片段放入 unmapped_text，最多 20 条。
 
+
+                字段约定（candidate）：
+
+                - headline：纯职业标题/一句话定位，例如 "前端开发工程师" 或 "高级前端工程师"。禁止把工作年限、期望薪资、期望城市等求职偏好拼进 headline。
+
+                - job_function：求职方向/目标岗位。优先取简历明确的"求职意向/目标岗位"；没有时可用最贴近当前职业方向的岗位名；都没有填 ""。
+
+                - expected_city：期望工作城市。仅当简历明确写了期望/意向城市时填写（常出现在"期望薪资：xx | 期望城市：xx"这类抬头行）；否则填 ""。不要用现居城市 city 兜底。
+
+                - expected_salary：期望薪资原文，例如 "20-25K"。仅当简历明确写了期望薪资时填写；否则填 ""。
+
+                - city：现居/常驻城市，与 expected_city 区分开。
+
                 '
             - id: 3e121f4c-ccb6-4311-9501-04677f21956d
               role: user
@@ -230,9 +243,15 @@ workflow:
                       type: string
                     email:
                       type: string
+                    expected_city:
+                      type: string
+                    expected_salary:
+                      type: string
                     full_name:
                       type: string
                     headline:
+                      type: string
+                    job_function:
                       type: string
                     links:
                       items:
@@ -254,6 +273,9 @@ workflow:
                     - phone
                     - city
                     - headline
+                    - job_function
+                    - expected_city
+                    - expected_salary
                     - links
                   type: object
                 education:

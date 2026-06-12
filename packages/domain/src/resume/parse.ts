@@ -18,6 +18,9 @@ const aiParsedResumeDraftJsonSchema = {
         phone: { type: ["string", "null"] },
         city: { type: ["string", "null"] },
         headline: { type: ["string", "null"] },
+        job_function: { type: ["string", "null"] },
+        expected_city: { type: ["string", "null"] },
+        expected_salary: { type: ["string", "null"] },
         links: {
           type: "array",
           items: {
@@ -30,7 +33,17 @@ const aiParsedResumeDraftJsonSchema = {
           },
         },
       },
-      required: ["full_name", "email", "phone", "city", "headline", "links"],
+      required: [
+        "full_name",
+        "email",
+        "phone",
+        "city",
+        "headline",
+        "job_function",
+        "expected_city",
+        "expected_salary",
+        "links",
+      ],
     },
     work_experiences: {
       type: "array",
@@ -156,8 +169,16 @@ type AIParsedResumeCandidate = {
   full_name: string | null;
   email: string | null;
   phone: string | null;
+  /** 现居城市。 */
   city: string | null;
+  /** 纯职业标题，不含薪资/城市等求职偏好。 */
   headline: string | null;
+  /** 求职方向/目标岗位。 */
+  job_function: string | null;
+  /** 期望工作城市。 */
+  expected_city: string | null;
+  /** 期望薪资文本，例如 "20-25K"。 */
+  expected_salary: string | null;
   links: AIParsedResumeLink[];
 };
 

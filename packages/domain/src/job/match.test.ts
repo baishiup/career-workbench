@@ -16,8 +16,7 @@ const fixedNow = new Date("2026-06-01T00:00:00Z");
 function buildProfile(overrides: Partial<ProfileDraft> = {}): ProfileDraft {
   return {
     personal: {
-      firstName: "",
-      lastName: "",
+      fullName: "",
       headline: "",
       email: "",
       phone: "",

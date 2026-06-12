@@ -35,16 +35,11 @@ function PersonalForm({
     <div className="flex flex-col gap-5">
       <div className="grid gap-4 md:grid-cols-2">
         <TextField
-          label="名"
+          className="md:col-span-2"
+          label="姓名"
           required
-          value={personal.firstName}
-          onChange={(value) => onPersonalChange("firstName", value)}
-        />
-        <TextField
-          label="姓"
-          required
-          value={personal.lastName}
-          onChange={(value) => onPersonalChange("lastName", value)}
+          value={personal.fullName}
+          onChange={(value) => onPersonalChange("fullName", value)}
         />
         <TextField
           className="md:col-span-2"
@@ -64,7 +59,7 @@ function PersonalForm({
           onChange={(value) => onPersonalChange("phone", value)}
         />
         <TextField
-          label="城市"
+          label="现居城市"
           value={personal.city}
           onChange={(value) => onPersonalChange("city", value)}
         />

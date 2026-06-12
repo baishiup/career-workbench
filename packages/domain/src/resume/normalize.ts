@@ -6,7 +6,11 @@
  * parser-only 字段不要进入 ProfileDraft 或 ResumeDocument 主数据。
  */
 
-import type { AIParsedResumeDraft, AIParsedResumeLink } from "./parse.ts";
+import type {
+  AIParsedResumeCandidate,
+  AIParsedResumeDraft,
+  AIParsedResumeLink,
+} from "./parse.ts";
 import type {
   JobPreferences,
   PersonalCustomField,
@@ -46,16 +50,15 @@ function aiParsedResumeDraftToProfileDraft(
   parsed: AIParsedResumeDraft,
   options: AIParsedResumeDraftToProfileOptions = {},
 ): ProfileDraft {
-  const { firstName, lastName } = splitFullName(parsed.candidate.full_name);
+  const fullName = cleanString(parsed.candidate.full_name);
   const links = mapCandidateLinks(parsed.candidate.links);
-  const preferences = mergePreferences(options.preferences);
+  const preferences = mergePreferences(parsed.candidate, options.preferences);
 
   return {
     ...emptyProfile,
     personal: {
       ...emptyProfile.personal,
-      firstName,
-      lastName,
+      fullName,
       headline:
         cleanString(parsed.candidate.headline) || preferences.jobFunction,
       email: cleanString(parsed.candidate.email),
@@ -179,9 +182,7 @@ function buildBaseResumeFromAIParsedDraft(
 /** Personal section 同时承载姓名、联系方式和候选人链接。 */
 function buildPersonalSection(profile: ProfileDraft): ResumeSection {
   const blocks: ResumeBlock[] = [];
-  const fullName = [profile.personal.firstName, profile.personal.lastName]
-    .filter(Boolean)
-    .join(" ");
+  const fullName = profile.personal.fullName.trim();
   const links = [
     profile.personal.linkedin
       ? {
@@ -451,27 +452,6 @@ function addBulletListBlock(
   });
 }
 
-function splitFullName(value: string | null) {
-  const fullName = cleanString(value);
-
-  if (!fullName) {
-    return { firstName: "", lastName: "" };
-  }
-
-  const parts = fullName.split(/\s+/).filter(Boolean);
-
-  if (parts.length <= 1) {
-    return { firstName: fullName, lastName: "" };
-  }
-
-  const [firstName, ...lastNameParts] = parts;
-
-  return {
-    firstName,
-    lastName: lastNameParts.join(" "),
-  };
-}
-
 function mapCandidateLinks(links: AIParsedResumeLink[]) {
   const result = {
     linkedin: "",
@@ -523,20 +503,32 @@ function getLinkLabel(url: string) {
   }
 }
 
+/**
+ * 求职偏好按"显式输入 > 简历抽取 > 默认值"逐字段取值。
+ * options.preferences 来自 onboarding 用户手填；candidate 来自简历解析。
+ */
 function mergePreferences(
-  preferences?: Partial<JobPreferences>,
+  candidate: AIParsedResumeCandidate,
+  options?: Partial<JobPreferences>,
 ): JobPreferences {
+  const pick = (explicit: string | undefined, fromResume: string | null) =>
+    cleanString(explicit) || cleanString(fromResume);
+
   return {
-    ...emptyProfile.preferences,
-    ...preferences,
-    jobTypes: cleanStringArray(preferences?.jobTypes ?? []),
+    jobFunction: pick(options?.jobFunction, candidate.job_function),
+    jobTypes: cleanStringArray(options?.jobTypes ?? []),
+    openToRemote:
+      options?.openToRemote ?? emptyProfile.preferences.openToRemote,
+    targetCity: pick(options?.targetCity, candidate.expected_city),
+    salaryExpectation: pick(
+      options?.salaryExpectation,
+      candidate.expected_salary,
+    ),
   };
 }
 
 function getResumeTitle(profile: ProfileDraft) {
-  const fullName = [profile.personal.firstName, profile.personal.lastName]
-    .filter(Boolean)
-    .join(" ");
+  const fullName = profile.personal.fullName.trim();
 
   if (fullName && profile.personal.headline) {
     return `${fullName} - ${profile.personal.headline}`;

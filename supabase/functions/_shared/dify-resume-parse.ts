@@ -291,6 +291,9 @@ function coerceAIParsedResumeDraft(value: unknown): AIParsedResumeDraft | null {
       phone: getNullableString(value.candidate.phone),
       city: getNullableString(value.candidate.city),
       headline: getNullableString(value.candidate.headline),
+      job_function: getNullableString(value.candidate.job_function),
+      expected_city: getNullableString(value.candidate.expected_city),
+      expected_salary: getNullableString(value.candidate.expected_salary),
       links: toLinkArray(value.candidate.links),
     },
     work_experiences: value.work_experiences

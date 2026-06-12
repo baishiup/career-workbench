@@ -25,8 +25,7 @@ function ProfileDisplay({
   onEdit: (section: ProfileSectionId) => void;
   profile: ProfileDraft;
 }) {
-  const fullName =
-    `${profile.personal.firstName} ${profile.personal.lastName}`.trim();
+  const fullName = profile.personal.fullName.trim();
 
   return (
     <div className="flex min-w-0 flex-col">
@@ -330,12 +329,11 @@ function PersonalFieldGrid({ profile }: { profile: ProfileDraft }) {
     value: field.value,
   }));
   const fields = [
-    { label: "名", value: profile.personal.firstName },
-    { label: "姓", value: profile.personal.lastName },
+    { label: "姓名", value: profile.personal.fullName },
     { label: "职业标题", value: profile.personal.headline },
     { label: "邮箱", value: profile.personal.email },
     { label: "电话", value: profile.personal.phone },
-    { label: "城市", value: profile.personal.city },
+    { label: "现居城市", value: profile.personal.city },
     { label: "LinkedIn 链接", value: profile.personal.linkedin },
     { label: "GitHub 链接", value: profile.personal.github },
     ...customFields,
@@ -362,7 +360,7 @@ function PreferencesFieldGrid({ profile }: { profile: ProfileDraft }) {
       label: "接受远程",
       value: profile.preferences.openToRemote ? "是" : "否",
     },
-    { label: "期望城市", value: profile.preferences.targetCity },
+    { label: "期望工作城市", value: profile.preferences.targetCity },
     { label: "薪资期望", value: profile.preferences.salaryExpectation },
   ];
 

@@ -2,8 +2,7 @@ import type { ProfileDraft } from "@career-workbench/domain";
 
 function getCompletion(profile: ProfileDraft) {
   const fields = [
-    profile.personal.firstName,
-    profile.personal.lastName,
+    profile.personal.fullName,
     profile.personal.email,
     profile.personal.phone,
     profile.personal.city,

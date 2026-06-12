@@ -7,8 +7,7 @@ const mockProfile: ProfileDraft = {
   ...emptyProfile,
   personal: {
     ...emptyProfile.personal,
-    firstName: "Demo",
-    lastName: "User",
+    fullName: "Demo User",
     headline: "Senior Frontend Engineer",
     city: "Remote",
   },

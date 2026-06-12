@@ -76,14 +76,8 @@ function applyProfileRowFallback(
     nextProfile.personal.email = row.email;
   }
 
-  if (
-    !nextProfile.personal.firstName &&
-    !nextProfile.personal.lastName &&
-    row.full_name
-  ) {
-    const [firstName, ...lastNameParts] = row.full_name.trim().split(/\s+/);
-    nextProfile.personal.firstName = firstName ?? "";
-    nextProfile.personal.lastName = lastNameParts.join(" ");
+  if (!nextProfile.personal.fullName && row.full_name) {
+    nextProfile.personal.fullName = row.full_name.trim();
   }
 
   return nextProfile;
