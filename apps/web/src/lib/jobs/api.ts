@@ -3,7 +3,6 @@ import { getSupabaseClient } from "@/lib/supabase";
 import { mockJobs } from "@/lib/jobs/mock-data";
 import type {
   JobEmploymentType,
-  JobImportMethod,
   JobRecord,
   JobRemoteStatus,
 } from "@/lib/jobs/types";
@@ -26,11 +25,10 @@ type JobParseDraft = {
   source_platform: string | null;
   company: string | null;
   title: string | null;
-  company_stage: string | null;
+  company_info: string | null;
   location: string | null;
   remote_status: JobRemoteStatus | null;
   job_type: JobEmploymentType | null;
-  seniority: string | null;
   years_required: string | null;
   required_skills: string[];
   preferred_skills: string[];
@@ -55,11 +53,11 @@ type JobDraftInput = {
   sourceUrl: string | null;
   company: string;
   title: string;
-  companyStage: string | null;
+  logoUrl: string | null;
+  companyInfo: string | null;
   location: string | null;
   remoteStatus: JobRemoteStatus;
   jobType: JobEmploymentType;
-  seniority: string | null;
   yearsRequired: string | null;
   requiredSkills: string[];
   preferredSkills: string[];
@@ -69,7 +67,6 @@ type JobDraftInput = {
   postedAt: string | null;
   summary: string | null;
   importedBy: string | null;
-  importMethod: JobImportMethod;
 };
 
 type JobDescriptionRow = {
@@ -78,11 +75,11 @@ type JobDescriptionRow = {
   source_url: string | null;
   company: string;
   title: string;
-  company_stage: string | null;
+  logo_url: string | null;
+  company_info: string | null;
   location: string | null;
   remote_status: JobRemoteStatus;
   job_type: JobEmploymentType;
-  seniority: string | null;
   years_required: string | null;
   required_skills: string[] | null;
   preferred_skills: string[] | null;
@@ -92,12 +89,11 @@ type JobDescriptionRow = {
   posted_at: string | null;
   summary: string | null;
   imported_by: string | null;
-  import_method: JobImportMethod;
   is_active: boolean;
 };
 
 const jobSelectColumns =
-  "id,source_platform,source_url,company,title,company_stage,location,remote_status,job_type,seniority,years_required,required_skills,preferred_skills,responsibilities,requirements,salary_range,posted_at,summary,imported_by,import_method,is_active";
+  "id,source_platform,source_url,company,title,logo_url,company_info,location,remote_status,job_type,years_required,required_skills,preferred_skills,responsibilities,requirements,salary_range,posted_at,summary,imported_by,is_active";
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -246,6 +242,39 @@ async function parseJobDescription(input: {
   return invokeEdgeFunction<JobParseResponse>("job-parse", formData);
 }
 
+const COMPANY_LOGO_BUCKET = "company-logos";
+const MAX_LOGO_BYTES = 2 * 1024 * 1024;
+
+/** 上传公司 logo 到 Supabase Storage 公开桶，返回可直接展示的公开 URL。 */
+async function uploadCompanyLogo(file: File): Promise<string> {
+  const supabase = requireSupabase("上传 logo");
+
+  if (file.size > MAX_LOGO_BYTES) {
+    throw new JobsApiError("Logo 图片不能超过 2MB。");
+  }
+
+  const extension = file.name.split(".").pop()?.toLowerCase() || "png";
+  const path = `${crypto.randomUUID()}.${extension}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(COMPANY_LOGO_BUCKET)
+    .upload(path, file, {
+      cacheControl: "31536000",
+      contentType: file.type || undefined,
+      upsert: false,
+    });
+
+  if (uploadError) {
+    throw new JobsApiError(uploadError.message, uploadError);
+  }
+
+  const { data } = supabase.storage
+    .from(COMPANY_LOGO_BUCKET)
+    .getPublicUrl(path);
+
+  return data.publicUrl;
+}
+
 function requireSupabase(action: string) {
   const supabase = getSupabaseClient();
 
@@ -259,11 +288,11 @@ function requireSupabase(action: string) {
 function toJobRowPayload(input: JobDraftInput) {
   return {
     company: input.company,
-    company_stage: input.companyStage,
-    import_method: input.importMethod,
+    company_info: input.companyInfo,
     imported_by: input.importedBy,
     job_type: input.jobType,
     location: input.location,
+    logo_url: input.logoUrl,
     posted_at: input.postedAt,
     preferred_skills: input.preferredSkills,
     remote_status: input.remoteStatus,
@@ -271,7 +300,6 @@ function toJobRowPayload(input: JobDraftInput) {
     requirements: input.requirements,
     responsibilities: input.responsibilities,
     salary_range: input.salaryRange,
-    seniority: input.seniority,
     source_platform: input.sourcePlatform,
     source_url: input.sourceUrl,
     summary: input.summary,
@@ -287,11 +315,11 @@ function mapJobRow(row: JobDescriptionRow): JobRecord {
     sourceUrl: row.source_url,
     company: row.company,
     title: row.title,
-    companyStage: row.company_stage,
+    logoUrl: row.logo_url,
+    companyInfo: row.company_info,
     location: row.location,
     remoteStatus: row.remote_status,
     jobType: row.job_type,
-    seniority: row.seniority,
     yearsRequired: row.years_required,
     requiredSkills: row.required_skills ?? [],
     preferredSkills: row.preferred_skills ?? [],
@@ -301,7 +329,6 @@ function mapJobRow(row: JobDescriptionRow): JobRecord {
     postedAt: row.posted_at ? row.posted_at.slice(0, 10) : null,
     summary: row.summary,
     importedBy: row.imported_by,
-    importMethod: row.import_method,
     isActive: row.is_active,
   };
 }
@@ -338,5 +365,6 @@ export {
   parseJobDescription,
   setJobActive,
   updateJob,
+  uploadCompanyLogo,
 };
 export type { JobDraftInput, JobParseDraft, JobParseResponse, JobsDataMode };

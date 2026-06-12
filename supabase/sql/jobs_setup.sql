@@ -9,11 +9,11 @@ create table if not exists public.job_descriptions (
   source_url text,
   company text not null,
   title text not null,
-  company_stage text,
+  logo_url text,
+  company_info text,
   location text,
   remote_status text not null default 'onsite',
   job_type text not null default 'full_time',
-  seniority text,
   years_required text,
   required_skills text[] not null default '{}',
   preferred_skills text[] not null default '{}',
@@ -23,7 +23,6 @@ create table if not exists public.job_descriptions (
   posted_at timestamptz,
   summary text,
   imported_by text,
-  import_method text not null default 'manual_text',
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -42,7 +41,10 @@ alter table public.job_descriptions
   add column if not exists title text;
 
 alter table public.job_descriptions
-  add column if not exists company_stage text;
+  add column if not exists logo_url text;
+
+alter table public.job_descriptions
+  add column if not exists company_info text;
 
 alter table public.job_descriptions
   add column if not exists location text;
@@ -52,9 +54,6 @@ alter table public.job_descriptions
 
 alter table public.job_descriptions
   add column if not exists job_type text not null default 'full_time';
-
-alter table public.job_descriptions
-  add column if not exists seniority text;
 
 alter table public.job_descriptions
   add column if not exists years_required text;
@@ -84,10 +83,13 @@ alter table public.job_descriptions
   add column if not exists imported_by text;
 
 alter table public.job_descriptions
-  add column if not exists import_method text not null default 'manual_text';
-
-alter table public.job_descriptions
   add column if not exists is_active boolean not null default true;
+
+-- 迁移已存在的库：删除不再使用的字段（公司阶段 / 级别 / 导入方式）。
+alter table public.job_descriptions
+  drop column if exists company_stage,
+  drop column if exists seniority,
+  drop column if exists import_method;
 
 alter table public.job_descriptions
   add column if not exists created_at timestamptz not null default now();
@@ -113,19 +115,6 @@ alter table public.job_descriptions
   add constraint job_descriptions_job_type_check
   check (job_type in ('full_time', 'contract', 'part_time'));
 
-alter table public.job_descriptions
-  drop constraint if exists job_descriptions_import_method_check;
-
--- Legacy enum migration: job_url rows fold into manual_text (link scraping is
--- out of scope) so re-running this file stays idempotent on older databases.
-update public.job_descriptions
-  set import_method = 'manual_text'
-  where import_method = 'job_url';
-
-alter table public.job_descriptions
-  add constraint job_descriptions_import_method_check
-  check (import_method in ('manual_form', 'manual_text', 'screenshot'));
-
 create index if not exists job_descriptions_active_created_idx
   on public.job_descriptions (is_active, created_at desc);
 
@@ -148,8 +137,8 @@ using (is_active);
 comment on table public.job_descriptions is
   'Admin-imported job postings with structured JD fields. Read-only for normal users; write policies arrive with the admin import task.';
 
-comment on column public.job_descriptions.import_method is
-  'How the job entered the system: manual_form, manual_text, or screenshot.';
+comment on column public.job_descriptions.logo_url is
+  'Public Supabase Storage URL for the company logo; null falls back to a derived letter avatar.';
 
 comment on column public.job_descriptions.is_active is
   'Inactive jobs are hidden from user-facing lists but kept for audit.';

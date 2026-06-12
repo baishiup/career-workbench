@@ -35,6 +35,5 @@ export type { JobRecord, MatchReport };
 export type {
   JobDescription,
   JobEmploymentType,
-  JobImportMethod,
   JobRemoteStatus,
 } from "@career-workbench/domain";

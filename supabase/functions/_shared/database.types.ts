@@ -63,16 +63,17 @@ export type Database = {
       job_descriptions: {
         Row: {
           company: string;
+          company_info: string | null;
           id: string;
           job_type: string;
           location: string | null;
+          logo_url: string | null;
           preferred_skills: string[] | null;
           remote_status: string;
           required_skills: string[] | null;
           requirements: string[] | null;
           responsibilities: string[] | null;
           salary_range: string | null;
-          seniority: string | null;
           summary: string | null;
           title: string;
           updated_at: string | null;

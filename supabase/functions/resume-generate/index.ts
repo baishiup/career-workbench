@@ -34,7 +34,6 @@ type JobRow = {
   requirements: string[] | null;
   responsibilities: string[] | null;
   salary_range: string | null;
-  seniority: string | null;
   summary: string | null;
   title: string;
   updated_at: string | null;
@@ -210,7 +209,7 @@ async function prepareGenerationInputs(
     supabase
       .from("job_descriptions")
       .select(
-        "id,company,title,location,remote_status,job_type,seniority,years_required,required_skills,preferred_skills,responsibilities,requirements,salary_range,summary,updated_at",
+        "id,company,title,location,remote_status,job_type,years_required,required_skills,preferred_skills,responsibilities,requirements,salary_range,summary,updated_at",
       )
       .eq("id", jobId)
       .maybeSingle(),

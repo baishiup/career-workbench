@@ -1,8 +1,4 @@
-import type {
-  JobEmploymentType,
-  JobImportMethod,
-  JobRemoteStatus,
-} from "@/lib/jobs/types";
+import type { JobEmploymentType, JobRemoteStatus } from "@/lib/jobs/types";
 
 const remoteStatusLabels: Record<JobRemoteStatus, string> = {
   hybrid: "混合办公",
@@ -14,12 +10,6 @@ const jobTypeLabels: Record<JobEmploymentType, string> = {
   contract: "合同",
   full_time: "全职",
   part_time: "兼职",
-};
-
-const importMethodLabels: Record<JobImportMethod, string> = {
-  manual_form: "手动填写",
-  manual_text: "粘贴 JD 解析",
-  screenshot: "截图解析",
 };
 
 const logoPalette = [
@@ -43,4 +33,4 @@ function getJobLogo(company: string) {
   return { className: logoPalette[hash], text };
 }
 
-export { getJobLogo, importMethodLabels, jobTypeLabels, remoteStatusLabels };
+export { getJobLogo, jobTypeLabels, remoteStatusLabels };

@@ -95,7 +95,7 @@ Deno.serve(async (request) => {
   const { data: jobRow, error: jobError } = await supabase
     .from("job_descriptions")
     .select(
-      "id,company,title,location,remote_status,job_type,seniority,years_required,required_skills,preferred_skills,responsibilities,requirements,salary_range,summary,updated_at",
+      "id,company,title,location,remote_status,job_type,years_required,required_skills,preferred_skills,responsibilities,requirements,salary_range,summary,updated_at",
     )
     .eq("id", jobId)
     .maybeSingle();

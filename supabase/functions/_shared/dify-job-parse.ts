@@ -37,11 +37,10 @@ type JobParseDraft = {
   source_platform: string | null;
   company: string | null;
   title: string | null;
-  company_stage: string | null;
+  company_info: string | null;
   location: string | null;
   remote_status: "remote" | "hybrid" | "onsite" | null;
   job_type: "full_time" | "contract" | "part_time" | null;
-  seniority: string | null;
   years_required: string | null;
   required_skills: string[];
   preferred_skills: string[];
@@ -330,7 +329,7 @@ function coerceJobParseDraft(value: unknown): JobParseDraft | null {
     source_platform: getNullableString(value.source_platform),
     company: getNullableString(value.company),
     title: getNullableString(value.title),
-    company_stage: getNullableString(value.company_stage),
+    company_info: getNullableString(value.company_info),
     location: getNullableString(value.location),
     remote_status: getEnumValue(
       value.remote_status,
@@ -348,7 +347,6 @@ function coerceJobParseDraft(value: unknown): JobParseDraft | null {
         "part_time",
       ] as const,
     ),
-    seniority: getNullableString(value.seniority),
     years_required: getNullableString(value.years_required),
     required_skills: toStringArray(value.required_skills),
     preferred_skills: toStringArray(value.preferred_skills),

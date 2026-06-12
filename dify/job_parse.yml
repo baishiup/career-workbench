@@ -194,6 +194,9 @@ workflow:
 
                 9. source_platform 只在输入中明确出现来源（如 LinkedIn 页面特征、招聘网站名）时填写，否则填 ""。
 
+                10. company_info 抽取 JD 中对公司本身的介绍（所属行业、业务方向、规模或发展阶段等），不超过
+                80 字；输入中没有相关描述时填 ""。
+
                 '
             - id: a1f3c2d4-0002-4abc-8def-job-parse-usr
               role: user
@@ -209,7 +212,7 @@ workflow:
               properties:
                 company:
                   type: string
-                company_stage:
+                company_info:
                   type: string
                 job_type:
                   type: string
@@ -245,8 +248,6 @@ workflow:
                   enum:
                     - job.parse.v1
                   type: string
-                seniority:
-                  type: string
                 source_platform:
                   type: string
                 summary:
@@ -260,11 +261,10 @@ workflow:
                 - source_platform
                 - company
                 - title
-                - company_stage
+                - company_info
                 - location
                 - remote_status
                 - job_type
-                - seniority
                 - years_required
                 - required_skills
                 - preferred_skills

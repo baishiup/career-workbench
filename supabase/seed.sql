@@ -8,11 +8,11 @@ insert into public.job_descriptions (
   source_url,
   company,
   title,
-  company_stage,
+  logo_url,
+  company_info,
   location,
   remote_status,
   job_type,
-  seniority,
   years_required,
   required_skills,
   preferred_skills,
@@ -22,7 +22,6 @@ insert into public.job_descriptions (
   posted_at,
   summary,
   imported_by,
-  import_method,
   is_active
 ) values
   (
@@ -31,11 +30,11 @@ insert into public.job_descriptions (
     'https://www.linkedin.com/jobs/view/mock-thrivecart',
     'ThriveCart',
     'Senior Frontend Engineer',
+    null,
     '电商 · 营销自动化 · 成长期',
     'United States',
     'remote',
     'full_time',
-    'Senior',
     '5+ 年',
     array['React', 'TypeScript', 'Design System', 'A/B Testing'],
     array['Next.js', 'Checkout UX', 'Conversion Analytics'],
@@ -53,7 +52,6 @@ insert into public.job_descriptions (
     now() - interval '11 hours',
     '面向商家增长和结账转化的前端岗位，适合突出组件系统、复杂表单和产品指标经验。',
     'Admin demo',
-    'manual_text',
     true
   ),
   (
@@ -62,11 +60,11 @@ insert into public.job_descriptions (
     'https://www.nextinsurance.com/careers/mock-frontend',
     'AP Intego (now NEXT)',
     'Frontend Software Engineer',
+    null,
     '保险科技 · 成熟期',
     'Boston, MA',
     'hybrid',
     'full_time',
-    'Senior',
     '6+ 年',
     array['React', 'TypeScript', 'Accessibility', 'Forms'],
     array['Insurance workflows', 'Testing', 'Design QA'],
@@ -84,7 +82,6 @@ insert into public.job_descriptions (
     now() - interval '4 days',
     '偏成熟业务系统的前端岗位，匹配复杂表单、可靠交付和可访问性证据。',
     'Admin demo',
-    'manual_text',
     true
   ),
   (
@@ -93,11 +90,11 @@ insert into public.job_descriptions (
     'https://www.linkedin.com/jobs/view/mock-emergent',
     'Emergent',
     'Frontend Engineer, AI Products',
+    null,
     '人工智能 · 软件 · 成长期',
     'San Francisco',
     'onsite',
     'full_time',
-    'Staff / Lead',
     '7+ 年',
     array['React', 'AI UX', 'Frontend Architecture', 'Realtime UI'],
     array['Agents', 'Streaming', 'Developer Tools'],
@@ -115,7 +112,6 @@ insert into public.job_descriptions (
     now() - interval '1 day',
     'AI 产品前端岗位，方向高度相关，但级别偏高，需要更强架构和负责人证据。',
     'Admin demo',
-    'screenshot',
     true
   ),
   (
@@ -124,11 +120,11 @@ insert into public.job_descriptions (
     'https://www.datacamp.com/careers/mock-platform-frontend',
     'DataCamp',
     'Frontend Platform Engineer',
+    null,
     '在线教育 · 数据学习 · 成熟期',
     'Remote - Europe / US overlap',
     'remote',
     'full_time',
-    'Mid-Senior',
     '4+ 年',
     array['React', 'TypeScript', 'Component Library', 'Testing'],
     array['Monorepo', 'Design Tokens', 'Documentation'],
@@ -146,7 +142,6 @@ insert into public.job_descriptions (
     now() - interval '6 days',
     '前端平台方向匹配度稳定，适合把组件系统、工程化和文档能力作为主线。',
     'Admin demo',
-    'manual_text',
     true
   )
 on conflict (id) do nothing;

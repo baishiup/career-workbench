@@ -19,7 +19,6 @@ import {
   ExternalLink,
   FileText,
   Globe2,
-  GraduationCap,
   Loader2,
   MapPin,
   Pencil,
@@ -42,7 +41,6 @@ import { cn } from "@/lib/utils";
 import { getJob, setJobActive } from "@/lib/jobs/api";
 import {
   getJobLogo,
-  importMethodLabels,
   jobTypeLabels,
   remoteStatusLabels,
 } from "@/lib/jobs/labels";
@@ -304,14 +302,22 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
           )}
         >
           <div className="flex min-w-0 gap-4">
-            <div
-              className={cn(
-                "flex size-14 shrink-0 items-center justify-center rounded-xl text-lg font-bold text-white",
-                logo.className,
-              )}
-            >
-              {logo.text}
-            </div>
+            {job.logoUrl ? (
+              <img
+                alt={`${job.company} logo`}
+                className="size-14 shrink-0 rounded-xl object-cover"
+                src={job.logoUrl}
+              />
+            ) : (
+              <div
+                className={cn(
+                  "flex size-14 shrink-0 items-center justify-center rounded-xl text-lg font-bold text-white",
+                  logo.className,
+                )}
+              >
+                {logo.text}
+              </div>
+            )}
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 {job.sourcePlatform ? (
@@ -333,10 +339,12 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
               <h1 className="mt-2 text-2xl font-semibold leading-tight tracking-tight">
                 {job.title}
               </h1>
-              <p className="mt-1 text-sm text-slate-500">
-                {job.company}
-                {job.companyStage ? ` / ${job.companyStage}` : null}
-              </p>
+              <p className="mt-1 text-sm text-slate-500">{job.company}</p>
+              {job.companyInfo ? (
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+                  {job.companyInfo}
+                </p>
+              ) : null}
               {job.summary ? (
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
                   {job.summary}
@@ -418,11 +426,6 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
                   value={jobTypeLabels[job.jobType]}
                 />
                 <Fact
-                  icon={GraduationCap}
-                  label="级别"
-                  value={job.seniority ?? "未提供"}
-                />
-                <Fact
                   icon={CalendarDays}
                   label="年限要求"
                   value={job.yearsRequired ?? "未提供"}
@@ -495,20 +498,14 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
               targetResumeError={targetResumeError}
             />
 
-            <Card className={panelClassName}>
-              <Card.Header>
-                <Card.Title>导入元数据</Card.Title>
-                {job.importedBy ? (
+            {job.importedBy ? (
+              <Card className={panelClassName}>
+                <Card.Header>
+                  <Card.Title>导入元数据</Card.Title>
                   <Card.Description>{job.importedBy}</Card.Description>
-                ) : null}
-              </Card.Header>
-              <Card.Content className="grid gap-2 text-sm">
-                <MetaRow
-                  label="导入方式"
-                  value={importMethodLabels[job.importMethod]}
-                />
-              </Card.Content>
-            </Card>
+                </Card.Header>
+              </Card>
+            ) : null}
           </aside>
         </div>
       </section>
@@ -1000,15 +997,6 @@ function SkillGroup({
           <span className="text-sm text-slate-500">暂无标签。</span>
         )}
       </div>
-    </div>
-  );
-}
-
-function MetaRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-2 last:border-0 last:pb-0">
-      <span className="text-slate-500">{label}</span>
-      <span className="text-right font-medium">{value}</span>
     </div>
   );
 }

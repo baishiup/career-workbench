@@ -23,17 +23,13 @@ import {
   getJob,
   parseJobDescription,
   updateJob,
+  uploadCompanyLogo,
   type JobDraftInput,
   type JobParseDraft,
 } from "@/lib/jobs/api";
-import {
-  importMethodLabels,
-  jobTypeLabels,
-  remoteStatusLabels,
-} from "@/lib/jobs/labels";
+import { jobTypeLabels, remoteStatusLabels } from "@/lib/jobs/labels";
 import type {
   JobEmploymentType,
-  JobImportMethod,
   JobRecord,
   JobRemoteStatus,
 } from "@/lib/jobs/types";
@@ -48,11 +44,11 @@ type JobFormState = {
   sourceUrl: string;
   company: string;
   title: string;
-  companyStage: string;
+  logoUrl: string;
+  companyInfo: string;
   location: string;
   remoteStatus: JobRemoteStatus;
   jobType: JobEmploymentType;
-  seniority: string;
   yearsRequired: string;
   requiredSkillsText: string;
   preferredSkillsText: string;
@@ -61,7 +57,6 @@ type JobFormState = {
   salaryRange: string;
   postedAt: string;
   summary: string;
-  importMethod: JobImportMethod;
 };
 
 const emptyForm: JobFormState = {
@@ -69,11 +64,11 @@ const emptyForm: JobFormState = {
   sourceUrl: "",
   company: "",
   title: "",
-  companyStage: "",
+  logoUrl: "",
+  companyInfo: "",
   location: "",
   remoteStatus: "onsite",
   jobType: "full_time",
-  seniority: "",
   yearsRequired: "",
   requiredSkillsText: "",
   preferredSkillsText: "",
@@ -82,7 +77,6 @@ const emptyForm: JobFormState = {
   salaryRange: "",
   postedAt: "",
   summary: "",
-  importMethod: "manual_form",
 };
 
 export function JobImportPage({ jobId }: { jobId?: string }) {
@@ -104,6 +98,10 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const loadExistingJob = useCallback(async () => {
     if (!jobId) {
@@ -197,6 +195,24 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
     );
   };
 
+  const handleLogoUpload = async (file: File | undefined) => {
+    if (!file) {
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    setLogoError(null);
+
+    try {
+      const logoUrl = await uploadCompanyLogo(file);
+      setForm((current) => ({ ...current, logoUrl }));
+    } catch (error) {
+      setLogoError(error instanceof Error ? error.message : "Logo 上传失败。");
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
   const handleParse = async () => {
     if (!jdText.trim() && screenshots.length === 0) {
       setParseError("请先粘贴 JD 文本或上传职位截图。");
@@ -207,25 +223,14 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
     setParseError(null);
     setParseWarnings([]);
 
-    const attemptMethod: JobImportMethod =
-      screenshots.length > 0 ? "screenshot" : "manual_text";
-
     try {
       const response = await parseJobDescription({ jdText, screenshots });
       const warnings = response.parsed.parse_warnings;
 
-      setForm((current) =>
-        applyParsedDraft(current, response.parsed, {
-          importMethod: attemptMethod,
-        }),
-      );
+      setForm((current) => applyParsedDraft(current, response.parsed));
       setParseWarnings(warnings);
     } catch (error) {
       setParseError(error instanceof Error ? error.message : "解析失败。");
-      setForm((current) => ({
-        ...current,
-        importMethod: attemptMethod,
-      }));
     } finally {
       setIsParsing(false);
     }
@@ -407,6 +412,65 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
           </Card.Description>
         </Card.Header>
         <Card.Content className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold text-slate-500">
+              公司 Logo
+            </span>
+            <div className="flex items-center gap-3">
+              <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-50 text-xs text-slate-400">
+                {form.logoUrl ? (
+                  <img
+                    alt="公司 logo 预览"
+                    className="size-full object-cover"
+                    src={form.logoUrl}
+                  />
+                ) : (
+                  "无图"
+                )}
+              </div>
+              <input
+                accept={ACCEPTED_IMAGE_TYPES}
+                className="hidden"
+                onChange={(event) => {
+                  void handleLogoUpload(event.target.files?.[0]);
+                  event.target.value = "";
+                }}
+                ref={logoInputRef}
+                type="file"
+              />
+              <Button
+                isDisabled={isUploadingLogo}
+                onPress={() => logoInputRef.current?.click()}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                {isUploadingLogo ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <ImagePlus className="size-4" />
+                )}
+                {isUploadingLogo ? "上传中…" : "上传 Logo"}
+              </Button>
+              {form.logoUrl ? (
+                <Button
+                  onPress={() => setForm((c) => ({ ...c, logoUrl: "" }))}
+                  size="sm"
+                  type="button"
+                  variant="ghost"
+                >
+                  移除
+                </Button>
+              ) : null}
+              <span className="text-sm text-slate-500">
+                PNG / JPEG / WebP，建议方形，最大 2MB
+              </span>
+            </div>
+            {logoError ? (
+              <span className="text-sm text-red-600">{logoError}</span>
+            ) : null}
+          </div>
+
           <div className="grid gap-3 sm:grid-cols-2">
             <FormField
               label="公司"
@@ -431,13 +495,6 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
               label="原始链接"
               onChange={(sourceUrl) => setForm((c) => ({ ...c, sourceUrl }))}
               value={form.sourceUrl}
-            />
-            <FormField
-              label="公司阶段"
-              onChange={(companyStage) =>
-                setForm((c) => ({ ...c, companyStage }))
-              }
-              value={form.companyStage}
             />
             <FormField
               label="地点"
@@ -467,11 +524,6 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
               value={form.jobType}
             />
             <FormField
-              label="级别"
-              onChange={(seniority) => setForm((c) => ({ ...c, seniority }))}
-              value={form.seniority}
-            />
-            <FormField
               label="年限要求"
               onChange={(yearsRequired) =>
                 setForm((c) => ({ ...c, yearsRequired }))
@@ -492,6 +544,18 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
             />
           </div>
 
+          <FormTextArea
+            label="职位概述"
+            onChange={(summary) => setForm((c) => ({ ...c, summary }))}
+            rows={3}
+            value={form.summary}
+          />
+          <FormTextArea
+            label="公司信息"
+            onChange={(companyInfo) => setForm((c) => ({ ...c, companyInfo }))}
+            rows={3}
+            value={form.companyInfo}
+          />
           <FormTextArea
             hint="每行一个技能，也可用逗号分隔"
             label="必备技能"
@@ -528,26 +592,6 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
             rows={5}
             value={form.requirementsText}
           />
-          <FormTextArea
-            label="职位概述"
-            onChange={(summary) => setForm((c) => ({ ...c, summary }))}
-            rows={3}
-            value={form.summary}
-          />
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <SelectField
-              label="导入方式"
-              onChange={(importMethod) =>
-                setForm((c) => ({
-                  ...c,
-                  importMethod: importMethod as JobImportMethod,
-                }))
-              }
-              options={importMethodLabels}
-              value={form.importMethod}
-            />
-          </div>
 
           {existingJob && !existingJob.isActive ? (
             <Chip className="w-fit" color="warning" size="sm" variant="soft">
@@ -721,11 +765,11 @@ function jobToFormState(job: JobRecord): JobFormState {
     sourceUrl: job.sourceUrl ?? "",
     company: job.company,
     title: job.title,
-    companyStage: job.companyStage ?? "",
+    logoUrl: job.logoUrl ?? "",
+    companyInfo: job.companyInfo ?? "",
     location: job.location ?? "",
     remoteStatus: job.remoteStatus,
     jobType: job.jobType,
-    seniority: job.seniority ?? "",
     yearsRequired: job.yearsRequired ?? "",
     requiredSkillsText: job.requiredSkills.join("\n"),
     preferredSkillsText: job.preferredSkills.join("\n"),
@@ -734,25 +778,22 @@ function jobToFormState(job: JobRecord): JobFormState {
     salaryRange: job.salaryRange ?? "",
     postedAt: job.postedAt ?? "",
     summary: job.summary ?? "",
-    importMethod: job.importMethod,
   };
 }
 
 function applyParsedDraft(
   current: JobFormState,
   parsed: JobParseDraft,
-  meta: { importMethod: JobImportMethod },
 ): JobFormState {
   return {
     ...current,
     sourcePlatform: parsed.source_platform ?? current.sourcePlatform,
     company: parsed.company ?? current.company,
     title: parsed.title ?? current.title,
-    companyStage: parsed.company_stage ?? current.companyStage,
+    companyInfo: parsed.company_info ?? current.companyInfo,
     location: parsed.location ?? current.location,
     remoteStatus: parsed.remote_status ?? current.remoteStatus,
     jobType: parsed.job_type ?? current.jobType,
-    seniority: parsed.seniority ?? current.seniority,
     yearsRequired: parsed.years_required ?? current.yearsRequired,
     requiredSkillsText: parsed.required_skills.join("\n"),
     preferredSkillsText: parsed.preferred_skills.join("\n"),
@@ -761,7 +802,6 @@ function applyParsedDraft(
     salaryRange: parsed.salary_range ?? current.salaryRange,
     postedAt: parsed.posted_at ?? current.postedAt,
     summary: parsed.summary ?? current.summary,
-    importMethod: meta.importMethod,
   };
 }
 
@@ -774,11 +814,11 @@ function formStateToDraftInput(
     sourceUrl: emptyToNull(form.sourceUrl),
     company: form.company.trim(),
     title: form.title.trim(),
-    companyStage: emptyToNull(form.companyStage),
+    logoUrl: emptyToNull(form.logoUrl),
+    companyInfo: emptyToNull(form.companyInfo),
     location: emptyToNull(form.location),
     remoteStatus: form.remoteStatus,
     jobType: form.jobType,
-    seniority: emptyToNull(form.seniority),
     yearsRequired: emptyToNull(form.yearsRequired),
     requiredSkills: splitListText(form.requiredSkillsText, true),
     preferredSkills: splitListText(form.preferredSkillsText, true),
@@ -788,7 +828,6 @@ function formStateToDraftInput(
     postedAt: emptyToNull(form.postedAt),
     summary: emptyToNull(form.summary),
     importedBy: meta.importedBy,
-    importMethod: form.importMethod,
   };
 }
 

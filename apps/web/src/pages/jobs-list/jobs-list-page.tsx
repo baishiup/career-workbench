@@ -221,14 +221,22 @@ function JobRow({
     <Table.Row id={job.id}>
       <Table.Cell>
         <div className="flex min-w-0 items-center gap-3">
-          <span
-            className={cn(
-              "flex size-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white",
-              logo.className,
-            )}
-          >
-            {logo.text}
-          </span>
+          {job.logoUrl ? (
+            <img
+              alt={`${job.company} logo`}
+              className="size-9 shrink-0 rounded-lg object-cover"
+              src={job.logoUrl}
+            />
+          ) : (
+            <span
+              className={cn(
+                "flex size-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white",
+                logo.className,
+              )}
+            >
+              {logo.text}
+            </span>
+          )}
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <p className="truncate font-medium text-slate-900">{job.title}</p>
@@ -238,10 +246,7 @@ function JobRow({
                 </Chip>
               ) : null}
             </div>
-            <p className="truncate text-sm text-slate-500">
-              {job.company}
-              {job.companyStage ? ` · ${compactStage(job.companyStage)}` : null}
-            </p>
+            <p className="truncate text-sm text-slate-500">{job.company}</p>
           </div>
         </div>
       </Table.Cell>
@@ -295,7 +300,7 @@ function filterJobs(
     return [
       job.company,
       job.title,
-      job.companyStage,
+      job.companyInfo,
       job.location,
       job.summary,
       ...job.requiredSkills,
@@ -306,10 +311,6 @@ function filterJobs(
       .toLowerCase()
       .includes(normalizedQuery);
   });
-}
-
-function compactStage(stage: string) {
-  return stage.split("·").at(-1)?.trim() ?? stage;
 }
 
 function MatchScoreCell({

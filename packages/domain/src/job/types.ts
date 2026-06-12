@@ -6,9 +6,6 @@
  * logo 派生）和本地 fixture，它们跟随 feature 归属。
  */
 
-/** 职位进入系统的方式：手动表单填写、粘贴 JD 文本解析或截图解析。 */
-type JobImportMethod = "manual_form" | "manual_text" | "screenshot";
-
 /** 远程办公状态。 */
 type JobRemoteStatus = "remote" | "hybrid" | "onsite";
 
@@ -22,11 +19,13 @@ type JobDescription = {
   sourceUrl: string | null;
   company: string;
   title: string;
-  companyStage: string | null;
+  /** 公司 logo 图片 URL（Supabase Storage 公开地址），无图时为 null。 */
+  logoUrl: string | null;
+  /** 公司简介自由文本，未提供时为 null。 */
+  companyInfo: string | null;
   location: string | null;
   remoteStatus: JobRemoteStatus;
   jobType: JobEmploymentType;
-  seniority: string | null;
   yearsRequired: string | null;
   requiredSkills: string[];
   preferredSkills: string[];
@@ -37,14 +36,8 @@ type JobDescription = {
   postedAt: string | null;
   summary: string | null;
   importedBy: string | null;
-  importMethod: JobImportMethod;
   /** 停用职位仅 admin 可见，用于编辑或重新启用。 */
   isActive: boolean;
 };
 
-export type {
-  JobDescription,
-  JobEmploymentType,
-  JobImportMethod,
-  JobRemoteStatus,
-};
+export type { JobDescription, JobEmploymentType, JobRemoteStatus };

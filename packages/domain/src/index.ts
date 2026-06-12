@@ -84,7 +84,6 @@ export type {
 export type {
   JobDescription,
   JobEmploymentType,
-  JobImportMethod,
   JobRemoteStatus,
 } from "./job/types";
 export {
