@@ -1,19 +1,20 @@
-import type { ComponentType, ReactNode, SVGProps } from "react";
+import type { ComponentType, SVGProps } from "react";
 import {
   ArrowRight,
-  Check,
+  Brain,
+  CheckCircle2,
   ChevronDown,
-  CirclePlay,
+  Database,
   FileText,
   Gauge,
   GitBranch,
-  LineChart,
+  Layers3,
   MessageSquareText,
-  PenLine,
+  PackageCheck,
+  PencilLine,
   ShieldCheck,
   Sparkles,
-  Target,
-  WandSparkles,
+  Workflow,
 } from "lucide-react";
 import { Button } from "@heroui/react";
 
@@ -23,63 +24,124 @@ import { navigateTo } from "@/lib/router";
 
 import "./landing-page.css";
 
-type FeatureIcon = ComponentType<SVGProps<SVGSVGElement>>;
+type LandingIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
-type StoryPanel = {
-  accent: "blue" | "green" | "slate";
+type FeatureItem = {
   description: string;
-  icon: FeatureIcon;
-  meta: string;
+  icon: LandingIcon;
   title: string;
 };
 
-const storyPanels: StoryPanel[] = [
+type EcosystemItem = {
+  description: string;
+  index: string;
+  title: string;
+};
+
+const navItems = [
+  { href: "product", label: "Product" },
+  { href: "workflow", label: "Workflow" },
+  { href: "match", label: "Match" },
+  { href: "resume", label: "Resume" },
+  { href: "community", label: "Community" },
+];
+
+const proofLabels = [
+  "Profile",
+  "JD Match",
+  "AI Narrative",
+  "Target Resume",
+  "Trace",
+  "Export",
+];
+
+const buildItems: FeatureItem[] = [
   {
-    accent: "blue",
     description:
-      "把经历拆成结构化模块，保留真实信息，同时让每段表达都能对应目标 JD。",
-    icon: PenLine,
-    meta: "Resume editor",
-    title: "核心简历编辑器",
+      "Upload or maintain a structured developer profile, then keep every generated resume grounded in real experience.",
+    icon: FileText,
+    title: "Profile as source of truth",
   },
   {
-    accent: "green",
     description:
-      "从技术栈、项目密度、职责范围和关键缺口生成匹配分，不靠单一关键词硬凑。",
-    icon: Gauge,
-    meta: "Match report",
-    title: "JD 匹配度分析",
+      "Turn a job description into responsibilities, requirements, seniority signals, tech stack, and hidden preferences.",
+    icon: GitBranch,
+    title: "JD parsing and structure",
   },
   {
-    accent: "slate",
     description:
-      "把 AI 判断过程写成可追踪的叙事：为什么推荐、哪里有风险、下一步改什么。",
-    icon: MessageSquareText,
-    meta: "AI narrative",
-    title: "AI 分析叙事",
+      "Move from profile and JD to a target-ready version without losing editability or evidence.",
+    icon: PencilLine,
+    title: "Target resume generation",
   },
 ];
 
-const workflowSteps = [
+const connectItems: FeatureItem[] = [
   {
-    description: "上传 PDF 或粘贴现有简历，生成结构化职业档案。",
-    icon: FileText,
-    title: "导入简历",
+    description:
+      "Supabase keeps auth, profile, jobs, resumes, and reports in the product boundary instead of a model notebook.",
+    icon: Database,
+    title: "Connect product data",
   },
   {
-    description: "录入目标 JD，拆出职责、要求、技术栈和隐藏偏好。",
-    icon: GitBranch,
-    title: "解析职位",
+    description:
+      "Dify workflows handle parsing, matching narrative, and generation behind controlled Edge Functions.",
+    icon: Workflow,
+    title: "Connect AI workflows",
   },
   {
-    description: "得到匹配度、风险点和可执行的简历改写建议。",
-    icon: Target,
-    title: "分析匹配",
+    description:
+      "Each AI output is converted back into structured workbench state for review, edit, and reuse.",
+    icon: Layers3,
+    title: "Connect generated artifacts",
+  },
+];
+
+const readyItems: FeatureItem[] = [
+  {
+    description:
+      "The AI can recommend stronger wording, but it should not invent projects, metrics, or background facts.",
+    icon: ShieldCheck,
+    title: "Fact-safe by default",
   },
   {
-    description: "在编辑器里定制投递版本，保留证据和修改记录。",
-    icon: WandSparkles,
-    title: "生成版本",
+    description:
+      "Match reports show strengths, gaps, risks, and next actions instead of hiding the reasoning.",
+    icon: MessageSquareText,
+    title: "Explainable AI narrative",
+  },
+  {
+    description:
+      "Generated resumes remain editable in the workbench, with style controls and future change logs.",
+    icon: PackageCheck,
+    title: "Editable delivery",
+  },
+];
+
+const startupItems = [
+  "Validate a job target before rewriting the whole resume.",
+  "Prioritize opportunities with a transparent match report.",
+  "Generate a first draft, then keep human review in the loop.",
+];
+
+const ecosystemItems: EcosystemItem[] = [
+  {
+    description:
+      "Resume parsing, target generation, and future AI chat can share the same trace contract.",
+    index: "01",
+    title: "AI Run Trace",
+  },
+  {
+    description:
+      "Profile, JD, match report, and target resume stay as product objects instead of prompt blobs.",
+    index: "02",
+    title: "Structured Career Data",
+  },
+  {
+    description:
+      "Local fixture mode keeps UI work fast while Supabase mode validates the real MVP path.",
+    index: "03",
+    title: "Local to Supabase",
   },
 ];
 
@@ -89,118 +151,204 @@ function LandingPage() {
   const isAuthenticated = Boolean(user);
   const canEnterWorkbench = !isAuthConfigured || isAuthenticated;
   const ctaHref = canEnterWorkbench ? "/jobs" : "/login";
-  const ctaLabel = canEnterWorkbench ? "进入工作台" : "免费开始使用";
+  const ctaLabel = canEnterWorkbench ? "进入工作台" : "Get Started";
 
   return (
-    <main className="cw-landing min-h-screen text-slate-950">
+    <main className="cw-landing">
       <LandingHeader ctaHref={ctaHref} ctaLabel={ctaLabel} />
 
-      <section className="cw-hero">
-        <div className="cw-hero-grid">
-          <div className="cw-hero-copy">
-            <h1>Career Workbench</h1>
-            <p className="cw-hero-lede">
-              AI 驱动的求职工作台。从简历定制、JD 匹配到面试准备，让每一次投递更精准、更有把握。
+      <section className="cw-hero cw-grid-shell" id="product">
+        <div className="cw-hero-announcement">
+          <strong>Career Workbench MVP</strong>
+          <span>Developer-first AI job search workspace</span>
+          <ArrowRight className="size-4" />
+        </div>
+
+        <div className="cw-hero-title-row">
+          <div className="cw-hero-heading-column">
+            <h1>
+              Build Target-Ready
+              <span>Career Workflow</span>
+            </h1>
+            <p className="cw-hero-proof-line">
+              <span />
+              Developer-first workflow for{" "}
+              <strong>Profile, JD, Match, Resume</strong>
             </p>
-            <div className="cw-hero-actions">
-              <Button
-                className="cw-primary-button"
-                onPress={() => navigateTo(ctaHref)}
-                size="lg"
-                type="button"
-              >
-                {ctaLabel}
-                <ArrowRight className="size-4" />
-              </Button>
-              <Button
-                className="cw-secondary-button"
-                onPress={() => scrollToSection("product-story")}
-                size="lg"
-                type="button"
-              >
-                <CirclePlay className="size-4" />
-                观看演示
-              </Button>
-            </div>
-            <div className="cw-hero-proof" aria-label="产品能力">
-              <ProofItem icon={Sparkles} text="AI 深度分析" />
-              <ProofItem icon={LineChart} text="机会优先级" />
-              <ProofItem icon={ShieldCheck} text="数据安全可控" />
-            </div>
           </div>
-
-          <ProductDeck />
+          <button
+            aria-label="查看工作流"
+            className="cw-hero-scroll"
+            onClick={() => scrollToSection("workflow")}
+            type="button"
+          >
+            <ChevronDown className="size-7" />
+          </button>
         </div>
 
-        <button
-          aria-label="查看产品能力"
-          className="cw-scroll-cue"
-          onClick={() => scrollToSection("product-story")}
-          type="button"
+        <div className="cw-hero-description-row">
+          <p>
+            Career Workbench turns your Profile, target JD, AI narrative, and
+            editable resume into one traceable workflow, so every application is
+            specific, grounded, and ready to refine.
+          </p>
+        </div>
+
+        <div
+          className="cw-proof-strip"
+          aria-label="Career Workbench core objects"
         >
-          <ChevronDown className="size-5" />
-        </button>
+          {proofLabels.map((label) => (
+            <span key={label}>{label}</span>
+          ))}
+        </div>
+
+        <WorkflowCanvasMockup />
       </section>
 
-      <section className="cw-product-story" id="product-story">
-        <div className="cw-section-heading">
-          <p>AI 助力的求职全流程</p>
-          <h2>从内容优化到机会把控，每一步都有数据与洞察支持</h2>
-        </div>
+      <FeatureSection
+        eyebrow="BUILD"
+        id="workflow"
+        items={buildItems}
+        summary="From profile to target resume, keep your AI-assisted job search grounded in real career facts."
+        title="From source profile to live application, bring each job target into one clear workflow."
+      />
 
-        <div className="cw-story-stack">
-          <StoryBlock panel={storyPanels[0]}>
-            <ResumeEditorMockup />
-          </StoryBlock>
-          <StoryBlock panel={storyPanels[1]}>
-            <MatchPanelMockup />
-          </StoryBlock>
-          <StoryBlock panel={storyPanels[2]}>
-            <AnalysisNarrativeMockup />
-          </StoryBlock>
-        </div>
-      </section>
+      <FeatureSection
+        eyebrow="Connect"
+        id="match"
+        items={connectItems}
+        media="stack"
+        summary="Connect the data layer, AI workflows, and review surfaces without turning the product into a prompt dump."
+        title="Supercharge career matching with structured data, Dify workflows, and editable outputs."
+      />
 
-      <section className="cw-workflow-section" id="workflow">
-        <div className="cw-section-heading">
-          <p>简单 4 步</p>
-          <h2>打造更强求职竞争力</h2>
+      <section className="cw-ready-section cw-grid-shell" id="resume">
+        <div className="cw-section-kicker">
+          <span />
+          Production Ready
         </div>
-        <div className="cw-workflow-grid">
-          {workflowSteps.map((step, index) => (
-            <WorkflowCard index={index} key={step.title} step={step} />
+        <div className="cw-ready-heading">
+          <h2>Trustworthy AI resume work since day one.</h2>
+          <p>
+            The product is designed around facts, explanations, and user
+            control, not one-click resume magic.
+          </p>
+        </div>
+        <div className="cw-ready-grid">
+          {readyItems.map((item) => (
+            <FeatureCard item={item} key={item.title} />
           ))}
         </div>
       </section>
 
-      <section className="cw-final-cta">
-        <div>
-          <h2>准备好让 AI 帮你拿到更多面试机会了吗？</h2>
+      <section className="cw-enterprise-section cw-grid-shell">
+        <div className="cw-enterprise-copy">
+          <div className="cw-section-kicker">
+            <span />
+            For serious job search
+          </div>
+          <h2>
+            Solid career infrastructure for developers who apply with intent.
+          </h2>
           <p>
-            立即体验 Career Workbench，让每一次投递都更节省时间、更有价值。
+            Replace scattered resume files, copy-pasted JD notes, and vague AI
+            suggestions with a single workspace that keeps decisions visible.
           </p>
         </div>
-        <div className="cw-final-actions">
-          <Button
-            className="cw-primary-button"
-            onPress={() => navigateTo(ctaHref)}
-            size="lg"
-            type="button"
-          >
-            {ctaLabel}
-            <ArrowRight className="size-4" />
-          </Button>
-          <Button
-            className="cw-dark-secondary-button"
-            onPress={() => scrollToSection("product-story")}
-            size="lg"
-            type="button"
-          >
-            观看演示
-            <CirclePlay className="size-4" />
-          </Button>
+        <div className="cw-metrics-board">
+          <MetricTile
+            label="Core loop"
+            value="Profile -> JD -> Match -> Resume"
+          />
+          <MetricTile label="AI outputs" value="Evidence, gaps, risks" />
+          <MetricTile label="Human control" value="Review, edit, save" />
+          <MetricTile label="MVP boundary" value="No scraping, no auto-apply" />
         </div>
       </section>
+
+      <section className="cw-startup-section cw-grid-shell">
+        <div className="cw-section-kicker">
+          <span />
+          Startup
+        </div>
+        <div className="cw-startup-layout">
+          <h2>
+            Unlock your next role
+            <span>with a tighter AI workflow.</span>
+          </h2>
+          <ul>
+            {startupItems.map((item) => (
+              <li key={item}>
+                <CheckCircle2 className="size-5" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="cw-community-section cw-grid-shell" id="community">
+        <div>
+          <div className="cw-section-kicker">
+            <span />
+            Community
+          </div>
+          <h2>Built for developer job-search loops.</h2>
+        </div>
+        <div className="cw-community-cards">
+          <QuoteCard
+            name="Profile-first"
+            quote="Every suggestion should map back to real experience, not generic resume advice."
+          />
+          <QuoteCard
+            name="JD-aware"
+            quote="Matching should explain why the target is worth time before writing starts."
+          />
+        </div>
+      </section>
+
+      <section className="cw-ecosystem-section cw-grid-shell">
+        <div className="cw-ecosystem-heading">
+          <div className="cw-section-kicker">
+            <span />
+            Ecosystem
+          </div>
+          <h2>
+            And,
+            <span>an expanding workbench ahead</span>
+          </h2>
+        </div>
+        <div className="cw-ecosystem-list">
+          {ecosystemItems.map((item) => (
+            <article key={item.title}>
+              <strong>{item.title}</strong>
+              <span>{item.index}</span>
+              <p>{item.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="cw-bottom-cta">
+        <div>
+          <h2>Ready to build your next target resume?</h2>
+          <p>
+            Start from your profile, analyze a real JD, and generate an editable
+            version grounded in your own evidence.
+          </p>
+        </div>
+        <Button
+          className="cw-bottom-cta-button"
+          onPress={() => navigateTo(ctaHref)}
+          type="button"
+        >
+          {ctaLabel}
+          <ArrowRight className="size-7" />
+        </Button>
+      </section>
+
+      <LandingFooter />
     </main>
   );
 }
@@ -219,24 +367,26 @@ function LandingHeader({
           <BrandLogo />
           <span>Career Workbench</span>
         </Link>
+
         <nav aria-label="首页导航" className="cw-header-nav">
-          <button onClick={() => scrollToSection("product-story")} type="button">
-            产品
-          </button>
-          <button onClick={() => scrollToSection("product-story")} type="button">
-            功能
-          </button>
-          <button onClick={() => scrollToSection("workflow")} type="button">
-            流程
-          </button>
+          {navItems.map((item) => (
+            <button
+              key={item.href}
+              onClick={() => scrollToSection(item.href)}
+              type="button"
+            >
+              {item.label}
+            </button>
+          ))}
         </nav>
+
         <Button
-          className="cw-primary-button cw-header-button"
+          className="cw-header-cta"
           onPress={() => navigateTo(ctaHref)}
-          size="sm"
           type="button"
         >
-          {ctaLabel}
+          <span>{ctaLabel}</span>
+          <ArrowRight className="size-6" />
         </Button>
       </div>
     </header>
@@ -270,272 +420,230 @@ function BrandLogo() {
   );
 }
 
-function ProductDeck() {
+function WorkflowCanvasMockup() {
   return (
-    <div className="cw-product-deck" aria-label="Career Workbench 产品界面预览">
-      <div className="cw-window cw-main-window cw-parallax-layer">
-        <WindowChrome title="Career Workbench" />
-        <div className="cw-dashboard-grid">
-          <aside>
-            {["映像", "工作台", "简历", "匹配配置", "AI 分析"].map((item) => (
-              <span className={item === "工作台" ? "is-active" : ""} key={item}>
-                {item}
-              </span>
-            ))}
-          </aside>
-          <div className="cw-dashboard-content">
-            <div className="cw-metric-row">
-              <Metric label="已匹配中" value="12" />
-              <Metric label="简历版本" value="5" />
-              <Metric label="投递追踪" value="28" />
-              <Metric label="平均匹配" value="86%" />
-            </div>
-            <div className="cw-dashboard-panels">
-              <div className="cw-mini-list">
-                <h3>最近活动</h3>
-                {[
-                  ["高级前端工程师 · 字节跳动", "86%"],
-                  ["资深全栈工程师 · 腾讯", "82%"],
-                  ["前端开发工程师 · 美团", "78%"],
-                ].map(([title, score]) => (
-                  <div key={title}>
-                    <span>{title}</span>
-                    <strong>{score}</strong>
-                  </div>
-                ))}
-              </div>
-              <div className="cw-score-donut">
-                <span>86%</span>
-                <small>平均匹配</small>
-              </div>
-            </div>
-          </div>
+    <section className="cw-workflow-media" aria-label="产品工作流占位图">
+      <div className="cw-canvas-toolbar">
+        <span>Career Workflow</span>
+        <div>
+          <button type="button">Preview</button>
+          <button type="button">Trace</button>
+          <button type="button">Export</button>
         </div>
       </div>
-
-      <div className="cw-window cw-editor-float cw-parallax-layer">
-        <WindowChrome title="Senior Frontend Engineer" compact />
-        <div className="cw-float-editor-body">
-          <span>简历编辑</span>
-          <span>匹配分析</span>
-          <span>AI 分析</span>
-          <span>投递建议</span>
+      <div className="cw-canvas-surface">
+        <WorkflowNode
+          className="cw-node-profile"
+          icon={FileText}
+          label="PROFILE"
+          title="Developer Profile"
+        />
+        <WorkflowNode
+          className="cw-node-jd"
+          icon={GitBranch}
+          label="JOB"
+          title="Target JD"
+        />
+        <WorkflowNode
+          className="cw-node-match"
+          icon={Gauge}
+          label="MATCH"
+          title="AI Narrative"
+        />
+        <WorkflowNode
+          className="cw-node-resume"
+          icon={Sparkles}
+          label="OUTPUT"
+          title="Target Resume"
+        />
+        <div className="cw-canvas-line cw-line-one" />
+        <div className="cw-canvas-line cw-line-two" />
+        <div className="cw-canvas-line cw-line-three" />
+        <div className="cw-canvas-panel">
+          <span>Recommended next action</span>
+          <strong>Strengthen performance evidence</strong>
+          <small>Profile fact required before rewrite</small>
         </div>
       </div>
-
-      <div className="cw-match-float cw-parallax-layer">
-        <span>匹配得分</span>
-        <strong>86%</strong>
-        <small>强匹配</small>
-        <div />
-      </div>
-    </div>
+    </section>
   );
 }
 
-function ProofItem({ icon: Icon, text }: { icon: FeatureIcon; text: string }) {
-  return (
-    <span>
-      <Icon className="size-5" />
-      {text}
-    </span>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-function WindowChrome({
-  compact = false,
+function WorkflowNode({
+  className,
+  icon: Icon,
+  label,
   title,
 }: {
-  compact?: boolean;
+  className: string;
+  icon: LandingIcon;
+  label: string;
   title: string;
 }) {
   return (
-    <div className="cw-window-chrome">
-      <span className="cw-window-brand">
-        <BrandLogo />
-        {!compact ? title : null}
+    <article className={`cw-workflow-node ${className}`}>
+      <span>
+        <Icon className="size-5" />
       </span>
-      <span className="cw-window-dots" aria-hidden="true">
-        <i />
-        <i />
-        <i />
-      </span>
-    </div>
-  );
-}
-
-function StoryBlock({
-  children,
-  panel,
-}: {
-  children: ReactNode;
-  panel: StoryPanel;
-}) {
-  const Icon = panel.icon;
-
-  return (
-    <article className={`cw-story-card cw-accent-${panel.accent}`}>
-      <div className="cw-story-copy">
-        <span>{panel.meta}</span>
-        <h3>
-          <Icon className="size-7" />
-          {panel.title}
-        </h3>
-        <p>{panel.description}</p>
-        <ul>
-          <li>
-            <Check className="size-4" />
-            版本历史与证据保留
-          </li>
-          <li>
-            <Check className="size-4" />
-            可执行的下一步建议
-          </li>
-          <li>
-            <Check className="size-4" />
-            导出 PDF / DOCX 前可预览
-          </li>
-        </ul>
+      <div>
+        <small>{label}</small>
+        <strong>{title}</strong>
       </div>
-      {children}
     </article>
   );
 }
 
-function ResumeEditorMockup() {
-  return (
-    <div className="cw-mockup cw-resume-mockup">
-      <div className="cw-mockup-sidebar">
-        {["个人信息", "工作经历", "项目经验", "技能", "教育背景"].map((item) => (
-          <span className={item === "工作经历" ? "is-active" : ""} key={item}>
-            {item}
-          </span>
-        ))}
-      </div>
-      <div className="cw-resume-editor">
-        <div className="cw-editor-toolbar">
-          <strong>工作经历</strong>
-          <span>B</span>
-          <span>I</span>
-          <span>•</span>
-          <span>AI 优化建议</span>
-        </div>
-        <h4>高级前端工程师 · 某科技公司</h4>
-        <p>
-          负责企业级产品的前端架构设计与开发，支持日活千万级用户访问。
-        </p>
-        <ul>
-          <li>基于 React + TypeScript 进行组件化开发，提升页面复用率。</li>
-          <li>主导性能优化，首屏加载时间从 2.3s 降至 1.1s。</li>
-          <li>搭建测试工程体系，CI 构建时间降低 40%。</li>
-        </ul>
-        <div className="cw-ai-note">
-          建议强化「性能优化」场景的业务影响，例如补充指标口径和用户规模。
-        </div>
-      </div>
-      <div className="cw-resume-preview">
-        <span />
-        <span />
-        <span />
-        <span />
-        <span />
-        <span />
-      </div>
-    </div>
-  );
-}
-
-function MatchPanelMockup() {
-  return (
-    <div className="cw-mockup cw-match-mockup">
-      <div className="cw-large-score">
-        <div>
-          <strong>86%</strong>
-          <span>强匹配</span>
-        </div>
-      </div>
-      <div className="cw-match-bars">
-        {[
-          ["技术栈匹配", "92%"],
-          ["项目经验匹配", "85%"],
-          ["工作职责匹配", "88%"],
-          ["软技能匹配", "75%"],
-        ].map(([label, value]) => (
-          <div key={label}>
-            <span>{label}</span>
-            <i style={{ width: value }} />
-            <strong>{value}</strong>
-          </div>
-        ))}
-      </div>
-      <div className="cw-gap-list">
-        <h4>关键差距</h4>
-        <p>大规模性能优化经验需要补充指标案例</p>
-        <p>React Native 经验可作为加分项</p>
-        <p>工具链经验与岗位要求高度一致</p>
-      </div>
-    </div>
-  );
-}
-
-function AnalysisNarrativeMockup() {
-  return (
-    <div className="cw-mockup cw-analysis-mockup">
-      <div className="cw-analysis-timeline">
-        {["10:21", "10:22", "10:24", "10:26"].map((time, index) => (
-          <span className={index === 3 ? "is-active" : ""} key={time}>
-            {time}
-          </span>
-        ))}
-      </div>
-      <div className="cw-analysis-body">
-        <h4>AI 深度洞察</h4>
-        <p>
-          你的经历与该岗位在复杂前端工程、技术栈与项目推进层面有较高重合。
-          目前最需要补齐的是大规模性能优化的量化证据。
-        </p>
-        <div className="cw-analysis-grid">
-          <div>
-            <strong>亮点</strong>
-            <span>具备丰富的 React 生态开发经验</span>
-            <span>工程化实践与岗位强相关</span>
-          </div>
-          <div>
-            <strong>风险</strong>
-            <span>缺少大型性能优化案例</span>
-            <span>移动端经验需要补充说明</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function WorkflowCard({
-  index,
-  step,
+function FeatureSection({
+  eyebrow,
+  id,
+  items,
+  media = "canvas",
+  summary,
+  title,
 }: {
-  index: number;
-  step: (typeof workflowSteps)[number];
+  eyebrow: string;
+  id: string;
+  items: FeatureItem[];
+  media?: "canvas" | "stack";
+  summary: string;
+  title: string;
 }) {
-  const Icon = step.icon;
+  return (
+    <section className="cw-feature-section cw-grid-shell" id={id}>
+      <div className="cw-section-kicker">
+        <span />
+        {eyebrow}
+      </div>
+      <div className="cw-feature-layout">
+        <div className="cw-feature-copy">
+          <h2>{title}</h2>
+          <div className="cw-feature-list">
+            {items.map((item) => (
+              <FeatureCard item={item} key={item.title} />
+            ))}
+          </div>
+        </div>
+        <div className="cw-feature-media">
+          {media === "stack" ? <IntegrationStackMockup /> : <BuildMockup />}
+        </div>
+      </div>
+      <p className="cw-feature-summary">{summary}</p>
+    </section>
+  );
+}
+
+function FeatureCard({ item }: { item: FeatureItem }) {
+  const Icon = item.icon;
 
   return (
-    <article className="cw-workflow-card">
-      <span className="cw-workflow-index">{String(index + 1).padStart(2, "0")}</span>
+    <article className="cw-feature-card">
       <Icon className="size-6" />
-      <h3>{step.title}</h3>
-      <p>{step.description}</p>
+      <div>
+        <h3>{item.title}</h3>
+        <p>{item.description}</p>
+      </div>
     </article>
+  );
+}
+
+function BuildMockup() {
+  return (
+    <div className="cw-build-mockup" aria-label="BUILD 区占位插图">
+      <div className="cw-resume-sheet">
+        <span />
+        <span />
+        <span />
+        <span />
+        <span />
+      </div>
+      <div className="cw-build-menu">
+        <strong>Add block</strong>
+        <span>Profile fact</span>
+        <span>Project evidence</span>
+        <span>Match insight</span>
+        <span>Resume section</span>
+      </div>
+      <div className="cw-mini-output">
+        <Brain className="size-5" />
+        <span>Generate target draft</span>
+      </div>
+    </div>
+  );
+}
+
+function IntegrationStackMockup() {
+  return (
+    <div className="cw-stack-mockup" aria-label="Connect 区占位插图">
+      {[
+        ["Supabase", "Auth / Profile / Resume"],
+        ["Edge Function", "Controlled AI gateway"],
+        ["Dify Workflow", "Parse / Match / Generate"],
+        ["Workbench UI", "Review / Edit / Save"],
+      ].map(([title, label]) => (
+        <div key={title}>
+          <strong>{title}</strong>
+          <span>{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MetricTile({ label, value }: { label: string; value: string }) {
+  return (
+    <article>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </article>
+  );
+}
+
+function QuoteCard({ name, quote }: { name: string; quote: string }) {
+  return (
+    <article className="cw-quote-card">
+      <p>{quote}</p>
+      <span>{name}</span>
+    </article>
+  );
+}
+
+function LandingFooter() {
+  return (
+    <footer className="cw-landing-footer">
+      <div className="cw-footer-columns">
+        <div>
+          <strong>RESOURCES</strong>
+          <span>Docs</span>
+          <span>Product notes</span>
+          <span>Local operations</span>
+        </div>
+        <div>
+          <strong>WORKBENCH</strong>
+          <span>Jobs</span>
+          <span>Resumes</span>
+          <span>Profile</span>
+        </div>
+        <div>
+          <strong>PROGRAMS</strong>
+          <span>AI matching</span>
+          <span>Resume generation</span>
+          <span>Trace ready</span>
+        </div>
+        <div>
+          <strong>BOUNDARY</strong>
+          <span>No auto-apply</span>
+          <span>No job scraping</span>
+          <span>User-controlled edits</span>
+        </div>
+      </div>
+      <div className="cw-footer-brand">
+        <BrandLogo />
+        <p>
+          Build target-ready career workflows with Career Workbench. Profile,
+          match, narrative, and resume in one editable loop.
+        </p>
+      </div>
+    </footer>
   );
 }
 
