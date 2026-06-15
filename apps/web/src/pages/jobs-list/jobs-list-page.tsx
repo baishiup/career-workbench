@@ -16,13 +16,6 @@ import {
   remoteStatusLabels,
 } from "@/lib/jobs/labels";
 import type { JobRecord, JobRemoteStatus } from "@/lib/jobs/types";
-import { useProfileDraft } from "@/lib/profile/use-profile-draft";
-import {
-  computeRuleMatch,
-  hasMatchableProfile,
-  type ProfileDraft,
-  type RuleMatchLabel,
-} from "@career-workbench/domain";
 
 const remoteStatusOptions: JobRemoteStatus[] = ["remote", "hybrid", "onsite"];
 
@@ -36,9 +29,6 @@ export function JobsListPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [remoteFilter, setRemoteFilter] = useState<RemoteStatusFilter>(null);
-  const { profile, isLoading: isProfileLoading } = useProfileDraft();
-  const matchProfile =
-    !isProfileLoading && hasMatchableProfile(profile) ? profile : null;
 
   const loadJobs = useCallback(async () => {
     setIsLoading(true);
@@ -78,7 +68,7 @@ export function JobsListPage() {
               </Chip>
             ) : null}
           </div>
-          <p className="text-sm text-slate-500">管理导入的职位和匹配度。</p>
+          <p className="text-sm text-slate-500">管理导入的职位。</p>
         </div>
         {isAdmin ? (
           <Button
@@ -157,17 +147,10 @@ export function JobsListPage() {
                 <Table.Column isRowHeader>职位</Table.Column>
                 <Table.Column>地点 / 方式</Table.Column>
                 <Table.Column>类型</Table.Column>
-                <Table.Column>匹配度</Table.Column>
                 <Table.Column>操作</Table.Column>
               </Table.Header>
               <Table.Body items={filteredJobs}>
-                {(job) => (
-                  <JobRow
-                    isProfileLoading={isProfileLoading}
-                    job={job}
-                    matchProfile={matchProfile}
-                  />
-                )}
+                {(job) => <JobRow job={job} />}
               </Table.Body>
             </Table.Content>
           </Table.ScrollContainer>
@@ -206,15 +189,7 @@ export function JobsListPage() {
   );
 }
 
-function JobRow({
-  isProfileLoading,
-  job,
-  matchProfile,
-}: {
-  isProfileLoading: boolean;
-  job: JobRecord;
-  matchProfile: ProfileDraft | null;
-}) {
+function JobRow({ job }: { job: JobRecord }) {
   const logo = getJobLogo(job.company);
 
   return (
@@ -262,13 +237,6 @@ function JobRow({
       </Table.Cell>
       <Table.Cell>{jobTypeLabels[job.jobType]}</Table.Cell>
       <Table.Cell>
-        <MatchScoreCell
-          isProfileLoading={isProfileLoading}
-          job={job}
-          matchProfile={matchProfile}
-        />
-      </Table.Cell>
-      <Table.Cell>
         <Link
           className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-400/35"
           href={`/jobs/${job.id}`}
@@ -311,60 +279,4 @@ function filterJobs(
       .toLowerCase()
       .includes(normalizedQuery);
   });
-}
-
-function MatchScoreCell({
-  isProfileLoading,
-  job,
-  matchProfile,
-}: {
-  isProfileLoading: boolean;
-  job: JobRecord;
-  matchProfile: ProfileDraft | null;
-}) {
-  if (isProfileLoading) {
-    return (
-      <span className="text-sm text-slate-400" title="正在加载 Profile">
-        —
-      </span>
-    );
-  }
-
-  if (!matchProfile) {
-    return (
-      <Link
-        className="text-sm font-medium text-blue-600 hover:underline"
-        href="/profile"
-        title="完善 Profile 后即可看到规则匹配分"
-      >
-        完善 Profile
-      </Link>
-    );
-  }
-
-  const match = computeRuleMatch(matchProfile, job);
-
-  return (
-    <span
-      className={cn(
-        "inline-flex rounded-full px-2.5 py-1 text-sm font-semibold",
-        matchPillClassName(match.label),
-      )}
-      title={match.label}
-    >
-      {match.score}%
-    </span>
-  );
-}
-
-function matchPillClassName(label: RuleMatchLabel) {
-  if (label === "强匹配") {
-    return "bg-blue-600/10 text-blue-600";
-  }
-
-  if (label === "可冲刺") {
-    return "bg-emerald-600/10 text-emerald-600";
-  }
-
-  return "bg-slate-100 text-slate-500";
 }

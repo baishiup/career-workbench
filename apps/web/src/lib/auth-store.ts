@@ -170,7 +170,6 @@ export const useAuthStore = create<AuthState>()((set) => ({
       const { error: profileError } = await supabase.from("profiles").upsert(
         {
           profile_data: profileData,
-          source: "onboarding",
           updated_at: updatedAt,
           user_id: user.id,
         },

@@ -29,6 +29,8 @@ export type {
   ProfileDraftToResumeDocumentOptions,
 } from "./resume/normalize";
 export type {
+  CustomField,
+  CustomModule,
   EducationItem,
   JobPreferences,
   PersonalCustomField,
@@ -39,48 +41,55 @@ export type {
   WorkItem,
 } from "./profile/types";
 export { emptyProfile } from "./profile/empty";
+export { hasMatchableProfile } from "./profile/matchable";
+export type { RichText, RichTextOp } from "./rich-text";
+export {
+  coerceRichText,
+  emptyRichText,
+  isRichText,
+  mergeTextAndBulletsToRichText,
+  renderRichTextToHtml,
+  richTextToPlainText,
+  textToRichText,
+} from "./rich-text";
 export type {
-  ResumeBlock,
-  ResumeBlockBase,
-  ResumeBlockKind,
-  ResumeBulletListBlock,
-  ResumeBulletListItem,
-  ResumeDateRangeBlock,
+  CustomResumeModule,
+  EducationResumeModule,
+  PersonalResumeModule,
+  PreferencesResumeModule,
+  ProjectsResumeModule,
   ResumeDocument,
-  ResumeLink,
-  ResumeLinkListBlock,
-  ResumeSection,
-  ResumeSectionKind,
-  ResumeTagListBlock,
+  ResumeModule,
+  ResumeModuleBase,
+  ResumeModuleKind,
   ResumeTargetContext,
-  ResumeTextBlock,
+  SkillsResumeModule,
+  WorkResumeModule,
 } from "./resume/types";
 export type {
   ResumeColorConfig,
+  ResumeContactStyle,
+  ResumeLayoutConfig,
   ResumePageMargin,
-  ResumePageSize,
+  ResumeSectionStyle,
+  ResumeSkillStyle,
   ResumeSpacingConfig,
   ResumeStyleConfig,
+  ResumeStyleTemplate,
+  ResumeTemplateId,
   ResumeTypographyConfig,
+} from "./resume/style";
+export {
+  createResumeStyleFromTemplate,
+  defaultResumeTemplateId,
+  getResumeStyleTemplate,
+  resumeStyleTemplates,
 } from "./resume/style";
 export type {
   JobDescription,
   JobEmploymentType,
   JobRemoteStatus,
 } from "./job/types";
-export {
-  computeProfileYears,
-  computeRuleMatch,
-  hasMatchableProfile,
-  matchLabelForScore,
-  normalizeSkill,
-  parseYearsRequired,
-} from "./job/match";
-export type {
-  RuleMatchBreakdown,
-  RuleMatchLabel,
-  RuleMatchResult,
-} from "./job/match";
 export {
   coerceMatchReportNarrative,
   isMatchReportStale,

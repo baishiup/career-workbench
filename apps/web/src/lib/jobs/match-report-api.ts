@@ -1,8 +1,8 @@
 /**
  * match_reports 的读取与分析触发。
  *
- * 职位详情页消费；后续 resume_generate 任务也会复用最新叙事分析。
- * 分数始终来自规则匹配（实时计算），这里只管 AI 叙事报告的持久化读写。
+ * 职位详情页消费；后续 resume_generate 任务也会复用最新匹配报告。
+ * 匹配度和叙事都由 AI 产出，这里只管报告的持久化读写。
  */
 
 import { invokeEdgeFunction } from "@/lib/edge-functions";
@@ -13,7 +13,6 @@ import {
   isMatchReportStale,
   type MatchReportNarrative,
   type MatchReportStatus,
-  type RuleMatchResult,
 } from "@career-workbench/domain";
 
 type MatchReportsDataMode = "supabase" | "mock";
@@ -120,11 +119,8 @@ async function fetchMatchReportContext(
   return { report, isStale, mode: "supabase" };
 }
 
-/** 触发 job-match Edge Function，规则分作为叙事输入透传。 */
-async function runJobMatchAnalysis(
-  jobId: string,
-  ruleMatch: RuleMatchResult,
-): Promise<MatchReportRecord> {
+/** 触发 job-match Edge Function，由 AI 读取 Profile + JD 产出匹配度与叙事。 */
+async function runJobMatchAnalysis(jobId: string): Promise<MatchReportRecord> {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
@@ -139,7 +135,6 @@ async function runJobMatchAnalysis(
 
   const response = await invokeEdgeFunction<JobMatchResponse>("job-match", {
     job_id: jobId,
-    rule_match: ruleMatch,
   });
 
   return mapReportRow(response.report);
@@ -159,6 +154,7 @@ function buildMockContext(jobId: string): MatchReportContext {
       jobId,
       status: "succeeded",
       narrative: {
+        matchScore: mockMatch.score,
         evidence: mockMatch.evidence,
         gaps: mockMatch.gaps,
         risks: mockMatch.risks,

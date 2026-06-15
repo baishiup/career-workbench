@@ -5,7 +5,7 @@
  * ResumeDocument，不直接依赖 Dify 的响应形状。
  */
 import "@supabase/functions-js/edge-runtime.d.ts";
-import type { ResumeDocument } from "./resume-normalize.ts";
+import { coerceRichText, type ResumeDocument } from "./resume-normalize.ts";
 
 const DEFAULT_DIFY_BASE_URL = "https://api.dify.ai/v1";
 const DEFAULT_DIFY_USER = "career-workbench-debug";
@@ -141,10 +141,10 @@ function extractResumeDocument(
   const candidates = getOutputCandidates(outputs);
 
   for (const candidate of candidates) {
-    const value = parseMaybeJson(candidate);
+    const value = coerceResumeDocumentTypes(parseMaybeJson(candidate));
 
     if (isResumeDocument(value)) {
-      return value;
+      return coerceModuleRichText(value);
     }
   }
 
@@ -155,6 +155,106 @@ function extractResumeDocument(
     { outputs },
     workflowRunId,
   );
+}
+
+// LLM 输出的 description / content 是纯文本字符串；落库前统一转成富文本 Delta，
+// 保证存储形态与编辑器/预览一致（前端读取虽也会兜底 coerce）。
+function coerceModuleRichText(document: ResumeDocument): ResumeDocument {
+  return {
+    ...document,
+    modules: document.modules.map((module) => {
+      switch (module.kind) {
+        case "education":
+          return {
+            ...module,
+            items: module.items.map((item) => ({
+              ...item,
+              description: coerceRichText(item.description),
+            })),
+          };
+        case "work":
+          return {
+            ...module,
+            items: module.items.map((item) => ({
+              ...item,
+              description: coerceRichText(item.description),
+            })),
+          };
+        case "projects":
+          return {
+            ...module,
+            items: module.items.map((item) => ({
+              ...item,
+              description: coerceRichText(item.description),
+            })),
+          };
+        case "custom":
+          return {
+            ...module,
+            module: {
+              ...module.module,
+              content: coerceRichText(module.module.content),
+            },
+          };
+        default:
+          return module;
+      }
+    }),
+  };
+}
+
+// Gemini 的 structured output 经常把布尔值序列化成字符串（"true"/"false"），
+// 直接交给严格校验会被判为非法文档并触发 fallback。这里在校验前把已知的
+// 布尔字段还原成真正的布尔值；非文档候选原样返回。
+function coerceResumeDocumentTypes(value: unknown): unknown {
+  if (!isRecord(value) || !Array.isArray(value.modules)) {
+    return value;
+  }
+
+  for (const module of value.modules) {
+    if (!isRecord(module)) {
+      continue;
+    }
+
+    // 模块默认可见，缺失或非法时回退为 true。
+    module.visible = coerceBoolean(module.visible, true);
+
+    if (!Array.isArray(module.items)) {
+      continue;
+    }
+
+    for (const item of module.items) {
+      if (isRecord(item) && typeof item.current === "string") {
+        const coerced = coerceBoolean(item.current, undefined);
+
+        if (coerced !== undefined) {
+          item.current = coerced;
+        }
+      }
+    }
+  }
+
+  return value;
+}
+
+function coerceBoolean(value: unknown, fallback: unknown) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const lowered = value.trim().toLowerCase();
+
+    if (lowered === "true") {
+      return true;
+    }
+
+    if (lowered === "false") {
+      return false;
+    }
+  }
+
+  return fallback;
 }
 
 // Dify 工作流输出字段名容易随着节点命名变化，先兼容常见输出键。
@@ -195,85 +295,41 @@ function isResumeDocument(value: unknown): value is ResumeDocument {
   return isRecord(value) &&
     typeof value.title === "string" &&
     value.title.trim().length > 0 &&
-    typeof value.locale === "string" &&
-    value.locale.trim().length > 0 &&
-    Array.isArray(value.sections) &&
-    value.sections.length > 0 &&
-    value.sections.every(isResumeSection);
+    Array.isArray(value.modules) &&
+    value.modules.length > 0 &&
+    value.modules.every(isResumeModule);
 }
 
-function isResumeSection(value: unknown) {
+function isResumeModule(value: unknown) {
   if (!isRecord(value)) {
     return false;
   }
 
-  return typeof value.id === "string" &&
-    value.id.trim().length > 0 &&
-    isSectionKind(value.kind) &&
-    typeof value.title === "string" &&
-    typeof value.visible === "boolean" &&
-    Array.isArray(value.blocks) &&
-    value.blocks.every(isResumeBlock);
-}
-
-function isResumeBlock(value: unknown) {
-  if (!isRecord(value) || typeof value.kind !== "string") {
+  if (typeof value.id !== "string" || value.id.trim().length === 0) {
     return false;
   }
 
-  const hasBase = typeof value.id === "string" &&
-    value.id.trim().length > 0 &&
-    (value.label === undefined || typeof value.label === "string");
-
-  if (!hasBase) {
+  if (typeof value.visible !== "boolean") {
     return false;
   }
 
-  if (value.kind === "text" || value.kind === "paragraph") {
-    return typeof value.text === "string";
+  switch (value.kind) {
+    case "personal":
+      return isRecord(value.personal);
+    case "preferences":
+      return isRecord(value.preferences);
+    case "education":
+    case "work":
+    case "projects":
+      return Array.isArray(value.items);
+    case "skills":
+      return Array.isArray(value.skills) &&
+        value.skills.every((skill) => typeof skill === "string");
+    case "custom":
+      return isRecord(value.module);
+    default:
+      return false;
   }
-
-  if (value.kind === "bulletList") {
-    return Array.isArray(value.items) &&
-      value.items.every((item) =>
-        isRecord(item) &&
-        typeof item.id === "string" &&
-        typeof item.text === "string"
-      );
-  }
-
-  if (value.kind === "tagList") {
-    return Array.isArray(value.tags) &&
-      value.tags.every((tag) => typeof tag === "string");
-  }
-
-  if (value.kind === "dateRange") {
-    return typeof value.startDate === "string" &&
-      typeof value.endDate === "string" &&
-      (value.current === undefined || typeof value.current === "boolean");
-  }
-
-  if (value.kind === "linkList") {
-    return Array.isArray(value.links) &&
-      value.links.every((link) =>
-        isRecord(link) &&
-        typeof link.id === "string" &&
-        typeof link.label === "string" &&
-        typeof link.url === "string"
-      );
-  }
-
-  return false;
-}
-
-function isSectionKind(value: unknown) {
-  return value === "personal" ||
-    value === "summary" ||
-    value === "skills" ||
-    value === "work" ||
-    value === "projects" ||
-    value === "education" ||
-    value === "custom";
 }
 
 function getWorkflowRunId(body: unknown) {

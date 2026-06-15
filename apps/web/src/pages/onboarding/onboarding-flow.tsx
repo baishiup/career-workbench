@@ -19,6 +19,7 @@ const defaultPreferences: JobPreferences = {
   openToRemote: true,
   targetCity: "",
   salaryExpectation: "",
+  customFields: [],
 };
 
 export function OnboardingFlow() {

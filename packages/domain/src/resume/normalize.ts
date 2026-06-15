@@ -4,6 +4,7 @@
  * 主链路是 AIParsedResumeDraft -> ProfileDraft -> ResumeDocument。
  * ProfileDraft 是事实归一层；raw_date、parse_warnings、unmapped_text 等
  * parser-only 字段不要进入 ProfileDraft 或 ResumeDocument 主数据。
+ * AI 仍输出纯文本的 summary / bullets / description，富文本（Delta）转换在此完成。
  */
 
 import type {
@@ -12,26 +13,29 @@ import type {
   AIParsedResumeLink,
 } from "./parse.ts";
 import type {
+  CustomField,
   JobPreferences,
-  PersonalCustomField,
   ProfileDraft,
 } from "../profile/types.ts";
-import type { ResumeBlock, ResumeDocument, ResumeSection } from "./types.ts";
-import type { ResumeStyleConfig } from "./style.ts";
+import type { ResumeDocument, ResumeModule } from "./types.ts";
+import {
+  createResumeStyleFromTemplate,
+  type ResumeStyleConfig,
+  type ResumeTemplateId,
+} from "./style.ts";
 import { emptyProfile } from "../profile/empty.ts";
+import { mergeTextAndBulletsToRichText, textToRichText } from "../rich-text.ts";
 
 type AIParsedResumeDraftToProfileOptions = {
   preferences?: Partial<JobPreferences>;
 };
 
 type ProfileDraftToResumeDocumentOptions = {
-  locale?: string;
   title?: string;
 };
 
 type DefaultResumeStyleConfigOptions = {
-  pageSize?: "a4" | "letter";
-  templateId?: string;
+  templateId?: ResumeTemplateId;
 };
 
 type BuildBaseResumeFromAIParsedDraftOptions =
@@ -75,23 +79,21 @@ function aiParsedResumeDraftToProfileDraft(
       school: cleanString(item.school),
       degree: cleanString(item.degree),
       major: cleanString(item.major),
-      location: cleanString(item.location),
       startDate: cleanString(item.start_date),
       endDate: cleanString(item.end_date),
-      description: cleanString(item.description),
+      current: false,
+      description: textToRichText(cleanString(item.description)),
     })),
     work: parsed.work_experiences.map((item, index) => ({
       id: stableId("work", index),
       company: cleanString(item.company),
       title: cleanString(item.title),
-      location: cleanString(item.location),
-      jobType: "",
       startDate: cleanString(item.start_date),
       endDate: cleanString(item.end_date),
       // current 为 null 表示无法确认，不推测为在职。
       current: item.current === true,
-      summary: cleanString(item.summary),
-      bullets: cleanStringArray(item.bullets),
+      description: mergeTextAndBulletsToRichText(item.summary, item.bullets),
+      skills: cleanStringArray(item.technologies),
     })),
     projects: parsed.projects.map((item, index) => ({
       id: stableId("project", index),
@@ -99,12 +101,12 @@ function aiParsedResumeDraftToProfileDraft(
       role: cleanString(item.role),
       startDate: cleanString(item.start_date),
       endDate: cleanString(item.end_date),
-      summary: cleanString(item.summary),
-      bullets: cleanStringArray(item.bullets),
-      links: item.links.map((link) => cleanString(link.url)).filter(Boolean),
-      technologies: cleanStringArray(item.technologies),
+      current: false,
+      description: mergeTextAndBulletsToRichText(item.summary, item.bullets),
+      skills: cleanStringArray(item.technologies),
     })),
     skills: cleanStringArray(parsed.skills),
+    custom: [],
   };
 }
 
@@ -113,56 +115,69 @@ function profileDraftToBaseResumeDocument(
   profile: ProfileDraft,
   options: ProfileDraftToResumeDocumentOptions = {},
 ): ResumeDocument {
-  const locale = options.locale ?? "zh-CN";
   const title = options.title ?? getResumeTitle(profile);
-  const sections: ResumeSection[] = [
-    buildPersonalSection(profile),
-    buildSummarySection(profile),
-    buildSkillsSection(profile),
-    buildWorkSection(profile),
-    buildProjectsSection(profile),
-    buildEducationSection(profile),
-  ];
+  const modules: ResumeModule[] = [];
 
-  return {
-    title,
-    locale,
-    sections: sections.filter((section) => section.blocks.length > 0),
-  };
+  modules.push({
+    id: "module-personal",
+    kind: "personal",
+    visible: true,
+    personal: profile.personal,
+  });
+
+  if (profile.skills.length > 0) {
+    modules.push({
+      id: "module-skills",
+      kind: "skills",
+      visible: true,
+      skills: cleanStringArray(profile.skills),
+    });
+  }
+
+  if (profile.work.length > 0) {
+    modules.push({
+      id: "module-work",
+      kind: "work",
+      visible: true,
+      items: profile.work,
+    });
+  }
+
+  if (profile.projects.length > 0) {
+    modules.push({
+      id: "module-projects",
+      kind: "projects",
+      visible: true,
+      items: profile.projects,
+    });
+  }
+
+  if (profile.education.length > 0) {
+    modules.push({
+      id: "module-education",
+      kind: "education",
+      visible: true,
+      items: profile.education,
+    });
+  }
+
+  profile.custom.forEach((module, index) => {
+    modules.push({
+      id: `module-custom-${index + 1}`,
+      kind: "custom",
+      visible: true,
+      module,
+    });
+  });
+
+  return { title, modules };
 }
 
-/** 第一阶段默认样式，后续可由模板系统覆盖。 */
+/** 第一阶段默认样式来自内置模板库。 */
 function createDefaultResumeStyleConfig(
   options: DefaultResumeStyleConfigOptions = {},
 ): ResumeStyleConfig {
-  return {
-    templateId: options.templateId ?? "base-clean-v1",
-    pageSize: options.pageSize ?? "a4",
-    colors: {
-      text: "#111827",
-      mutedText: "#4B5563",
-      accent: "#2563EB",
-      border: "#D1D5DB",
-      background: "#FFFFFF",
-    },
-    typography: {
-      fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-      baseFontSize: 12,
-      headingFontSize: 16,
-      lineHeight: 1.45,
-    },
-    spacing: {
-      pageMargin: {
-        top: 40,
-        right: 40,
-        bottom: 40,
-        left: 40,
-      },
-      sectionSpacing: 18,
-      blockSpacing: 8,
-      itemSpacing: 6,
-    },
-  };
+  return createResumeStyleFromTemplate(options.templateId);
 }
 
 /** 便利 wrapper；内部必须保持 parsed -> profile -> resume 的主链路。 */
@@ -179,285 +194,12 @@ function buildBaseResumeFromAIParsedDraft(
   };
 }
 
-/** Personal section 同时承载姓名、联系方式和候选人链接。 */
-function buildPersonalSection(profile: ProfileDraft): ResumeSection {
-  const blocks: ResumeBlock[] = [];
-  const fullName = profile.personal.fullName.trim();
-  const links = [
-    profile.personal.linkedin
-      ? {
-          id: "personal-link-linkedin",
-          label: "LinkedIn",
-          url: profile.personal.linkedin,
-        }
-      : null,
-    profile.personal.github
-      ? {
-          id: "personal-link-github",
-          label: "GitHub",
-          url: profile.personal.github,
-        }
-      : null,
-    profile.personal.portfolio
-      ? {
-          id: "personal-link-portfolio",
-          label: "Portfolio",
-          url: profile.personal.portfolio,
-        }
-      : null,
-  ].filter((item): item is { id: string; label: string; url: string } =>
-    Boolean(item),
-  );
-
-  addTextBlock(blocks, "personal-name", "姓名", fullName);
-  addTextBlock(blocks, "personal-headline", "标题", profile.personal.headline);
-  addTextBlock(blocks, "personal-email", "邮箱", profile.personal.email);
-  addTextBlock(blocks, "personal-phone", "电话", profile.personal.phone);
-  addTextBlock(blocks, "personal-city", "城市", profile.personal.city);
-
-  if (links.length > 0) {
-    blocks.push({
-      id: "personal-links",
-      kind: "linkList",
-      label: "链接",
-      links,
-    });
-  }
-
-  return {
-    id: "section-personal",
-    kind: "personal",
-    title: "Personal Info",
-    visible: true,
-    blocks,
-  };
-}
-
-/** Summary 第一阶段只使用 Profile headline，避免自动扩写事实。 */
-function buildSummarySection(profile: ProfileDraft): ResumeSection {
-  const blocks: ResumeBlock[] = [];
-
-  addTextBlock(
-    blocks,
-    "summary-headline",
-    "职业摘要",
-    profile.personal.headline,
-    "paragraph",
-  );
-
-  return {
-    id: "section-summary",
-    kind: "summary",
-    title: "Professional Summary",
-    visible: true,
-    blocks,
-  };
-}
-
-function buildSkillsSection(profile: ProfileDraft): ResumeSection {
-  const tags = cleanStringArray(profile.skills);
-
-  return {
-    id: "section-skills",
-    kind: "skills",
-    title: "Core Skills",
-    visible: true,
-    blocks:
-      tags.length > 0
-        ? [
-            {
-              id: "skills-tags",
-              kind: "tagList",
-              label: "技能",
-              tags,
-            },
-          ]
-        : [],
-  };
-}
-
-/** Work section 从 Profile.work 生成。 */
-function buildWorkSection(profile: ProfileDraft): ResumeSection {
-  return {
-    id: "section-work",
-    kind: "work",
-    title: "Work Experience",
-    visible: true,
-    blocks: profile.work.flatMap((item, index) => {
-      const prefix = `work-${index + 1}`;
-      const blocks: ResumeBlock[] = [];
-      const title = [item.company, item.title].filter(Boolean).join(" · ");
-
-      addTextBlock(blocks, `${prefix}-title`, "职位", title);
-      addDateRangeBlock(
-        blocks,
-        `${prefix}-dates`,
-        item.startDate,
-        item.endDate,
-        item.current,
-      );
-      addTextBlock(
-        blocks,
-        `${prefix}-summary`,
-        "摘要",
-        item.summary,
-        "paragraph",
-      );
-      addBulletListBlock(blocks, `${prefix}-bullets`, item.bullets);
-
-      return blocks;
-    }),
-  };
-}
-
-/** Project section 从 Profile.projects 生成，并保留技术栈标签。 */
-function buildProjectsSection(profile: ProfileDraft): ResumeSection {
-  return {
-    id: "section-projects",
-    kind: "projects",
-    title: "Project Experience",
-    visible: true,
-    blocks: profile.projects.flatMap((item, index) => {
-      const prefix = `project-${index + 1}`;
-      const blocks: ResumeBlock[] = [];
-      const title = [item.name, item.role].filter(Boolean).join(" · ");
-
-      addTextBlock(blocks, `${prefix}-title`, "项目", title);
-      addDateRangeBlock(
-        blocks,
-        `${prefix}-dates`,
-        item.startDate,
-        item.endDate,
-        false,
-      );
-      addTextBlock(
-        blocks,
-        `${prefix}-summary`,
-        "摘要",
-        item.summary,
-        "paragraph",
-      );
-      addBulletListBlock(blocks, `${prefix}-bullets`, item.bullets);
-
-      if (item.technologies.length > 0) {
-        blocks.push({
-          id: `${prefix}-technologies`,
-          kind: "tagList",
-          label: "技术栈",
-          tags: cleanStringArray(item.technologies),
-        });
-      }
-
-      return blocks;
-    }),
-  };
-}
-
-/** Education section 从 Profile.education 生成，不推断额外学历信息。 */
-function buildEducationSection(profile: ProfileDraft): ResumeSection {
-  return {
-    id: "section-education",
-    kind: "education",
-    title: "Education",
-    visible: true,
-    blocks: profile.education.flatMap((item, index) => {
-      const prefix = `education-${index + 1}`;
-      const blocks: ResumeBlock[] = [];
-      const title = [item.school, item.degree, item.major]
-        .filter(Boolean)
-        .join(" · ");
-
-      addTextBlock(blocks, `${prefix}-title`, "教育", title);
-      addDateRangeBlock(
-        blocks,
-        `${prefix}-dates`,
-        item.startDate,
-        item.endDate,
-        false,
-      );
-      addTextBlock(
-        blocks,
-        `${prefix}-description`,
-        "说明",
-        item.description,
-        "paragraph",
-      );
-
-      return blocks;
-    }),
-  };
-}
-
-function addTextBlock(
-  blocks: ResumeBlock[],
-  id: string,
-  label: string,
-  text: string,
-  kind: "text" | "paragraph" = "text",
-) {
-  const cleaned = cleanString(text);
-
-  if (!cleaned) {
-    return;
-  }
-
-  blocks.push({
-    id,
-    kind,
-    label,
-    text: cleaned,
-  });
-}
-
-function addDateRangeBlock(
-  blocks: ResumeBlock[],
-  id: string,
-  startDate: string,
-  endDate: string,
-  current: boolean,
-) {
-  if (!startDate && !endDate && !current) {
-    return;
-  }
-
-  blocks.push({
-    id,
-    kind: "dateRange",
-    label: "时间",
-    startDate,
-    endDate,
-    current,
-  });
-}
-
-function addBulletListBlock(
-  blocks: ResumeBlock[],
-  id: string,
-  bullets: string[],
-) {
-  const items = cleanStringArray(bullets).map((text, index) => ({
-    id: `${id}-${index + 1}`,
-    text,
-  }));
-
-  if (items.length === 0) {
-    return;
-  }
-
-  blocks.push({
-    id,
-    kind: "bulletList",
-    label: "要点",
-    items,
-  });
-}
-
 function mapCandidateLinks(links: AIParsedResumeLink[]) {
   const result = {
     linkedin: "",
     github: "",
     portfolio: "",
-    customFields: [] as PersonalCustomField[],
+    customFields: [] as CustomField[],
   };
 
   for (const link of links) {
@@ -524,6 +266,7 @@ function mergePreferences(
       options?.salaryExpectation,
       candidate.expected_salary,
     ),
+    customFields: options?.customFields ?? [],
   };
 }
 

@@ -1,10 +1,10 @@
 /**
- * AI 叙事匹配分析入口（登录用户）。
+ * AI 匹配分析入口（登录用户）。
  *
- * 接收职位 id 和前端规则匹配结果，读取当前用户 Profile 与职位行，
- * 在 match_reports 中 upsert pending 行，调 Dify job_match workflow，
- * 把叙事 JSON、双快照和 external_run_id 写回，最终置 succeeded / failed。
- * 每用户每职位一行，重新分析覆盖更新；AI 不打分，分数始终来自规则。
+ * 接收职位 id，读取当前用户 Profile 与职位行，在 match_reports 中 upsert
+ * pending 行，调 Dify job_match workflow，把含匹配度的报告 JSON、双快照和
+ * external_run_id 写回，最终置 succeeded / failed。每用户每职位一行，
+ * 重新分析覆盖更新；匹配度由 AI 读取 Profile + JD 后产出。
  */
 import "@supabase/functions-js/edge-runtime.d.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -56,18 +56,6 @@ Deno.serve(async (request) => {
 
   if (!uuidPattern.test(jobId)) {
     return errorResponse("job_id must be a valid uuid", 400, "request");
-  }
-
-  // 规则分由前端 @career-workbench/domain 计算后透传，只作为叙事输入，
-  // 不持久化也不会被 AI 修改，所以这里只做形状校验。
-  const ruleMatch = body.rule_match;
-
-  if (!isRecord(ruleMatch) || typeof ruleMatch.score !== "number") {
-    return errorResponse(
-      "rule_match must be an object with a numeric score",
-      400,
-      "request",
-    );
   }
 
   const supabase = auth.supabase;
@@ -135,7 +123,6 @@ Deno.serve(async (request) => {
     const matchResult = await runJobMatchWithDify({
       profileJson: JSON.stringify(profileRow.profile_data),
       jobJson: JSON.stringify(jobRow),
-      ruleMatchJson: JSON.stringify(ruleMatch),
     });
 
     const { data: reportRow, error: succeededError } = await supabase

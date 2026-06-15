@@ -97,14 +97,14 @@ function LandingPage() {
 
           <div className="cw-hero-content">
             <FadeUp delay={0.1} immediate>
-              <p className="cw-hero-eyebrow">
-                面向开发者的 AI 求职工作台
-              </p>
+              <p className="cw-hero-eyebrow">面向开发者的 AI 求职工作台</p>
               <h1>把每一次申请变成可追踪的职业工作流</h1>
             </FadeUp>
             <FadeUp delay={0.25} immediate>
               <p className="cw-hero-subtitle">
-                Career Workbench 将个人资料、目标 JD、匹配叙事和可编辑简历放进同一个闭环，让 AI 建议有来源、可复核、能继续迭代。
+                Career Workbench 将个人资料、目标
+                JD、匹配叙事和可编辑简历放进同一个闭环，让 AI
+                建议有来源、可复核、能继续迭代。
               </p>
             </FadeUp>
             <FadeUp className="cw-hero-actions" delay={0.4} immediate>
@@ -145,7 +145,8 @@ function LandingPage() {
             </FadeUp>
             <FadeUp delay={0.2}>
               <blockquote>
-                “我不想要一键生成的漂亮简历。我更需要知道：这个岗位为什么匹配、哪里有风险、哪段经历应该被强化，以及 AI 有没有开始编造。”
+                “我不想要一键生成的漂亮简历。我更需要知道：这个岗位为什么匹配、哪里有风险、哪段经历应该被强化，以及
+                AI 有没有开始编造。”
               </blockquote>
             </FadeUp>
             <FadeUp delay={0.3}>
@@ -430,7 +431,10 @@ function BoomerangVideoBg({ src }: { src: string }) {
         ref={videoRef}
         src={src}
       />
-      <canvas className={canvasReady ? "is-ready" : undefined} ref={canvasRef} />
+      <canvas
+        className={canvasReady ? "is-ready" : undefined}
+        ref={canvasRef}
+      />
     </div>
   );
 }
@@ -684,7 +688,8 @@ function LandingFooter({
             <span>Career Workbench</span>
           </Link>
           <p>
-            把求职资料、岗位判断、匹配叙事和目标简历放进同一个可复核的 AI 工作流。
+            把求职资料、岗位判断、匹配叙事和目标简历放进同一个可复核的 AI
+            工作流。
           </p>
           <button
             className="cw-footer-cta"

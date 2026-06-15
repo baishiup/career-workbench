@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Button, Chip, Tabs } from "@heroui/react";
 import {
+  Blocks,
   Code2,
   FolderGit2,
   GraduationCap,
@@ -14,9 +15,14 @@ import {
   pillTabIndicatorClassName,
   pillTabListClassName,
 } from "@/components/workbench/surface-classes";
+import { RichTextView } from "@/components/rich-text/rich-text-view";
 import { drawerOrder, sectionMeta } from "@/pages/profile/data";
 import type { ProfileIcon } from "@/pages/profile/types";
-import type { ProfileDraft, ProfileSectionId } from "@career-workbench/domain";
+import {
+  type ProfileDraft,
+  type ProfileSectionId,
+  richTextToPlainText,
+} from "@career-workbench/domain";
 
 function ProfileDisplay({
   onEdit,
@@ -70,7 +76,10 @@ function ProfileDisplay({
               {profile.education.map((item) => (
                 <TimelineItem
                   key={item.id}
-                  date={formatDateRange(item.startDate, item.endDate)}
+                  date={formatDateRange(
+                    item.startDate,
+                    item.current ? "至今" : item.endDate,
+                  )}
                 >
                   <h3 className="text-base font-semibold">
                     {item.school || "未填写学校"}
@@ -79,15 +88,11 @@ function ProfileDisplay({
                     {[item.degree, item.major].filter(Boolean).join(" / ") ||
                       "学历和专业未填写"}
                   </p>
-                  {item.location ? (
-                    <p className="mt-1 text-sm text-slate-500">
-                      {item.location}
-                    </p>
-                  ) : null}
-                  {item.description ? (
-                    <p className="mt-2 text-sm leading-5 text-slate-500">
-                      {item.description}
-                    </p>
+                  {richTextToPlainText(item.description) ? (
+                    <RichTextView
+                      className="mt-2 text-sm leading-5 text-slate-500"
+                      value={item.description}
+                    />
                   ) : null}
                 </TimelineItem>
               ))}
@@ -125,17 +130,20 @@ function ProfileDisplay({
                   <p className="text-sm font-medium text-slate-500">
                     {item.title || "未填写职位"}
                   </p>
-                  {item.summary ? (
-                    <p className="mt-2 max-w-4xl text-sm leading-5">
-                      {item.summary}
-                    </p>
+                  {richTextToPlainText(item.description) ? (
+                    <RichTextView
+                      className="mt-2 max-w-4xl text-sm leading-5"
+                      value={item.description}
+                    />
                   ) : null}
-                  {item.bullets.filter(Boolean).length > 0 ? (
-                    <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-sm leading-5 text-slate-500">
-                      {item.bullets.filter(Boolean).map((bullet) => (
-                        <li key={bullet}>{bullet}</li>
+                  {item.skills.filter(Boolean).length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {item.skills.filter(Boolean).map((skill) => (
+                        <Chip key={skill} size="sm" variant="secondary">
+                          {skill}
+                        </Chip>
                       ))}
-                    </ul>
+                    </div>
                   ) : null}
                 </TimelineItem>
               ))}
@@ -162,7 +170,10 @@ function ProfileDisplay({
               {profile.projects.map((item) => (
                 <TimelineItem
                   key={item.id}
-                  date={formatDateRange(item.startDate, item.endDate)}
+                  date={formatDateRange(
+                    item.startDate,
+                    item.current ? "至今" : item.endDate,
+                  )}
                 >
                   <h3 className="text-base font-semibold">
                     {item.name || "未填写项目"}
@@ -172,23 +183,17 @@ function ProfileDisplay({
                       {item.role}
                     </p>
                   ) : null}
-                  {item.summary ? (
-                    <p className="mt-2 max-w-4xl text-sm leading-5">
-                      {item.summary}
-                    </p>
+                  {richTextToPlainText(item.description) ? (
+                    <RichTextView
+                      className="mt-2 max-w-4xl text-sm leading-5"
+                      value={item.description}
+                    />
                   ) : null}
-                  {item.bullets.filter(Boolean).length > 0 ? (
-                    <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-sm leading-5 text-slate-500">
-                      {item.bullets.filter(Boolean).map((bullet) => (
-                        <li key={bullet}>{bullet}</li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  {item.technologies.filter(Boolean).length > 0 ? (
+                  {item.skills.filter(Boolean).length > 0 ? (
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {item.technologies.filter(Boolean).map((tech) => (
-                        <Chip key={tech} size="sm" variant="secondary">
-                          {tech}
+                      {item.skills.filter(Boolean).map((skill) => (
+                        <Chip key={skill} size="sm" variant="secondary">
+                          {skill}
                         </Chip>
                       ))}
                     </div>
@@ -227,6 +232,39 @@ function ProfileDisplay({
               description="添加技术栈、工具和能力关键词，后续岗位匹配会优先引用这些标签。"
               onAction={() => onEdit("skills")}
               title="还没有技能标签"
+            />
+          )}
+        </ProfileSectionBlock>
+
+        <ProfileSectionBlock
+          description={sectionMeta.custom.description}
+          icon={Blocks}
+          id="profile-custom"
+          onEdit={() => onEdit("custom")}
+          title={sectionMeta.custom.label}
+        >
+          {profile.custom.length > 0 ? (
+            <div className="flex flex-col gap-5">
+              {profile.custom.map((item) => (
+                <div key={item.id}>
+                  <h3 className="text-base font-semibold">
+                    {item.name || "未命名模块"}
+                  </h3>
+                  {richTextToPlainText(item.content) ? (
+                    <RichTextView
+                      className="mt-2 max-w-4xl text-sm leading-5 text-slate-500"
+                      value={item.content}
+                    />
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptySection
+              actionLabel="添加自定义模块"
+              description="用自定义标题和富文本内容补充固定模块覆盖不到的信息。"
+              onAction={() => onEdit("custom")}
+              title="还没有自定义模块"
             />
           )}
         </ProfileSectionBlock>
@@ -362,6 +400,10 @@ function PreferencesFieldGrid({ profile }: { profile: ProfileDraft }) {
     },
     { label: "期望工作城市", value: profile.preferences.targetCity },
     { label: "薪资期望", value: profile.preferences.salaryExpectation },
+    ...(profile.preferences.customFields ?? []).map((field) => ({
+      label: field.label || "自定义字段",
+      value: field.value,
+    })),
   ];
 
   return (

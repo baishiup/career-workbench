@@ -1,4 +1,5 @@
 import {
+  Blocks,
   BriefcaseBusiness,
   Code2,
   FolderGit2,
@@ -36,18 +37,23 @@ const sectionMeta: Record<
   },
   work: {
     label: "工作经历",
-    description: "公司、职位、职责和可用于简历的 bullet。",
+    description: "公司、职位、工作描述（富文本）和相关技能。",
     icon: BriefcaseBusiness,
   },
   projects: {
     label: "项目经历",
-    description: "代表项目、角色、技术栈和成果要点。",
+    description: "代表项目、角色、项目描述（富文本）和相关技能。",
     icon: FolderGit2,
   },
   skills: {
     label: "技能标签",
     description: "可被匹配和简历生成引用的技能标签。",
     icon: Code2,
+  },
+  custom: {
+    label: "自定义模块",
+    description: "自定义标题与富文本内容，补充固定模块之外的信息。",
+    icon: Blocks,
   },
 };
 
@@ -62,6 +68,7 @@ const drawerOrder: ProfileSectionId[] = [
   "work",
   "projects",
   "skills",
+  "custom",
 ];
 
 export {

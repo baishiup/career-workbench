@@ -51,11 +51,7 @@ import {
   getLatestTargetJobResume,
 } from "@/lib/resumes/api";
 import type { ResumeFunctionRow } from "@/lib/resumes/types";
-import {
-  computeRuleMatch,
-  hasMatchableProfile,
-  type RuleMatchResult,
-} from "@career-workbench/domain";
+import { hasMatchableProfile } from "@career-workbench/domain";
 
 import { ResumeEditorDrawer } from "@/pages/resume-detail/components/resume-editor-drawer";
 import { MatchReportCard } from "./components/match-report-card";
@@ -81,20 +77,26 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
   );
   const { profile, isLoading: isProfileLoading } = useProfileDraft();
 
-  const ruleMatch = useMemo(() => {
-    if (!job || isProfileLoading || !hasMatchableProfile(profile)) {
-      return null;
-    }
-
-    return computeRuleMatch(profile, job);
-  }, [job, profile, isProfileLoading]);
+  // 有可匹配的 Profile 才允许运行分析；匹配度本身由 AI 产出，不再实时计算。
+  const canMatch = useMemo(
+    () => !isProfileLoading && hasMatchableProfile(profile),
+    [profile, isProfileLoading],
+  );
 
   const matchReport = useMatchReport(jobId);
 
+  // 只有未过期的成功报告才展示匹配度，过期/失败时回到「—」并提示重新分析。
+  const matchScore =
+    matchReport.report?.status === "succeeded" &&
+    !matchReport.isStale &&
+    matchReport.report.narrative
+      ? matchReport.report.narrative.matchScore
+      : null;
+
   const handleRunAnalysis = () => {
-    if (ruleMatch && !matchReport.isRunning) {
+    if (canMatch && !matchReport.isRunning) {
       setGenerateError(null);
-      void matchReport.runAnalysis(ruleMatch);
+      void matchReport.runAnalysis();
     }
   };
 
@@ -105,14 +107,14 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
   const handleGenerateResume = async () => {
     setGenerateError(null);
 
-    if (!ruleMatch) {
+    if (!canMatch) {
       navigateTo("/profile");
       return;
     }
 
     if (!canGenerateResume) {
       if (!matchReport.isRunning) {
-        await matchReport.runAnalysis(ruleMatch);
+        await matchReport.runAnalysis();
       }
       return;
     }
@@ -123,6 +125,10 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
       const result = await generateTargetJobResume(jobId);
       setTargetJobResume(result.resume);
       setOpenedResume(result.resume);
+
+      if (result.degraded) {
+        setGenerateError("AI 定制失败，已用原始简历占位，请稍后重试生成。");
+      }
     } catch (error) {
       setGenerateError(
         error instanceof Error ? error.message : "生成定制简历失败。",
@@ -373,7 +379,8 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
             }
             isProfileLoading={isProfileLoading}
             isRunningAnalysis={matchReport.isRunning}
-            match={ruleMatch}
+            hasProfile={canMatch}
+            matchScore={matchScore}
             onGenerateResume={() => {
               if (targetJobResume) {
                 setOpenedResume(targetJobResume);
@@ -475,14 +482,14 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
 
           <aside className="flex min-w-0 flex-col gap-4">
             <MatchReportCard
-              canRun={Boolean(ruleMatch)}
+              canRun={canMatch}
               matchReport={matchReport}
               onRun={handleRunAnalysis}
             />
 
             <TargetResumeCard
               canGenerateResume={canGenerateResume}
-              canRunAnalysis={Boolean(ruleMatch)}
+              canRunAnalysis={canMatch}
               generateError={generateError}
               isGeneratingResume={isGeneratingResume}
               isLoadingTargetResume={isLoadingTargetResume}
@@ -540,7 +547,8 @@ function MatchScorePanel({
   isGenerationActionDisabled,
   isProfileLoading,
   isRunningAnalysis,
-  match,
+  hasProfile,
+  matchScore,
   onGenerateResume,
   onRunAnalysis,
 }: {
@@ -550,7 +558,9 @@ function MatchScorePanel({
   isGenerationActionDisabled: boolean;
   isProfileLoading: boolean;
   isRunningAnalysis: boolean;
-  match: RuleMatchResult | null;
+  hasProfile: boolean;
+  /** AI 产出的匹配度；尚未分析或报告过期时为 null。 */
+  matchScore: number | null;
   onGenerateResume: () => void;
   onRunAnalysis: () => void;
 }) {
@@ -558,7 +568,7 @@ function MatchScorePanel({
     return (
       <div className="flex flex-col gap-3 rounded-xl bg-slate-900 p-4 text-white">
         <div>
-          <p className="text-sm text-white/75">规则匹配分</p>
+          <p className="text-sm text-white/75">AI 匹配度</p>
           <p className="mt-2 text-4xl font-semibold">—</p>
           <p className="mt-1 text-sm font-medium text-white/75">
             正在加载 Profile…
@@ -568,14 +578,14 @@ function MatchScorePanel({
     );
   }
 
-  if (!match) {
+  if (!hasProfile) {
     return (
       <div className="flex flex-col gap-3 rounded-xl bg-slate-900 p-4 text-white">
         <div>
-          <p className="text-sm text-white/75">规则匹配分</p>
+          <p className="text-sm text-white/75">AI 匹配度</p>
           <p className="mt-2 text-4xl font-semibold">—</p>
           <p className="mt-1 text-sm font-medium text-white/75">
-            完善 Profile 的技能或工作经历后，这里会实时计算匹配分。
+            完善 Profile 的技能或工作经历后，运行分析即可得到 AI 匹配度。
           </p>
         </div>
         <Button
@@ -592,16 +602,19 @@ function MatchScorePanel({
   return (
     <div className="flex flex-col gap-3 rounded-xl bg-blue-600 p-4 text-white">
       <div>
-        <p className="text-sm text-white/75">规则匹配分</p>
-        <p className="mt-2 text-4xl font-semibold">{match.score}%</p>
-        <p className="mt-1 text-sm font-medium">{match.label}</p>
-      </div>
-      <ProgressBar color="success" size="sm" value={match.score} />
-      {match.breakdown.missingRequiredSkills.length > 0 ? (
-        <p className="text-xs leading-5 text-white/75">
-          缺少必备技能：{match.breakdown.missingRequiredSkills.join("、")}
+        <p className="text-sm text-white/75">AI 匹配度</p>
+        <p className="mt-2 text-4xl font-semibold">
+          {matchScore === null ? "—" : `${matchScore}%`}
         </p>
-      ) : null}
+        <p className="mt-1 text-sm font-medium text-white/75">
+          {matchScore === null
+            ? "运行分析后由 AI 给出匹配度和理由。"
+            : "AI 综合 Profile 与 JD 的评估。"}
+        </p>
+      </div>
+      {matchScore === null ? null : (
+        <ProgressBar color="success" size="sm" value={matchScore} />
+      )}
       <div className="grid grid-cols-2 gap-2">
         <Button
           isDisabled={isRunningAnalysis}

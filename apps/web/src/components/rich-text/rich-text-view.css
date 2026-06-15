@@ -1,0 +1,44 @@
+/* 富文本只读渲染的基础排版，贴合简历/Profile 正文。 */
+.rich-text-view {
+  display: flow-root;
+  font-size: inherit;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.rich-text-view p {
+  margin: 0 0 0.45em;
+}
+
+.rich-text-view p:last-child {
+  margin-bottom: 0;
+}
+
+.rich-text-view ul,
+.rich-text-view ol {
+  margin: 0.25em 0 0.75em;
+  padding-left: 1.35em;
+}
+
+.rich-text-view ul {
+  list-style-type: disc;
+}
+
+.rich-text-view ol {
+  list-style-type: decimal;
+}
+
+.rich-text-view li {
+  display: list-item;
+  margin: 0 0 0.28em;
+  padding-left: 0.1em;
+}
+
+.rich-text-view li:last-child {
+  margin-bottom: 0;
+}
+
+.rich-text-view a {
+  color: #2563eb;
+  text-decoration: underline;
+}

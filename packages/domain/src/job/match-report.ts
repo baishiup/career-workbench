@@ -1,22 +1,25 @@
 /**
- * MatchReport（AI 叙事分析）领域类型与纯函数。
+ * MatchReport（AI 匹配分析）领域类型与纯函数。
  *
- * 分数始终来自规则匹配（match.ts），这里只描述 job_match workflow
- * 产出的叙事内容、报告状态和复用/过期判断；不含 IO、持久化和 UI。
+ * 匹配度（0–100）和叙事都由 job_match workflow 的大模型产出，AI 直接
+ * 读取 Profile + 结构化 JD 给出语义判断；本文件只描述报告内容、状态和
+ * 复用/过期判断，不含 IO、持久化和 UI。
  */
 
 /** match_reports 行的生命周期状态。 */
 type MatchReportStatus = "pending" | "succeeded" | "failed";
 
-/** AI 叙事分析的四类产出，不含分数。 */
+/** AI 匹配分析产出：一个 0–100 匹配度加四类叙事。 */
 type MatchReportNarrative = {
+  /** AI 综合评估的匹配度，0–100 整数。 */
+  matchScore: number;
   /** 命中证据：Profile 中能支撑该职位要求的事实。 */
   evidence: string[];
   /** 能力缺口：JD 要求但 Profile 缺少或证据不足的部分。 */
   gaps: string[];
   /** 风险表达：投递或简历表述中需要注意的风险点。 */
   risks: string[];
-  /** 总评叙事，围绕规则匹配分展开。 */
+  /** 总评叙事，即匹配度背后的理由。 */
   aiNote: string;
 };
 
@@ -80,14 +83,37 @@ function toStringArray(value: unknown): string[] {
     : [];
 }
 
+/** 解析匹配度：取数字（兼容 "85" 字符串），夹到 0–100 并取整。 */
+function coerceMatchScore(value: unknown): number | null {
+  const raw =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number.parseFloat(value)
+        : Number.NaN;
+
+  if (!Number.isFinite(raw)) {
+    return null;
+  }
+
+  return Math.round(Math.min(100, Math.max(0, raw)));
+}
+
 /**
- * 把 match_reports.report_json 解析成叙事结构。兼容 workflow 输出的
- * snake_case（ai_note）和 camelCase（aiNote）；aiNote 缺失视为非法报告。
+ * 把 match_reports.report_json 解析成报告结构。兼容 workflow 输出的
+ * snake_case（match_score / ai_note）和 camelCase（matchScore / aiNote）；
+ * 匹配度或 aiNote 缺失视为非法报告。
  */
 function coerceMatchReportNarrative(
   value: unknown,
 ): MatchReportNarrative | null {
   if (!isRecord(value)) {
+    return null;
+  }
+
+  const matchScore = coerceMatchScore(value.match_score ?? value.matchScore);
+
+  if (matchScore === null) {
     return null;
   }
 
@@ -99,6 +125,7 @@ function coerceMatchReportNarrative(
   }
 
   return {
+    matchScore,
     evidence: toStringArray(value.evidence),
     gaps: toStringArray(value.gaps),
     risks: toStringArray(value.risks),

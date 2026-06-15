@@ -9,7 +9,6 @@ import {
   runJobMatchAnalysis,
   type MatchReportRecord,
 } from "@/lib/jobs/match-report-api";
-import type { RuleMatchResult } from "@career-workbench/domain";
 
 type MatchReportState = {
   report: MatchReportRecord | null;
@@ -23,7 +22,7 @@ type UseMatchReportResult = MatchReportState & {
   isRunning: boolean;
   /** 本次触发分析的失败信息；已持久化的失败原因看 report.errorMessage。 */
   runError: string | null;
-  runAnalysis: (ruleMatch: RuleMatchResult) => Promise<void>;
+  runAnalysis: () => Promise<void>;
   reload: () => Promise<void>;
 };
 
@@ -63,27 +62,22 @@ function useMatchReport(jobId: string): UseMatchReportResult {
     void reload();
   }, [reload]);
 
-  const runAnalysis = useCallback(
-    async (ruleMatch: RuleMatchResult) => {
-      setIsRunning(true);
-      setRunError(null);
+  const runAnalysis = useCallback(async () => {
+    setIsRunning(true);
+    setRunError(null);
 
-      try {
-        const report = await runJobMatchAnalysis(jobId, ruleMatch);
-        // 刚生成的报告必然基于当前快照，直接视为未过期。
-        setState({ report, isStale: false, isLoading: false, loadError: null });
-      } catch (error) {
-        setRunError(
-          error instanceof Error ? error.message : "AI 叙事分析失败。",
-        );
-        // 失败行已被 Edge Function 标记为 failed，重新拉取以展示失败态。
-        await reload();
-      } finally {
-        setIsRunning(false);
-      }
-    },
-    [jobId, reload],
-  );
+    try {
+      const report = await runJobMatchAnalysis(jobId);
+      // 刚生成的报告必然基于当前快照，直接视为未过期。
+      setState({ report, isStale: false, isLoading: false, loadError: null });
+    } catch (error) {
+      setRunError(error instanceof Error ? error.message : "AI 叙事分析失败。");
+      // 失败行已被 Edge Function 标记为 failed，重新拉取以展示失败态。
+      await reload();
+    } finally {
+      setIsRunning(false);
+    }
+  }, [jobId, reload]);
 
   return { ...state, isRunning, runError, runAnalysis, reload };
 }

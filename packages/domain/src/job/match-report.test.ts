@@ -57,12 +57,14 @@ describe("coerceMatchReportNarrative", () => {
     expect(
       coerceMatchReportNarrative({
         schema_version: "job.match.v1",
+        match_score: 82,
         evidence: ["有 React 生产经验"],
         gaps: ["缺少支付链路案例"],
         risks: ["避免夸大 A/B 测试经验"],
         ai_note: "整体匹配度较好。",
       }),
     ).toEqual({
+      matchScore: 82,
       evidence: ["有 React 生产经验"],
       gaps: ["缺少支付链路案例"],
       risks: ["避免夸大 A/B 测试经验"],
@@ -73,12 +75,14 @@ describe("coerceMatchReportNarrative", () => {
   it("兼容 camelCase 字段并过滤非字符串项", () => {
     expect(
       coerceMatchReportNarrative({
+        matchScore: 70,
         evidence: ["证据 A", 42, ""],
         gaps: null,
         risks: ["风险 A"],
         aiNote: " 总评。 ",
       }),
     ).toEqual({
+      matchScore: 70,
       evidence: ["证据 A"],
       gaps: [],
       risks: ["风险 A"],
@@ -86,8 +90,26 @@ describe("coerceMatchReportNarrative", () => {
     });
   });
 
-  it("aiNote 缺失或非对象输入返回 null", () => {
-    expect(coerceMatchReportNarrative({ evidence: [] })).toBeNull();
+  it("匹配度为字符串数字时解析，并夹到 0–100 取整", () => {
+    expect(
+      coerceMatchReportNarrative({
+        match_score: "85.6",
+        aiNote: "总评。",
+      })?.matchScore,
+    ).toBe(86);
+    expect(
+      coerceMatchReportNarrative({
+        match_score: 140,
+        aiNote: "总评。",
+      })?.matchScore,
+    ).toBe(100);
+  });
+
+  it("匹配度或 aiNote 缺失、非对象输入返回 null", () => {
+    expect(coerceMatchReportNarrative({ ai_note: "缺分数" })).toBeNull();
+    expect(
+      coerceMatchReportNarrative({ match_score: 60, evidence: [] }),
+    ).toBeNull();
     expect(coerceMatchReportNarrative("not a report")).toBeNull();
     expect(coerceMatchReportNarrative(null)).toBeNull();
   });

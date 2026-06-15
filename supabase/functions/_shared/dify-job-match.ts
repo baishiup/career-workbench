@@ -1,8 +1,9 @@
 /**
  * Dify job_match 适配层。
  *
- * 负责 Workflow 调用和叙事输出提取；业务函数只消费 JobMatchNarrative，
- * 不直接关心 Dify 的响应形状。叙事不含分数，分数始终来自规则匹配。
+ * 负责 Workflow 调用和输出提取；业务函数只消费 JobMatchNarrative，
+ * 不直接关心 Dify 的响应形状。匹配度（match_score）和叙事都由大模型
+ * 读取 Profile + JD 后产出。
  */
 import "@supabase/functions-js/edge-runtime.d.ts";
 
@@ -15,9 +16,11 @@ type DifyJobMatchStage =
   | "workflow_run"
   | "workflow_output";
 
-/** job_match workflow 输出的叙事结构，对齐 match_reports.report_json。 */
+/** job_match workflow 输出结构，对齐 match_reports.report_json。 */
 type JobMatchNarrative = {
   schema_version: "job.match.v1";
+  /** AI 综合评估的匹配度，0–100 整数。 */
+  match_score: number;
   evidence: string[];
   gaps: string[];
   risks: string[];
@@ -29,8 +32,6 @@ type DifyJobMatchInput = {
   profileJson: string;
   /** 结构化 JD 字段 JSON 字符串。 */
   jobJson: string;
-  /** 规则匹配结果 JSON 字符串（分数与等级以此为准）。 */
-  ruleMatchJson: string;
 };
 
 /** runJobMatchWithDify 返回给业务函数的稳定结构。 */
@@ -65,7 +66,7 @@ class DifyJobMatchError extends Error {
   }
 }
 
-/** Profile + JD + 规则结果 -> Dify workflow run -> JobMatchNarrative。 */
+/** Profile + JD -> Dify workflow run -> JobMatchNarrative（含匹配度）。 */
 async function runJobMatchWithDify(
   input: DifyJobMatchInput,
 ): Promise<DifyJobMatchResult> {
@@ -88,7 +89,6 @@ async function runJobMatchWithDify(
     inputs: {
       profile_json: input.profileJson,
       job_json: input.jobJson,
-      rule_match_json: input.ruleMatchJson,
     },
     response_mode: "blocking",
     user: difyUser,
@@ -209,18 +209,40 @@ function coerceJobMatchNarrative(value: unknown): JobMatchNarrative | null {
     return null;
   }
 
-  // ai_note 是叙事核心，作为输出形状的最低要求；列表允许为空。
+  // 匹配度和 ai_note 是输出形状的最低要求；叙事列表允许为空。
+  const matchScore = coerceMatchScore(value.match_score);
+
+  if (matchScore === null) {
+    return null;
+  }
+
   if (typeof value.ai_note !== "string" || value.ai_note.trim().length === 0) {
     return null;
   }
 
   return {
     schema_version: "job.match.v1",
+    match_score: matchScore,
     evidence: toStringArray(value.evidence),
     gaps: toStringArray(value.gaps),
     risks: toStringArray(value.risks),
     ai_note: value.ai_note.trim(),
   };
+}
+
+/** 解析匹配度：取数字（兼容字符串），夹到 0–100 并取整。 */
+function coerceMatchScore(value: unknown): number | null {
+  const raw = typeof value === "number"
+    ? value
+    : typeof value === "string"
+    ? Number.parseFloat(value)
+    : Number.NaN;
+
+  if (!Number.isFinite(raw)) {
+    return null;
+  }
+
+  return Math.round(Math.min(100, Math.max(0, raw)));
 }
 
 function toStringArray(value: unknown) {

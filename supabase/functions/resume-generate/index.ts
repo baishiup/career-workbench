@@ -58,6 +58,8 @@ type FallbackContext = {
   reason: "invalid_dify_document";
   stage: string;
   workflowRunId: string | null;
+  /** Dify 原始 outputs，留作排查 LLM 输出为何被判非法。 */
+  rawOutputs: unknown;
 };
 
 const uuidPattern =
@@ -164,6 +166,7 @@ Deno.serve(async (request) => {
             reason: "invalid_dify_document",
             stage: error.stage,
             workflowRunId: error.workflowRunId,
+            rawOutputs: extractFallbackOutputs(error.details),
           },
           generatedAt,
           job,
@@ -320,29 +323,22 @@ function buildProfileFallbackDocument(
 ): ResumeDocument {
   const document = withTargetContext(
     profileDraftToBaseResumeDocument(profileData, {
-      locale: "zh-CN",
       title: `${job.company} ${job.title} 定制简历`,
     }),
     job,
   );
 
-  if (document.sections.length > 0) {
+  if (document.modules.length > 0) {
     return document;
   }
 
   return {
     ...document,
-    sections: [{
-      blocks: [{
-        id: "fallback-summary",
-        kind: "paragraph" as const,
-        label: "职业摘要",
-        text: "",
-      }],
-      id: "section-summary",
-      kind: "summary" as const,
-      title: "Professional Summary",
+    modules: [{
+      id: "module-personal",
+      kind: "personal" as const,
       visible: true,
+      personal: profileData.personal,
     }],
   };
 }
@@ -389,6 +385,9 @@ async function persistGeneratedResume(input: {
     status: "ok",
     provider: input.provider,
     resume,
+    // fallback 不再静默：前端据此提示「AI 定制失败，已用原始简历占位」。
+    degraded: input.fallback !== null,
+    degraded_reason: input.fallback?.reason ?? null,
   });
 }
 
@@ -405,6 +404,9 @@ function buildSourceContext(input: {
     error_message: input.error?.message ?? null,
     error_stage: input.error?.stage ?? null,
     fallback_error_message: input.fallback?.errorMessage ?? null,
+    fallback_raw_outputs: input.fallback
+      ? truncateForStorage(input.fallback.rawOutputs)
+      : null,
     fallback_reason: input.fallback?.reason ?? null,
     fallback_stage: input.fallback?.stage ?? null,
     generated_at: input.generatedAt,
@@ -593,4 +595,32 @@ function serializeDetails(details: unknown) {
   }
 
   return details ?? null;
+}
+
+/** DifyResumeGenerateError.details 形如 { outputs }；取出原始 outputs 供排查。 */
+function extractFallbackOutputs(details: unknown): unknown {
+  if (isRecord(details) && "outputs" in details) {
+    return (details as { outputs?: unknown }).outputs ?? null;
+  }
+
+  return null;
+}
+
+/** 原始 LLM 输出可能较大，落库前截断，避免 source_context_json 膨胀。 */
+function truncateForStorage(value: unknown, maxLength = 20000): unknown {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const serialized = typeof value === "string" ? value : JSON.stringify(value);
+
+  if (serialized.length <= maxLength) {
+    return value;
+  }
+
+  return {
+    truncated: true,
+    length: serialized.length,
+    preview: serialized.slice(0, maxLength),
+  };
 }

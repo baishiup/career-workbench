@@ -22,11 +22,13 @@ const emptyProfile: ProfileDraft = {
     openToRemote: true,
     targetCity: "",
     salaryExpectation: "",
+    customFields: [],
   },
   education: [],
   work: [],
   projects: [],
   skills: [],
+  custom: [],
 };
 
 export { emptyProfile };

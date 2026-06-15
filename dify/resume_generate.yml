@@ -126,7 +126,7 @@ workflow:
           desc: 生成可编辑 ResumeDocument，只使用 Profile 中已有事实。
           model:
             completion_params:
-              temperature: 0
+              temperature: 0.4
               thinking_mode: false
             mode: chat
             name: gemini-2.5-flash
@@ -135,35 +135,35 @@ workflow:
             - id: 1791000000002-system
               role: system
               text:
-                '你是一个求职简历定制器。输入是候选人 Profile（JSON）、结构化职位描述（JSON）和最新匹配分析（JSON）。
+                "你是一个求职简历定制器。输入是候选人 Profile（JSON）、结构化职位描述（JSON）和最新匹配分析（JSON）。
 
 
-                你的职责是生成一份面向该职位的 ResumeDocument 草稿，用于后续人工编辑。你可以重排 section、筛选技能、改写 summary 和 bullet 表达，但必须严格基于 Profile 中已有事实。禁止虚构公司、项目、学历、时间、技能、证书、指标、人数、金额或任何 Profile 中不存在的经历。
+                你的职责是把候选人已有经历重新包装、改写成一份面向该职位的 ResumeDocument 草稿。你必须主动改写每段描述的措辞，使其贴合 JD 的 required_skills、responsibilities 以及 match report 指出的匹配点；不允许原样照抄 Profile 里的句子。你可以重排模块、筛选并突出与 JD 相关的技能与经历，但所有事实必须严格基于 Profile，禁止虚构公司、项目、学历、时间、技能、证书、指标、人数、金额或任何 Profile 中不存在的经历。
 
 
                 输出要求：
 
                 1. 只输出 JSON 对象，不要输出 markdown。
 
-                2. 必须是 ResumeDocument：包含 title、locale、target、sections。
+                2. 必须是 ResumeDocument：包含 title、target、modules（不要输出 locale 或 sections）。
 
-                3. locale 固定为 "zh-CN"。
+                3. target 至少包含 company 和 title；jobId 可为空，后端会补齐。
 
-                4. target 至少包含 company 和 title；jobId 可为空，后端会补齐。
+                4. modules 是有序数组，每个模块用以下 kind 之一：personal、preferences、skills、work、projects、education、custom；每个模块都要有稳定 id 和 visible（布尔值，通常为 true）。
 
-                5. sections 使用以下 kind：personal、summary、skills、work、projects、education、custom。
+                5. 各模块的数据字段：personal 模块带 personal 对象（fullName、headline、email、phone、city、linkedin、github、portfolio、customFields:[{id,label,value}]）；preferences 模块带 preferences 对象（jobFunction、jobTypes、openToRemote、targetCity、salaryExpectation、customFields）；skills 模块带 skills 字符串数组；work 模块带 items 数组，每条含 id、company、title、startDate、endDate、current（布尔）、description（纯文本）、skills 字符串数组；projects 模块带 items 数组，每条含 id、name、role、startDate、endDate、current、description（纯文本）、skills 字符串数组；education 模块带 items 数组，每条含 id、school、degree、major、startDate、endDate、current、description（纯文本）；custom 模块带 module 对象（id、name、content 纯文本）。
 
-                6. block 使用以下 kind：text、paragraph、bulletList、tagList、dateRange、linkList。
+                6. description 和 content 一律输出纯文本（可用换行分隔多行或要点），不要输出 HTML 或富文本结构，后端会负责转换。
 
-                7. 每个 section、block、bullet、link 都必须有稳定 id。
+                7. 这是硬性要求：work/project 的 description 必须围绕 JD 关键词改写，点名最相关的能力与成果，并尽量前置与 JD 最相关的经历；改写后不得与 Profile 原文逐字相同，也不得夸大或虚构。
 
-                8. summary 和 bullets 要围绕 JD 与 match report 叙事强化相关经验，但不要夸大。
+                8. 如果某个 JD 要求 Profile 没有证据，不要写成已掌握；可如实表述相近经验。
 
-                9. 如果某个 JD 要求 Profile 没有证据，不要把它写成已掌握；可以在 summary 或 bullet 中如实表述相近经验。
+                9. 日期使用 YYYY-MM 文本；current 为 true 时表示“至今”，此时 endDate 可留空。
 
-                10. 输出应尽量简洁，适合一页简历初稿。
+                10. 输出应尽量简洁，适合一页简历初稿；整体结构必须严格合法，否则会被判为无效。
 
-                '
+                "
             - id: 1791000000002-user
               role: user
               text: "候选人 Profile（JSON）：
@@ -187,23 +187,153 @@ workflow:
           selected: false
           structured_output:
             schema:
-              properties:
-                locale:
-                  type: string
-                sections:
-                  items:
-                    type: object
-                  type: array
-                target:
-                  type: object
-                title:
-                  type: string
+              type: object
               required:
                 - title
-                - locale
                 - target
-                - sections
-              type: object
+                - modules
+              properties:
+                title:
+                  type: string
+                target:
+                  type: object
+                  required:
+                    - company
+                    - title
+                  properties:
+                    company:
+                      type: string
+                    title:
+                      type: string
+                    jobId:
+                      type: string
+                modules:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - id
+                      - kind
+                      - visible
+                    properties:
+                      id:
+                        type: string
+                      kind:
+                        type: string
+                        enum:
+                          - personal
+                          - preferences
+                          - skills
+                          - work
+                          - projects
+                          - education
+                          - custom
+                      visible:
+                        type: boolean
+                      skills:
+                        type: array
+                        items:
+                          type: string
+                      personal:
+                        type: object
+                        properties:
+                          fullName:
+                            type: string
+                          headline:
+                            type: string
+                          email:
+                            type: string
+                          phone:
+                            type: string
+                          city:
+                            type: string
+                          linkedin:
+                            type: string
+                          github:
+                            type: string
+                          portfolio:
+                            type: string
+                          customFields:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                label:
+                                  type: string
+                                value:
+                                  type: string
+                      preferences:
+                        type: object
+                        properties:
+                          jobFunction:
+                            type: string
+                          jobTypes:
+                            type: array
+                            items:
+                              type: string
+                          openToRemote:
+                            type: boolean
+                          targetCity:
+                            type: string
+                          salaryExpectation:
+                            type: string
+                          customFields:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                label:
+                                  type: string
+                                value:
+                                  type: string
+                      module:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          content:
+                            type: string
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                            - id
+                          properties:
+                            id:
+                              type: string
+                            company:
+                              type: string
+                            title:
+                              type: string
+                            name:
+                              type: string
+                            role:
+                              type: string
+                            school:
+                              type: string
+                            degree:
+                              type: string
+                            major:
+                              type: string
+                            startDate:
+                              type: string
+                            endDate:
+                              type: string
+                            current:
+                              type: boolean
+                            description:
+                              type: string
+                            skills:
+                              type: array
+                              items:
+                                type: string
           structured_output_enabled: true
           title: LLM 生成简历
           type: llm
@@ -223,7 +353,7 @@ workflow:
         type: custom
         width: 242
       - data:
-          code: "function main({ llm_output }) {\n  let value = llm_output;\n  if (typeof value === 'string') {\n    value = value.trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/i, '');\n    value = JSON.parse(value);\n  }\n  if (!value || typeof value !== 'object' || !Array.isArray(value.sections)) {\n    throw new Error('ResumeDocument is invalid');\n  }\n  return { text: JSON.stringify(value) };\n}\n"
+          code: "function main({ llm_output }) {\n  let value = llm_output;\n  if (typeof value === 'string') {\n    value = value.trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/i, '');\n    value = JSON.parse(value);\n  }\n  if (!value || typeof value !== 'object' || !Array.isArray(value.modules)) {\n    throw new Error('ResumeDocument is invalid');\n  }\n  return { text: JSON.stringify(value) };\n}\n"
           code_language: javascript
           desc: 归一化 LLM 输出，最终 text 必须是 ResumeDocument JSON 字符串。
           outputs:

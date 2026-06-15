@@ -2,8 +2,8 @@
  * 职位详情页的「匹配分析」卡片。
  *
  * 状态机：加载中 → 无报告（运行分析）/ 已有报告（未过期直接展示，
- * 过期提示重新分析）/ 失败（保留错误并可重试）。分数不在这里展示，
- * 规则匹配分由页面顶部面板实时计算。
+ * 过期提示重新分析）/ 失败（保留错误并可重试）。匹配度数字在页面顶部
+ * 面板展示，这里聚焦命中证据、能力缺口和风险表达等叙事。
  */
 
 import { Button, Card, Chip } from "@heroui/react";
@@ -108,7 +108,7 @@ export function MatchReportCard({
           description={
             report?.status === "pending"
               ? "上次分析未完成，可以重新运行。"
-              : "运行 AI 叙事分析后，这里会展示命中证据、能力缺口和风险表达。分数始终来自规则计算，AI 只负责解释。"
+              : "运行 AI 分析后，这里会展示命中证据、能力缺口和风险表达，匹配度数字显示在上方面板。"
           }
           onRun={onRun}
           runError={runError}
@@ -120,9 +120,7 @@ export function MatchReportCard({
       return (
         <RetryBlock
           description={
-            runError ??
-            report.errorMessage ??
-            "分析结果不可用，可以重试。规则匹配分不受影响。"
+            runError ?? report.errorMessage ?? "分析结果不可用，可以重试。"
           }
           isDisabled={!canRun}
           label="重试分析"

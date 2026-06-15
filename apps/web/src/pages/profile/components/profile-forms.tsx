@@ -10,18 +10,24 @@ import {
   Select,
   Tag,
   TagGroup,
-  TextArea,
 } from "@heroui/react";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { jobTypeOptions, skillSuggestions } from "@/pages/profile/data";
 import type {
+  CustomModule,
   EducationItem,
   JobPreferences,
   ProjectItem,
   WorkItem,
 } from "@career-workbench/domain";
-import { DateField, TextAreaField, TextField } from "./profile-fields";
+import { MonthRangeField } from "@/components/forms/month-range-field";
+import {
+  CustomFieldsEditor,
+  RichTextField,
+  TagsField,
+  TextField,
+} from "./profile-fields";
 import { SortableEditorCard } from "./sortable-editor-card";
 
 function PreferencesForm({
@@ -88,6 +94,57 @@ function PreferencesForm({
         </Checkbox.Control>
         <Checkbox.Content>接受远程工作</Checkbox.Content>
       </Checkbox>
+      <CustomFieldsEditor
+        className="md:col-span-2"
+        fields={preferences.customFields}
+        onChange={(customFields) => onPreferencesChange({ customFields })}
+      />
+    </div>
+  );
+}
+
+/** 教育经历单条字段组，profile 抽屉与简历编辑器共用。 */
+function EducationItemFields({
+  item,
+  onChange,
+}: {
+  item: EducationItem;
+  onChange: (patch: Partial<EducationItem>) => void;
+}) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      <TextField
+        className="md:col-span-2"
+        label="学校"
+        required
+        value={item.school}
+        onChange={(value) => onChange({ school: value })}
+      />
+      <TextField
+        label="学历"
+        value={item.degree}
+        onChange={(value) => onChange({ degree: value })}
+      />
+      <TextField
+        label="专业"
+        value={item.major}
+        onChange={(value) => onChange({ major: value })}
+      />
+      <MonthRangeField
+        className="md:col-span-2"
+        onChange={(range) => onChange(range)}
+        value={{
+          current: item.current,
+          endDate: item.endDate,
+          startDate: item.startDate,
+        }}
+      />
+      <RichTextField
+        className="md:col-span-2"
+        label="补充说明"
+        onChange={(description) => onChange({ description })}
+        value={item.description}
+      />
     </div>
   );
 }
@@ -124,52 +181,65 @@ function EducationForm({
           onReorder={onReorder}
           title={`教育经历 ${index + 1}`}
         >
-          <div className="grid gap-4 md:grid-cols-2">
-            <TextField
-              className="md:col-span-2"
-              label="学校"
-              required
-              value={item.school}
-              onChange={(value) => onUpdate(item.id, { school: value })}
-            />
-            <TextField
-              label="学历"
-              value={item.degree}
-              onChange={(value) => onUpdate(item.id, { degree: value })}
-            />
-            <TextField
-              label="专业"
-              value={item.major}
-              onChange={(value) => onUpdate(item.id, { major: value })}
-            />
-            <TextField
-              label="地点"
-              value={item.location}
-              onChange={(value) => onUpdate(item.id, { location: value })}
-            />
-            <DateField
-              label="开始日期"
-              value={item.startDate}
-              onChange={(value) => onUpdate(item.id, { startDate: value })}
-            />
-            <DateField
-              label="结束日期"
-              value={item.endDate}
-              onChange={(value) => onUpdate(item.id, { endDate: value })}
-            />
-            <TextAreaField
-              className="md:col-span-2"
-              label="补充说明"
-              value={item.description}
-              onChange={(value) => onUpdate(item.id, { description: value })}
-            />
-          </div>
+          <EducationItemFields
+            item={item}
+            onChange={(patch) => onUpdate(item.id, patch)}
+          />
         </SortableEditorCard>
       ))}
       <Button onPress={onAdd} type="button" variant="outline">
         <Plus className="size-4" />
         添加教育经历
       </Button>
+    </div>
+  );
+}
+
+/** 工作经历单条字段组，profile 抽屉与简历编辑器共用。 */
+function WorkItemFields({
+  item,
+  onChange,
+}: {
+  item: WorkItem;
+  onChange: (patch: Partial<WorkItem>) => void;
+}) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      <TextField
+        className="md:col-span-2"
+        label="职位名称"
+        required
+        value={item.title}
+        onChange={(value) => onChange({ title: value })}
+      />
+      <TextField
+        className="md:col-span-2"
+        label="公司"
+        required
+        value={item.company}
+        onChange={(value) => onChange({ company: value })}
+      />
+      <MonthRangeField
+        className="md:col-span-2"
+        onChange={(range) => onChange(range)}
+        value={{
+          current: item.current,
+          endDate: item.endDate,
+          startDate: item.startDate,
+        }}
+      />
+      <RichTextField
+        className="md:col-span-2"
+        label="工作描述"
+        onChange={(description) => onChange({ description })}
+        value={item.description}
+      />
+      <TagsField
+        className="md:col-span-2"
+        label="技能"
+        onChange={(skills) => onChange({ skills })}
+        values={item.skills}
+      />
     </div>
   );
 }
@@ -189,12 +259,6 @@ function WorkForm({
 }) {
   const dragIndexRef = useRef<number | null>(null);
 
-  function updateBullet(item: WorkItem, bulletIndex: number, value: string) {
-    const nextBullets = [...item.bullets];
-    nextBullets[bulletIndex] = value;
-    onUpdate(item.id, { bullets: nextBullets });
-  }
-
   return (
     <div className="flex flex-col gap-4">
       {work.map((item, index) => (
@@ -212,20 +276,10 @@ function WorkForm({
           onReorder={onReorder}
           title={`工作经历 ${index + 1}`}
         >
-          <div className="grid gap-4 md:grid-cols-2">
-            <WorkCoreFields item={item} onUpdate={onUpdate} />
-            <TextAreaField
-              className="md:col-span-2"
-              label="经历摘要"
-              value={item.summary}
-              onChange={(value) => onUpdate(item.id, { summary: value })}
-            />
-            <WorkBulletList
-              item={item}
-              onUpdate={onUpdate}
-              updateBullet={updateBullet}
-            />
-          </div>
+          <WorkItemFields
+            item={item}
+            onChange={(patch) => onUpdate(item.id, patch)}
+          />
         </SortableEditorCard>
       ))}
       <Button onPress={onAdd} type="button" variant="outline">
@@ -236,119 +290,50 @@ function WorkForm({
   );
 }
 
-function WorkCoreFields({
+/** 项目经历单条字段组，profile 抽屉与简历编辑器共用。 */
+function ProjectItemFields({
   item,
-  onUpdate,
+  onChange,
 }: {
-  item: WorkItem;
-  onUpdate: (id: string, patch: Partial<WorkItem>) => void;
+  item: ProjectItem;
+  onChange: (patch: Partial<ProjectItem>) => void;
 }) {
   return (
-    <>
+    <div className="grid gap-4 md:grid-cols-2">
       <TextField
         className="md:col-span-2"
-        label="职位名称"
+        label="项目名称"
         required
-        value={item.title}
-        onChange={(value) => onUpdate(item.id, { title: value })}
+        value={item.name}
+        onChange={(value) => onChange({ name: value })}
       />
       <TextField
+        label="角色"
+        value={item.role}
+        onChange={(value) => onChange({ role: value })}
+      />
+      <div className="hidden md:block" />
+      <MonthRangeField
         className="md:col-span-2"
-        label="公司"
-        required
-        value={item.company}
-        onChange={(value) => onUpdate(item.id, { company: value })}
+        onChange={(range) => onChange(range)}
+        value={{
+          current: item.current,
+          endDate: item.endDate,
+          startDate: item.startDate,
+        }}
       />
-      <TextField
-        label="工作类型"
-        value={item.jobType}
-        onChange={(value) => onUpdate(item.id, { jobType: value })}
-      />
-      <TextField
-        label="地点"
-        value={item.location}
-        onChange={(value) => onUpdate(item.id, { location: value })}
-      />
-      <DateField
-        label="开始日期"
-        value={item.startDate}
-        onChange={(value) => onUpdate(item.id, { startDate: value })}
-      />
-      <DateField
-        label="结束日期"
-        value={item.endDate}
-        onChange={(value) => onUpdate(item.id, { endDate: value })}
-      />
-      <Checkbox
+      <RichTextField
         className="md:col-span-2"
-        isSelected={item.current}
-        onChange={(checked) => onUpdate(item.id, { current: checked })}
-      >
-        <Checkbox.Control>
-          <Checkbox.Indicator />
-        </Checkbox.Control>
-        <Checkbox.Content>我目前仍在这里工作</Checkbox.Content>
-      </Checkbox>
-    </>
-  );
-}
-
-function WorkBulletList({
-  item,
-  onUpdate,
-  updateBullet,
-}: {
-  item: WorkItem;
-  onUpdate: (id: string, patch: Partial<WorkItem>) => void;
-  updateBullet: (item: WorkItem, bulletIndex: number, value: string) => void;
-}) {
-  return (
-    <div className="md:col-span-2">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-slate-900">工作描述</p>
-        <Button
-          onPress={() => onUpdate(item.id, { bullets: [...item.bullets, ""] })}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          <Plus className="size-4" />
-          添加要点
-        </Button>
-      </div>
-      <div className="flex flex-col gap-2">
-        {item.bullets.map((bullet, bulletIndex) => (
-          <div className="flex items-start gap-2" key={bulletIndex}>
-            <span className="pt-2 text-sm font-semibold text-slate-500">•</span>
-            <TextArea
-              className="min-h-10 py-2"
-              fullWidth
-              onChange={(event) =>
-                updateBullet(item, bulletIndex, event.target.value)
-              }
-              rows={2}
-              value={bullet}
-              variant="secondary"
-            />
-            <Button
-              aria-label="删除要点"
-              isIconOnly
-              onPress={() =>
-                onUpdate(item.id, {
-                  bullets: item.bullets.filter(
-                    (_, currentIndex) => currentIndex !== bulletIndex,
-                  ),
-                })
-              }
-              size="sm"
-              type="button"
-              variant="danger-soft"
-            >
-              <X className="size-4" />
-            </Button>
-          </div>
-        ))}
-      </div>
+        label="项目描述"
+        onChange={(description) => onChange({ description })}
+        value={item.description}
+      />
+      <TagsField
+        className="md:col-span-2"
+        label="技能"
+        onChange={(skills) => onChange({ skills })}
+        values={item.skills}
+      />
     </div>
   );
 }
@@ -385,51 +370,10 @@ function ProjectsForm({
           onReorder={onReorder}
           title={`项目经历 ${index + 1}`}
         >
-          <div className="grid gap-4 md:grid-cols-2">
-            <TextField
-              className="md:col-span-2"
-              label="项目名称"
-              required
-              value={item.name}
-              onChange={(value) => onUpdate(item.id, { name: value })}
-            />
-            <TextField
-              label="角色"
-              value={item.role}
-              onChange={(value) => onUpdate(item.id, { role: value })}
-            />
-            <div className="hidden md:block" />
-            <DateField
-              label="开始日期"
-              value={item.startDate}
-              onChange={(value) => onUpdate(item.id, { startDate: value })}
-            />
-            <DateField
-              label="结束日期"
-              value={item.endDate}
-              onChange={(value) => onUpdate(item.id, { endDate: value })}
-            />
-            <TextAreaField
-              className="md:col-span-2"
-              label="项目摘要"
-              value={item.summary}
-              onChange={(value) => onUpdate(item.id, { summary: value })}
-            />
-            <StringListEditor
-              addLabel="添加要点"
-              className="md:col-span-2"
-              onChange={(bullets) => onUpdate(item.id, { bullets })}
-              title="项目要点"
-              values={item.bullets}
-            />
-            <StringListEditor
-              addLabel="添加技术"
-              className="md:col-span-2"
-              onChange={(technologies) => onUpdate(item.id, { technologies })}
-              title="技术栈"
-              values={item.technologies}
-            />
-          </div>
+          <ProjectItemFields
+            item={item}
+            onChange={(patch) => onUpdate(item.id, patch)}
+          />
         </SortableEditorCard>
       ))}
       <Button onPress={onAdd} type="button" variant="outline">
@@ -440,62 +384,73 @@ function ProjectsForm({
   );
 }
 
-function StringListEditor({
-  addLabel,
-  className,
+/** 自定义模块单条字段组：标题 + 富文本内容。 */
+function CustomModuleFields({
+  item,
   onChange,
-  title,
-  values,
 }: {
-  addLabel: string;
-  className?: string;
-  onChange: (values: string[]) => void;
-  title: string;
-  values: string[];
+  item: CustomModule;
+  onChange: (patch: Partial<CustomModule>) => void;
 }) {
   return (
-    <div className={className}>
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-slate-900">{title}</p>
-        <Button
-          onPress={() => onChange([...values, ""])}
-          size="sm"
-          type="button"
-          variant="outline"
+    <div className="flex flex-col gap-4">
+      <TextField
+        label="模块名称"
+        required
+        value={item.name}
+        onChange={(value) => onChange({ name: value })}
+      />
+      <RichTextField
+        label="内容"
+        onChange={(content) => onChange({ content })}
+        value={item.content}
+      />
+    </div>
+  );
+}
+
+function CustomForm({
+  custom,
+  onAdd,
+  onDelete,
+  onReorder,
+  onUpdate,
+}: {
+  custom: CustomModule[];
+  onAdd: () => void;
+  onDelete: (id: string) => void;
+  onReorder: (from: number, to: number) => void;
+  onUpdate: (id: string, patch: Partial<CustomModule>) => void;
+}) {
+  const dragIndexRef = useRef<number | null>(null);
+
+  return (
+    <div className="flex flex-col gap-4">
+      {custom.map((item, index) => (
+        <SortableEditorCard
+          dragIndexRef={dragIndexRef}
+          index={index}
+          key={item.id}
+          onDelete={() => onDelete(item.id)}
+          onDragEnd={() => {
+            dragIndexRef.current = null;
+          }}
+          onDragStartIndex={(nextIndex) => {
+            dragIndexRef.current = nextIndex;
+          }}
+          onReorder={onReorder}
+          title={item.name || `自定义模块 ${index + 1}`}
         >
-          <Plus className="size-4" />
-          {addLabel}
-        </Button>
-      </div>
-      <div className="flex flex-col gap-2">
-        {values.map((value, index) => (
-          <div className="flex items-start gap-2" key={index}>
-            <span className="pt-2 text-sm font-semibold text-slate-500">•</span>
-            <Input
-              fullWidth
-              onChange={(event) => {
-                const next = [...values];
-                next[index] = event.target.value;
-                onChange(next);
-              }}
-              value={value}
-              variant="secondary"
-            />
-            <Button
-              aria-label="删除"
-              isIconOnly
-              onPress={() =>
-                onChange(values.filter((_, current) => current !== index))
-              }
-              size="sm"
-              type="button"
-              variant="danger-soft"
-            >
-              <X className="size-4" />
-            </Button>
-          </div>
-        ))}
-      </div>
+          <CustomModuleFields
+            item={item}
+            onChange={(patch) => onUpdate(item.id, patch)}
+          />
+        </SortableEditorCard>
+      ))}
+      <Button onPress={onAdd} type="button" variant="outline">
+        <Plus className="size-4" />
+        添加自定义模块
+      </Button>
     </div>
   );
 }
@@ -634,4 +589,15 @@ function SkillInput({
   );
 }
 
-export { EducationForm, PreferencesForm, ProjectsForm, SkillsForm, WorkForm };
+export {
+  CustomForm,
+  CustomModuleFields,
+  EducationForm,
+  EducationItemFields,
+  PreferencesForm,
+  ProjectItemFields,
+  ProjectsForm,
+  SkillsForm,
+  WorkForm,
+  WorkItemFields,
+};

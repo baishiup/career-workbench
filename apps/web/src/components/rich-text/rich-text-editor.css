@@ -1,0 +1,41 @@
+/* 让 Quill snow 主题贴合表单样式：圆角、淡边框、紧凑高度。 */
+.rich-text-editor .ql-toolbar.ql-snow {
+  border-color: #e2e8f0;
+  border-top-left-radius: 7px;
+  border-top-right-radius: 7px;
+  padding: 4px 6px;
+}
+
+.rich-text-editor .ql-container.ql-snow {
+  border-color: #e2e8f0;
+  border-bottom-left-radius: 7px;
+  border-bottom-right-radius: 7px;
+  font-family: inherit;
+  font-size: 12.5px;
+}
+
+.rich-text-editor .ql-editor {
+  min-height: 96px;
+  line-height: 1.55;
+}
+
+/* Quill 自己用 li[data-list] + .ql-ui::before 画 marker；不要用 native list 覆盖它。 */
+.rich-text-editor .ql-editor li[data-list] {
+  list-style-type: none;
+  padding-left: 1.5em;
+  position: relative;
+}
+
+.rich-text-editor .ql-editor li > .ql-ui::before {
+  display: inline-block;
+  margin-left: -1.5em;
+  margin-right: 0.3em;
+  text-align: right;
+  width: 1.2em;
+}
+
+.rich-text-editor .ql-editor.ql-blank::before {
+  font-style: normal;
+  color: #94a3b8;
+  font-size: 12.5px;
+}

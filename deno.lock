@@ -4,6 +4,7 @@
     "jsr:@supabase/functions-js@2.108.0": "2.108.0",
     "npm:@supabase/supabase-js@2.108.0": "2.108.0",
     "npm:openai@^4.52.5": "4.104.0",
+    "npm:prettier@^3.8.4": "3.8.4",
     "npm:typescript@6.0.3": "6.0.3"
   },
   "jsr": {
@@ -286,6 +287,11 @@
       "bin": true,
       "tarball": "https://registry.npmmirror.com/openai/-/openai-4.104.0.tgz"
     },
+    "prettier@3.8.4": {
+      "integrity": "sha512-N2MylSdi48+5N/6S5j+maeHbUSIzzZ5uOcX5Hm4QpV8Dkb1HFjfAKTKX6yNPJQD9AhcT3ifHNB66tWTTJDi11Q==",
+      "bin": true,
+      "tarball": "https://registry.npmmirror.com/prettier/-/prettier-3.8.4.tgz"
+    },
     "tr46@0.0.3": {
       "integrity": "sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==",
       "tarball": "https://registry.npmmirror.com/tr46/-/tr46-0.0.3.tgz"
@@ -323,6 +329,7 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:prettier@^3.8.4",
         "npm:typescript@6.0.3"
       ]
     },

@@ -31,3 +31,8 @@ export {
   createDefaultResumeStyleConfig,
   profileDraftToBaseResumeDocument,
 } from "../../../packages/domain/src/resume/normalize.ts";
+
+export {
+  coerceRichText,
+  textToRichText,
+} from "../../../packages/domain/src/rich-text.ts";

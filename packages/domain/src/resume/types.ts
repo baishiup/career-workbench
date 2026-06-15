@@ -1,97 +1,81 @@
 /**
  * 投递简历正文模型。
  *
- * 这里描述 ResumeDocument、ResumeSection 和 ResumeBlock，
- * 不存用户长期资料；长期资料归 profile.ts。
+ * 简历 = 一组有序、可显隐的模块（ResumeModule）。每个模块复用 profile/types.ts
+ * 里定义的同一套内容类型（PersonalInfo / EducationItem / WorkItem ...），
+ * 简历额外承载排序与显隐；Profile 则是这些内容的扁平事实层。两边共用字段类型。
  */
 
-/** 简历第一阶段支持的 section 类型。 */
-type ResumeSectionKind =
+import type {
+  CustomModule,
+  EducationItem,
+  JobPreferences,
+  PersonalInfo,
+  ProjectItem,
+  WorkItem,
+} from "../profile/types.ts";
+
+/** 固定的简历模块类型。 */
+type ResumeModuleKind =
   | "personal"
-  | "summary"
-  | "skills"
+  | "preferences"
+  | "education"
   | "work"
   | "projects"
-  | "education"
+  | "skills"
   | "custom";
 
-/** section 内部可复用的内容块类型。 */
-type ResumeBlockKind =
-  | "text"
-  | "paragraph"
-  | "bulletList"
-  | "tagList"
-  | "dateRange"
-  | "linkList";
-
-/** 所有简历内容块共享的稳定标识。 */
-type ResumeBlockBase = {
+/** 所有模块共享的排序与显隐元数据。 */
+type ResumeModuleBase = {
   id: string;
-  kind: ResumeBlockKind;
-  label?: string;
-};
-
-/** 单行文本或段落文本内容块。 */
-type ResumeTextBlock = ResumeBlockBase & {
-  kind: "text" | "paragraph";
-  text: string;
-};
-
-/** bullet 列表中的单个条目，可独立定位和改写。 */
-type ResumeBulletListItem = {
-  id: string;
-  text: string;
-};
-
-/** 工作经历、项目经历等区域常用的 bullet 列表内容块。 */
-type ResumeBulletListBlock = ResumeBlockBase & {
-  kind: "bulletList";
-  items: ResumeBulletListItem[];
-};
-
-/** 技能、关键词等标签列表内容块。 */
-type ResumeTagListBlock = ResumeBlockBase & {
-  kind: "tagList";
-  tags: string[];
-};
-
-/** 教育或经历时间范围内容块。 */
-type ResumeDateRangeBlock = ResumeBlockBase & {
-  kind: "dateRange";
-  startDate: string;
-  endDate: string;
-  current?: boolean;
-};
-
-/** 简历中的链接项，例如 GitHub、作品集或项目地址。 */
-type ResumeLink = {
-  id: string;
-  label: string;
-  url: string;
-};
-
-/** 多个链接组成的内容块。 */
-type ResumeLinkListBlock = ResumeBlockBase & {
-  kind: "linkList";
-  links: ResumeLink[];
-};
-
-/** section 内允许渲染和编辑的所有内容块联合类型。 */
-type ResumeBlock =
-  | ResumeTextBlock
-  | ResumeBulletListBlock
-  | ResumeTagListBlock
-  | ResumeDateRangeBlock
-  | ResumeLinkListBlock;
-
-/** 简历顶层 section，负责排序、显隐和承载内容块。 */
-type ResumeSection = {
-  id: string;
-  kind: ResumeSectionKind;
-  title: string;
+  /** 是否在这份简历里展示该模块。 */
   visible: boolean;
-  blocks: ResumeBlock[];
 };
+
+type PersonalResumeModule = ResumeModuleBase & {
+  kind: "personal";
+  personal: PersonalInfo;
+};
+
+type PreferencesResumeModule = ResumeModuleBase & {
+  kind: "preferences";
+  preferences: JobPreferences;
+};
+
+type EducationResumeModule = ResumeModuleBase & {
+  kind: "education";
+  items: EducationItem[];
+};
+
+type WorkResumeModule = ResumeModuleBase & {
+  kind: "work";
+  items: WorkItem[];
+};
+
+type ProjectsResumeModule = ResumeModuleBase & {
+  kind: "projects";
+  items: ProjectItem[];
+};
+
+type SkillsResumeModule = ResumeModuleBase & {
+  kind: "skills";
+  skills: string[];
+};
+
+type CustomResumeModule = ResumeModuleBase & {
+  kind: "custom";
+  module: CustomModule;
+};
+
+/** 简历模块联合类型。 */
+type ResumeModule =
+  | PersonalResumeModule
+  | PreferencesResumeModule
+  | EducationResumeModule
+  | WorkResumeModule
+  | ProjectsResumeModule
+  | SkillsResumeModule
+  | CustomResumeModule;
 
 /** 当前简历面向的目标岗位上下文。 */
 type ResumeTargetContext = {
@@ -104,24 +88,21 @@ type ResumeTargetContext = {
 type ResumeDocument = {
   id?: string;
   title: string;
-  locale: string;
   target?: ResumeTargetContext;
-  sections: ResumeSection[];
+  modules: ResumeModule[];
 };
 
 export type {
-  ResumeBlock,
-  ResumeBlockBase,
-  ResumeBlockKind,
-  ResumeBulletListBlock,
-  ResumeBulletListItem,
-  ResumeDateRangeBlock,
+  CustomResumeModule,
+  EducationResumeModule,
+  PersonalResumeModule,
+  PreferencesResumeModule,
+  ProjectsResumeModule,
   ResumeDocument,
-  ResumeLink,
-  ResumeLinkListBlock,
-  ResumeSection,
-  ResumeSectionKind,
-  ResumeTagListBlock,
+  ResumeModule,
+  ResumeModuleBase,
+  ResumeModuleKind,
   ResumeTargetContext,
-  ResumeTextBlock,
+  SkillsResumeModule,
+  WorkResumeModule,
 };

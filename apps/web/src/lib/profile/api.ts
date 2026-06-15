@@ -6,7 +6,16 @@
 
 import { emptyProfile } from "@/lib/profile/empty-profile";
 import { getSupabaseClient } from "@/lib/supabase";
-import type { ProfileDraft } from "@career-workbench/domain";
+import {
+  coerceRichText,
+  type CustomField,
+  type CustomModule,
+  type EducationItem,
+  mergeTextAndBulletsToRichText,
+  type ProfileDraft,
+  type ProjectItem,
+  type WorkItem,
+} from "@career-workbench/domain";
 
 type ProfileDataRow = {
   profile_data: unknown | null;
@@ -17,15 +26,111 @@ type UserDataRow = {
   full_name: string | null;
 };
 
-type StoredProfileDraft = Partial<
-  Omit<ProfileDraft, "personal" | "preferences">
-> & {
-  personal?: Partial<ProfileDraft["personal"]>;
-  preferences?: Partial<ProfileDraft["preferences"]>;
-};
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return isRecord(value) ? value : {};
+}
+
+function str(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function strArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+
+function bool(value: unknown): boolean {
+  return typeof value === "boolean" ? value : false;
+}
+
+function toCustomFields(value: unknown): CustomField[] {
+  return (Array.isArray(value) ? value : []).map((field, index) => {
+    const record = asRecord(field);
+
+    return {
+      id: str(record.id) || `custom-field-${index + 1}`,
+      label: str(record.label),
+      value: str(record.value),
+    };
+  });
+}
+
+/** 同时兼容旧形态（summary + bullets / location / technologies / 纯文本说明）。 */
+function normalizeEducationItem(value: unknown, index: number): EducationItem {
+  const record = asRecord(value);
+
+  return {
+    current: bool(record.current),
+    degree: str(record.degree),
+    description: coerceRichText(record.description),
+    endDate: str(record.endDate),
+    id: str(record.id) || `edu-${index + 1}`,
+    major: str(record.major),
+    school: str(record.school),
+    startDate: str(record.startDate),
+  };
+}
+
+function normalizeWorkItem(value: unknown, index: number): WorkItem {
+  const record = asRecord(value);
+  const description =
+    "description" in record
+      ? coerceRichText(record.description)
+      : mergeTextAndBulletsToRichText(
+          str(record.summary),
+          strArray(record.bullets),
+        );
+
+  return {
+    company: str(record.company),
+    current: bool(record.current),
+    description,
+    endDate: str(record.endDate),
+    id: str(record.id) || `work-${index + 1}`,
+    skills: strArray(record.skills),
+    startDate: str(record.startDate),
+    title: str(record.title),
+  };
+}
+
+function normalizeProjectItem(value: unknown, index: number): ProjectItem {
+  const record = asRecord(value);
+  const description =
+    "description" in record
+      ? coerceRichText(record.description)
+      : mergeTextAndBulletsToRichText(
+          str(record.summary),
+          strArray(record.bullets),
+        );
+  const skills = Array.isArray(record.skills)
+    ? strArray(record.skills)
+    : strArray(record.technologies);
+
+  return {
+    current: bool(record.current),
+    description,
+    endDate: str(record.endDate),
+    id: str(record.id) || `project-${index + 1}`,
+    name: str(record.name),
+    role: str(record.role),
+    skills,
+    startDate: str(record.startDate),
+  };
+}
+
+function normalizeCustomModule(value: unknown, index: number): CustomModule {
+  const record = asRecord(value);
+
+  return {
+    content: coerceRichText(record.content),
+    id: str(record.id) || `custom-${index + 1}`,
+    name: str(record.name),
+  };
 }
 
 function normalizeProfileData(value: unknown): ProfileDraft {
@@ -33,29 +138,44 @@ function normalizeProfileData(value: unknown): ProfileDraft {
     return emptyProfile;
   }
 
-  const profile = value as StoredProfileDraft;
-  const personal = profile.personal ?? {};
-  const preferences = profile.preferences ?? {};
+  const personal = asRecord(value.personal);
+  const preferences = asRecord(value.preferences);
 
   return {
-    ...emptyProfile,
-    ...profile,
     personal: {
       ...emptyProfile.personal,
-      ...personal,
-      customFields: Array.isArray(personal.customFields)
-        ? personal.customFields
-        : [],
+      city: str(personal.city) || emptyProfile.personal.city,
+      customFields: toCustomFields(personal.customFields),
+      email: str(personal.email),
+      fullName: str(personal.fullName),
+      github: str(personal.github),
+      headline: str(personal.headline),
+      linkedin: str(personal.linkedin),
+      phone: str(personal.phone),
+      portfolio: str(personal.portfolio),
     },
     preferences: {
-      ...emptyProfile.preferences,
-      ...preferences,
-      jobTypes: Array.isArray(preferences.jobTypes) ? preferences.jobTypes : [],
+      customFields: toCustomFields(preferences.customFields),
+      jobFunction: str(preferences.jobFunction),
+      jobTypes: strArray(preferences.jobTypes),
+      openToRemote:
+        typeof preferences.openToRemote === "boolean"
+          ? preferences.openToRemote
+          : emptyProfile.preferences.openToRemote,
+      salaryExpectation: str(preferences.salaryExpectation),
+      targetCity: str(preferences.targetCity),
     },
-    education: Array.isArray(profile.education) ? profile.education : [],
-    work: Array.isArray(profile.work) ? profile.work : [],
-    projects: Array.isArray(profile.projects) ? profile.projects : [],
-    skills: Array.isArray(profile.skills) ? profile.skills : [],
+    education: (Array.isArray(value.education) ? value.education : []).map(
+      normalizeEducationItem,
+    ),
+    work: (Array.isArray(value.work) ? value.work : []).map(normalizeWorkItem),
+    projects: (Array.isArray(value.projects) ? value.projects : []).map(
+      normalizeProjectItem,
+    ),
+    skills: strArray(value.skills),
+    custom: (Array.isArray(value.custom) ? value.custom : []).map(
+      normalizeCustomModule,
+    ),
   };
 }
 

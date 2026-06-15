@@ -1,0 +1,43 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@career-workbench/web", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "web:remote",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@career-workbench/web", "dev:remote"],
+      "port": 5173
+    },
+    {
+      "name": "supabase",
+      "runtimeExecutable": "supabase",
+      "runtimeArgs": ["start"],
+      "port": 54323
+    },
+    {
+      "name": "functions",
+      "runtimeExecutable": "supabase",
+      "runtimeArgs": [
+        "functions",
+        "serve",
+        "--env-file",
+        "supabase/.env.local",
+        "--import-map",
+        "supabase/functions/import_map.json",
+        "--no-verify-jwt"
+      ],
+      "port": 54321
+    },
+    {
+      "name": "dev:local (full stack)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/dev-local.mjs"],
+      "port": 5173
+    }
+  ]
+}

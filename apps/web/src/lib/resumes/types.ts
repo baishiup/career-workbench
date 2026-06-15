@@ -54,6 +54,9 @@ type ResumeGenerateResponse = {
   status: "ok";
   provider: "dify";
   resume: ResumeFunctionRow;
+  /** true 表示 AI 定制失败、已用原始简历占位，需提示用户重试。 */
+  degraded?: boolean;
+  degraded_reason?: string | null;
 };
 
 export type {

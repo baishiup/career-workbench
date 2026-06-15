@@ -138,8 +138,17 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.34) 48%, rgba(255, 255, 255, 0.86)),
-    radial-gradient(circle at 50% 36%, rgba(255, 255, 255, 0.32), transparent 42%);
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.72),
+      rgba(255, 255, 255, 0.34) 48%,
+      rgba(255, 255, 255, 0.86)
+    ),
+    radial-gradient(
+      circle at 50% 36%,
+      rgba(255, 255, 255, 0.32),
+      transparent 42%
+    );
   content: "";
 }
 
@@ -596,7 +605,12 @@
 .cw-feature-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(8, 21, 12, 0.2), rgba(8, 21, 12, 0.18) 38%, rgba(8, 21, 12, 0.84));
+  background: linear-gradient(
+    180deg,
+    rgba(8, 21, 12, 0.2),
+    rgba(8, 21, 12, 0.18) 38%,
+    rgba(8, 21, 12, 0.84)
+  );
 }
 
 .cw-feature-label,

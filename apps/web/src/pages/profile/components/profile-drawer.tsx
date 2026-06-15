@@ -5,17 +5,20 @@ import { Alert, Button, Drawer, useOverlayState } from "@heroui/react";
 import { Save } from "lucide-react";
 
 import { sectionMeta } from "@/pages/profile/data";
-import type {
-  EducationItem,
-  JobPreferences,
-  PersonalInfo,
-  ProfileDraft,
-  ProfileSectionId,
-  ProjectItem,
-  WorkItem,
+import {
+  type CustomModule,
+  type EducationItem,
+  emptyRichText,
+  type JobPreferences,
+  type PersonalInfo,
+  type ProfileDraft,
+  type ProfileSectionId,
+  type ProjectItem,
+  type WorkItem,
 } from "@career-workbench/domain";
 import { PersonalForm } from "./personal-form";
 import {
+  CustomForm,
   EducationForm,
   PreferencesForm,
   ProjectsForm,
@@ -110,8 +113,17 @@ function ProfileDrawer({
     });
   }
 
+  function updateCustom(id: string, patch: Partial<CustomModule>) {
+    onDraftChange({
+      ...draft,
+      custom: draft.custom.map((item) =>
+        item.id === id ? { ...item, ...patch } : item,
+      ),
+    });
+  }
+
   function reorderList(
-    listName: "education" | "work" | "projects",
+    listName: "education" | "work" | "projects" | "custom",
     from: number,
     to: number,
   ) {
@@ -192,10 +204,10 @@ function ProfileDrawer({
                           school: "",
                           degree: "",
                           major: "",
-                          location: "",
                           startDate: "",
                           endDate: "",
-                          description: "",
+                          current: false,
+                          description: emptyRichText,
                         },
                       ],
                     })
@@ -224,13 +236,11 @@ function ProfileDrawer({
                           id: createId("work"),
                           company: "",
                           title: "",
-                          location: "",
-                          jobType: "全职",
                           startDate: "",
                           endDate: "",
                           current: false,
-                          summary: "",
-                          bullets: [""],
+                          description: emptyRichText,
+                          skills: [],
                         },
                       ],
                     })
@@ -260,10 +270,9 @@ function ProfileDrawer({
                           role: "",
                           startDate: "",
                           endDate: "",
-                          summary: "",
-                          bullets: [""],
-                          links: [],
-                          technologies: [],
+                          current: false,
+                          description: emptyRichText,
+                          skills: [],
                         },
                       ],
                     })
@@ -284,6 +293,33 @@ function ProfileDrawer({
                 <SkillsForm
                   onChange={(skills) => onDraftChange({ ...draft, skills })}
                   skills={draft.skills}
+                />
+              ) : null}
+
+              {section === "custom" ? (
+                <CustomForm
+                  custom={draft.custom}
+                  onAdd={() =>
+                    onDraftChange({
+                      ...draft,
+                      custom: [
+                        ...draft.custom,
+                        {
+                          id: createId("custom"),
+                          name: "",
+                          content: emptyRichText,
+                        },
+                      ],
+                    })
+                  }
+                  onDelete={(id) =>
+                    onDraftChange({
+                      ...draft,
+                      custom: draft.custom.filter((item) => item.id !== id),
+                    })
+                  }
+                  onReorder={(from, to) => reorderList("custom", from, to)}
+                  onUpdate={updateCustom}
                 />
               ) : null}
             </Drawer.Body>

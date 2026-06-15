@@ -1,16 +1,21 @@
 "use client";
 
 import type { ComponentType, SVGProps } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Button, Tabs } from "@heroui/react";
 import {
+  coerceRichText,
   createDefaultResumeStyleConfig,
-  type ResumeBlock,
+  createResumeStyleFromTemplate,
+  type CustomModule,
+  type EducationItem,
+  type JobPreferences,
+  type PersonalInfo,
+  type ProjectItem,
   type ResumeDocument,
-  type ResumePageSize,
-  type ResumeSection,
-  type ResumeSectionKind,
+  type ResumeModule,
   type ResumeStyleConfig,
+  type WorkItem,
 } from "@career-workbench/domain";
 import {
   FilePenLine,
@@ -77,9 +82,10 @@ function ResumeEditorWorkspace({
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
-    initialDocument?.sections[0]?.id ?? null,
+    initialDocument?.modules[0]?.id ?? null,
   );
   const [sectionFocusSignal, setSectionFocusSignal] = useState(0);
+  const editorScrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setDraftDocument(initialDocument);
@@ -88,7 +94,7 @@ function ResumeEditorWorkspace({
     setSavedStyle(initialStyle);
     setIsSaving(false);
     setSaveError(null);
-    setSelectedSectionId(initialDocument?.sections[0]?.id ?? null);
+    setSelectedSectionId(initialDocument?.modules[0]?.id ?? null);
   }, [initialDocument, initialStyle, resume.id]);
 
   const isDirty = useMemo(
@@ -146,7 +152,7 @@ function ResumeEditorWorkspace({
     setDraftDocument(savedDocument);
     setDraftStyle(savedStyle);
     setSaveError(null);
-    setSelectedSectionId(savedDocument?.sections[0]?.id ?? null);
+    setSelectedSectionId(savedDocument?.modules[0]?.id ?? null);
   }
 
   useEffect(() => {
@@ -155,12 +161,12 @@ function ResumeEditorWorkspace({
       return;
     }
 
-    const hasSelectedSection = draftDocument.sections.some(
-      (section) => section.id === selectedSectionId,
+    const hasSelectedSection = draftDocument.modules.some(
+      (module) => module.id === selectedSectionId,
     );
 
     if (!hasSelectedSection) {
-      setSelectedSectionId(draftDocument.sections[0]?.id ?? null);
+      setSelectedSectionId(draftDocument.modules[0]?.id ?? null);
     }
   }, [draftDocument, selectedSectionId]);
 
@@ -171,6 +177,7 @@ function ResumeEditorWorkspace({
   }
 
   function handleSectionSelect(sectionId: string) {
+    setActiveTab("editor");
     setSelectedSectionId(sectionId);
     setSectionFocusSignal((current) => current + 1);
   }
@@ -261,6 +268,7 @@ function ResumeEditorWorkspace({
         ) : null}
         <div className="min-h-0 flex-1 overflow-hidden">
           <div
+            ref={editorScrollRef}
             className={cn(
               "h-full overflow-y-auto p-4",
               activeTab !== "editor" && "hidden",
@@ -271,8 +279,9 @@ function ResumeEditorWorkspace({
                 document={draftDocument}
                 onDocumentChange={setDraftDocument}
                 sectionFocusSignal={sectionFocusSignal}
-                onSectionFocus={setSelectedSectionId}
+                onSectionFocus={handleSectionSelect}
                 selectedSectionId={selectedSectionId}
+                scrollContainerRef={editorScrollRef}
               />
             ) : (
               <InvalidDocumentAlert />
@@ -328,247 +337,408 @@ function InvalidDocumentAlert() {
   );
 }
 
-const sectionKinds = new Set<ResumeSectionKind>([
-  "custom",
-  "education",
+const moduleKinds = new Set<ResumeModule["kind"]>([
   "personal",
+  "preferences",
+  "education",
+  "work",
   "projects",
   "skills",
-  "summary",
-  "work",
+  "custom",
 ]);
 
 function normalizeResumeDocument(value: unknown): ResumeDocument | null {
   const record = asRecord(value);
 
-  if (
-    !(
-      typeof record?.title === "string" &&
-      typeof record.locale === "string" &&
-      Array.isArray(record.sections)
-    )
-  ) {
+  if (!record || typeof record.title !== "string") {
     return null;
   }
 
-  const sections = record.sections
-    .map((section, index) => normalizeResumeSection(section, index))
-    .filter((section): section is ResumeSection => Boolean(section));
+  let modules: ResumeModule[];
 
-  if (sections.length === 0) {
+  if (Array.isArray(record.modules)) {
+    modules = record.modules
+      .map((module, index) => normalizeResumeModule(module, index))
+      .filter((module): module is ResumeModule => Boolean(module));
+  } else if (Array.isArray(record.sections)) {
+    // 旧版 section/block 文档：内容保真迁移到模块（无法重建的结构化条目降级为自定义模块）。
+    modules = migrateLegacySections(record.sections);
+  } else {
     return null;
   }
+
+  if (modules.length === 0) {
+    return null;
+  }
+
+  const base = cloneValue(record);
+  delete (base as Record<string, unknown>).sections;
 
   return {
-    ...cloneValue(record),
-    locale: record.locale,
-    sections,
+    ...base,
+    modules,
     title: record.title,
   } as ResumeDocument;
 }
 
-function normalizeResumeSection(
+/** 把旧版 section/block 文档迁移成模块，尽量保留内容。 */
+function migrateLegacySections(sections: unknown[]): ResumeModule[] {
+  return sections
+    .map((section, index): ResumeModule | null => {
+      const record = asRecord(section);
+
+      if (!record) {
+        return null;
+      }
+
+      const id = getString(record.id, `module-${index + 1}`);
+      const visible =
+        typeof record.visible === "boolean" ? record.visible : true;
+      const blocks = toArray(record.blocks);
+
+      if (record.kind === "personal") {
+        return {
+          id,
+          kind: "personal",
+          personal: legacyPersonal(blocks),
+          visible,
+        };
+      }
+
+      if (record.kind === "skills") {
+        return { id, kind: "skills", skills: legacySkills(blocks), visible };
+      }
+
+      return {
+        id,
+        kind: "custom",
+        module: {
+          content: legacyBlocksToRichText(blocks),
+          id: `${id}-content`,
+          name: getString(record.title, "模块"),
+        },
+        visible,
+      };
+    })
+    .filter((module): module is ResumeModule => Boolean(module));
+}
+
+function legacyPersonal(blocks: unknown[]): PersonalInfo {
+  const personal: PersonalInfo = {
+    city: "",
+    customFields: [],
+    email: "",
+    fullName: "",
+    github: "",
+    headline: "",
+    linkedin: "",
+    phone: "",
+    portfolio: "",
+  };
+
+  for (const block of blocks) {
+    const record = rec(block);
+
+    if (record.kind === "text" || record.kind === "paragraph") {
+      const text = getStringValue(record.text);
+
+      if (!personal.fullName) {
+        personal.fullName = text;
+      } else if (!personal.headline) {
+        personal.headline = text;
+      }
+      continue;
+    }
+
+    if (record.kind === "linkList") {
+      for (const link of toArray(record.links)) {
+        const linkRecord = rec(link);
+        const label = getStringValue(linkRecord.label);
+        const url = getStringValue(linkRecord.url);
+        const lowered = label.toLowerCase();
+
+        if (/邮箱|email/.test(lowered)) {
+          personal.email = url;
+        } else if (/电话|phone/.test(lowered)) {
+          personal.phone = url;
+        } else if (lowered.includes("linkedin")) {
+          personal.linkedin = url;
+        } else if (lowered.includes("github")) {
+          personal.github = url;
+        } else if (/portfolio|作品/.test(lowered)) {
+          personal.portfolio = url;
+        } else if (url) {
+          personal.customFields.push({
+            id: `custom-${personal.customFields.length + 1}`,
+            label: label || "Link",
+            value: url,
+          });
+        }
+      }
+    }
+  }
+
+  return personal;
+}
+
+function legacySkills(blocks: unknown[]): string[] {
+  const skills: string[] = [];
+
+  for (const block of blocks) {
+    const record = rec(block);
+
+    if (record.kind === "tagList") {
+      skills.push(...toStringArray(record.tags));
+    }
+  }
+
+  return skills;
+}
+
+function legacyBlocksToRichText(blocks: unknown[]) {
+  const ops: { attributes?: Record<string, unknown>; insert: string }[] = [];
+
+  for (const block of blocks) {
+    const record = rec(block);
+
+    if (record.kind === "text" || record.kind === "paragraph") {
+      const text = getStringValue(record.text);
+      if (text) {
+        ops.push({ insert: `${text}\n` });
+      }
+    } else if (record.kind === "bulletList") {
+      for (const item of toArray(record.items)) {
+        const text = getStringValue(rec(item).text);
+        if (text) {
+          ops.push({ insert: text });
+          ops.push({ attributes: { list: "bullet" }, insert: "\n" });
+        }
+      }
+    } else if (record.kind === "tagList") {
+      const tags = toStringArray(record.tags);
+      if (tags.length > 0) {
+        ops.push({ insert: `${tags.join(" · ")}\n` });
+      }
+    } else if (record.kind === "dateRange") {
+      const end = record.current ? "至今" : getStringValue(record.endDate);
+      const range = [getStringValue(record.startDate), end]
+        .filter(Boolean)
+        .join(" - ");
+      if (range) {
+        ops.push({ insert: `${range}\n` });
+      }
+    } else if (record.kind === "linkList") {
+      for (const link of toArray(record.links)) {
+        const linkRecord = rec(link);
+        const label = getStringValue(linkRecord.label);
+        const url = getStringValue(linkRecord.url);
+        if (url) {
+          ops.push({ insert: `${label ? `${label}: ` : ""}${url}\n` });
+        }
+      }
+    }
+  }
+
+  if (ops.length === 0) {
+    ops.push({ insert: "\n" });
+  }
+
+  return coerceRichText({ ops });
+}
+
+function normalizeResumeModule(
   value: unknown,
   index: number,
-): ResumeSection | null {
+): ResumeModule | null {
   const record = asRecord(value);
 
-  if (!record) {
+  if (
+    !record ||
+    typeof record.kind !== "string" ||
+    !moduleKinds.has(record.kind as ResumeModule["kind"])
+  ) {
     return null;
   }
 
-  const rawBlocks = Array.isArray(record.blocks) ? record.blocks : [];
-  const hasUsefulContent =
-    typeof record.title === "string" ||
-    isSectionKind(record.kind) ||
-    rawBlocks.length > 0;
+  const id = getString(record.id, `module-${index + 1}`);
+  const visible = typeof record.visible === "boolean" ? record.visible : true;
 
-  if (!hasUsefulContent) {
-    return null;
+  switch (record.kind as ResumeModule["kind"]) {
+    case "personal":
+      return {
+        id,
+        kind: "personal",
+        personal: normalizePersonal(record.personal),
+        visible,
+      };
+    case "preferences":
+      return {
+        id,
+        kind: "preferences",
+        preferences: normalizePreferences(record.preferences),
+        visible,
+      };
+    case "education":
+      return {
+        id,
+        items: toArray(record.items).map(normalizeEducation),
+        kind: "education",
+        visible,
+      };
+    case "work":
+      return {
+        id,
+        items: toArray(record.items).map(normalizeWork),
+        kind: "work",
+        visible,
+      };
+    case "projects":
+      return {
+        id,
+        items: toArray(record.items).map(normalizeProject),
+        kind: "projects",
+        visible,
+      };
+    case "skills":
+      return {
+        id,
+        kind: "skills",
+        skills: toStringArray(record.skills),
+        visible,
+      };
+    case "custom":
+      return {
+        id,
+        kind: "custom",
+        module: normalizeCustom(record.module, id),
+        visible,
+      };
+    default:
+      return null;
   }
+}
 
-  const kind = isSectionKind(record.kind) ? record.kind : "custom";
+function normalizePersonal(value: unknown): PersonalInfo {
+  const record = asRecord(value) ?? {};
 
   return {
-    blocks: rawBlocks
-      .map((block, blockIndex) =>
-        normalizeResumeBlock(block, index, blockIndex),
-      )
-      .filter((block): block is ResumeBlock => Boolean(block)),
-    id: getString(record.id, `section-${index + 1}`),
-    kind,
-    title: getString(record.title, sectionKindFallbackTitle(kind)),
-    visible: typeof record.visible === "boolean" ? record.visible : true,
+    city: getStringValue(record.city),
+    customFields: toCustomFields(record.customFields),
+    email: getStringValue(record.email),
+    fullName: getStringValue(record.fullName),
+    github: getStringValue(record.github),
+    headline: getStringValue(record.headline),
+    linkedin: getStringValue(record.linkedin),
+    phone: getStringValue(record.phone),
+    portfolio: getStringValue(record.portfolio),
   };
 }
 
-function normalizeResumeBlock(
-  value: unknown,
-  sectionIndex: number,
-  blockIndex: number,
-): ResumeBlock | null {
-  const record = asRecord(value);
+function normalizePreferences(value: unknown): JobPreferences {
+  const record = asRecord(value) ?? {};
 
-  if (!record || typeof record.kind !== "string") {
-    return null;
-  }
-
-  const id = getString(
-    record.id,
-    `section-${sectionIndex + 1}-block-${blockIndex + 1}`,
-  );
-  const label = getOptionalString(record.label);
-
-  if (record.kind === "text" || record.kind === "paragraph") {
-    return {
-      id,
-      kind: record.kind,
-      label,
-      text: getString(record.text, ""),
-    };
-  }
-
-  if (record.kind === "bulletList") {
-    const items = Array.isArray(record.items) ? record.items : [];
-
-    return {
-      id,
-      items: items.map((item, index) => {
-        const itemRecord = asRecord(item);
-
-        return {
-          id: getString(itemRecord?.id, `${id}-item-${index + 1}`),
-          text: getString(itemRecord?.text, ""),
-        };
-      }),
-      kind: "bulletList",
-      label,
-    };
-  }
-
-  if (record.kind === "tagList") {
-    return {
-      id,
-      kind: "tagList",
-      label,
-      tags: Array.isArray(record.tags)
-        ? record.tags.filter((tag): tag is string => typeof tag === "string")
-        : [],
-    };
-  }
-
-  if (record.kind === "dateRange") {
-    return {
-      current: typeof record.current === "boolean" ? record.current : false,
-      endDate: getString(record.endDate, ""),
-      id,
-      kind: "dateRange",
-      label,
-      startDate: getString(record.startDate, ""),
-    };
-  }
-
-  if (record.kind === "linkList") {
-    const links = Array.isArray(record.links) ? record.links : [];
-
-    return {
-      id,
-      kind: "linkList",
-      label,
-      links: links.map((link, index) => {
-        const linkRecord = asRecord(link);
-
-        return {
-          id: getString(linkRecord?.id, `${id}-link-${index + 1}`),
-          label: getString(linkRecord?.label, ""),
-          url: getString(linkRecord?.url, ""),
-        };
-      }),
-    };
-  }
-
-  return null;
+  return {
+    customFields: toCustomFields(record.customFields),
+    jobFunction: getStringValue(record.jobFunction),
+    jobTypes: toStringArray(record.jobTypes),
+    openToRemote:
+      typeof record.openToRemote === "boolean" ? record.openToRemote : true,
+    salaryExpectation: getStringValue(record.salaryExpectation),
+    targetCity: getStringValue(record.targetCity),
+  };
 }
 
-function isSectionKind(value: unknown): value is ResumeSectionKind {
-  return (
-    typeof value === "string" && sectionKinds.has(value as ResumeSectionKind)
+function normalizeEducation(value: unknown, index: number): EducationItem {
+  const record = asRecord(value) ?? {};
+
+  return {
+    current: getBool(record.current),
+    degree: getStringValue(record.degree),
+    description: coerceRichText(record.description),
+    endDate: getStringValue(record.endDate),
+    id: getString(record.id, `edu-${index + 1}`),
+    major: getStringValue(record.major),
+    school: getStringValue(record.school),
+    startDate: getStringValue(record.startDate),
+  };
+}
+
+function normalizeWork(value: unknown, index: number): WorkItem {
+  const record = asRecord(value) ?? {};
+
+  return {
+    company: getStringValue(record.company),
+    current: getBool(record.current),
+    description: coerceRichText(record.description),
+    endDate: getStringValue(record.endDate),
+    id: getString(record.id, `work-${index + 1}`),
+    skills: toStringArray(record.skills),
+    startDate: getStringValue(record.startDate),
+    title: getStringValue(record.title),
+  };
+}
+
+function normalizeProject(value: unknown, index: number): ProjectItem {
+  const record = asRecord(value) ?? {};
+
+  return {
+    current: getBool(record.current),
+    description: coerceRichText(record.description),
+    endDate: getStringValue(record.endDate),
+    id: getString(record.id, `project-${index + 1}`),
+    name: getStringValue(record.name),
+    role: getStringValue(record.role),
+    skills: toStringArray(record.skills),
+    startDate: getStringValue(record.startDate),
+  };
+}
+
+function normalizeCustom(value: unknown, fallbackId: string): CustomModule {
+  const record = asRecord(value) ?? {};
+
+  return {
+    content: coerceRichText(record.content),
+    id: getString(record.id, `${fallbackId}-content`),
+    name: getStringValue(record.name),
+  };
+}
+
+function toCustomFields(value: unknown) {
+  return toArray(value).map((field, index) => {
+    const record = asRecord(field) ?? {};
+
+    return {
+      id: getString(record.id, `custom-field-${index + 1}`),
+      label: getStringValue(record.label),
+      value: getStringValue(record.value),
+    };
+  });
+}
+
+function toArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function toStringArray(value: unknown): string[] {
+  return toArray(value).filter(
+    (item): item is string => typeof item === "string",
   );
 }
 
-function sectionKindFallbackTitle(kind: ResumeSectionKind) {
-  return kind === "personal" ? "Personal Info" : kind;
+function getStringValue(value: unknown): string {
+  return typeof value === "string" ? value : "";
 }
 
-function getOptionalString(value: unknown) {
-  return typeof value === "string" ? value : undefined;
+function getBool(value: unknown): boolean {
+  return typeof value === "boolean" ? value : false;
 }
 
 function normalizeResumeStyle(value: unknown): ResumeStyleConfig {
   const defaults = createDefaultResumeStyleConfig();
   const record = asRecord(value);
-  const colors = asRecord(record?.colors);
-  const typography = asRecord(record?.typography);
-  const spacing = asRecord(record?.spacing);
-  const pageMargin = asRecord(spacing?.pageMargin);
-
-  return {
-    ...defaults,
-    templateId: getString(record?.templateId, defaults.templateId),
-    pageSize: getPageSize(record?.pageSize, defaults.pageSize),
-    colors: {
-      ...defaults.colors,
-      accent: getString(colors?.accent, defaults.colors.accent),
-      background: getString(colors?.background, defaults.colors.background),
-      border: getString(colors?.border, defaults.colors.border),
-      mutedText: getString(colors?.mutedText, defaults.colors.mutedText),
-      text: getString(colors?.text, defaults.colors.text),
-    },
-    typography: {
-      ...defaults.typography,
-      baseFontSize: getNumber(
-        typography?.baseFontSize,
-        defaults.typography.baseFontSize,
-      ),
-      fontFamily: getString(
-        typography?.fontFamily,
-        defaults.typography.fontFamily,
-      ),
-      headingFontSize: getNumber(
-        typography?.headingFontSize,
-        defaults.typography.headingFontSize,
-      ),
-      lineHeight: getNumber(
-        typography?.lineHeight,
-        defaults.typography.lineHeight,
-      ),
-    },
-    spacing: {
-      ...defaults.spacing,
-      blockSpacing: getNumber(
-        spacing?.blockSpacing,
-        defaults.spacing.blockSpacing,
-      ),
-      itemSpacing: getNumber(
-        spacing?.itemSpacing,
-        defaults.spacing.itemSpacing,
-      ),
-      pageMargin: {
-        ...defaults.spacing.pageMargin,
-        bottom: getNumber(
-          pageMargin?.bottom,
-          defaults.spacing.pageMargin.bottom,
-        ),
-        left: getNumber(pageMargin?.left, defaults.spacing.pageMargin.left),
-        right: getNumber(pageMargin?.right, defaults.spacing.pageMargin.right),
-        top: getNumber(pageMargin?.top, defaults.spacing.pageMargin.top),
-      },
-      sectionSpacing: getNumber(
-        spacing?.sectionSpacing,
-        defaults.spacing.sectionSpacing,
-      ),
-    },
-  };
+  return createResumeStyleFromTemplate(
+    getString(record?.templateId, defaults.templateId),
+  );
 }
 
 function getString(value: unknown, fallback: string) {
@@ -577,18 +747,14 @@ function getString(value: unknown, fallback: string) {
     : fallback;
 }
 
-function getNumber(value: unknown, fallback: number) {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-}
-
-function getPageSize(value: unknown, fallback: ResumePageSize): ResumePageSize {
-  return value === "a4" || value === "letter" ? value : fallback;
-}
-
 function asRecord(value: unknown) {
   return typeof value === "object" && value !== null
     ? (value as Record<string, unknown>)
     : null;
+}
+
+function rec(value: unknown): Record<string, unknown> {
+  return asRecord(value) ?? {};
 }
 
 function cloneValue<TValue>(value: TValue): TValue {

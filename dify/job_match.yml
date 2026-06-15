@@ -1,5 +1,5 @@
 app:
-  description: 基于 Profile、结构化 JD 和规则匹配结果输出叙事分析（evidence / gaps / risks / ai_note），不输出分数。
+  description: 基于 Profile 和结构化 JD，由大模型给出匹配度（match_score 0-100）和叙事分析（evidence / gaps / risks / ai_note）。
   icon: 🧭
   icon_background: "#EDE9FE"
   icon_type: emoji
@@ -74,7 +74,7 @@ workflow:
         zIndex: 0
     nodes:
       - data:
-          desc: Edge Function 传入 Profile、结构化 JD 和规则匹配结果，均为 JSON 字符串。
+          desc: Edge Function 传入 Profile 和结构化 JD，均为 JSON 字符串。
           selected: false
           title: 用户输入
           type: start
@@ -97,15 +97,6 @@ workflow:
               required: true
               type: paragraph
               variable: job_json
-            - hide: false
-              hint: ""
-              label: rule_match_json
-              max_length: 8000
-              options: []
-              placeholder: ""
-              required: true
-              type: paragraph
-              variable: rule_match_json
         height: 137
         id: "1786000000001"
         position:
@@ -123,7 +114,7 @@ workflow:
           context:
             enabled: false
             variable_selector: []
-          desc: 围绕规则匹配结果生成 evidence / gaps / risks / ai_note 叙事，不打分。
+          desc: 读取 Profile 和 JD，给出匹配度 match_score 与 evidence / gaps / risks / ai_note。
           model:
             completion_params:
               temperature: 0
@@ -135,21 +126,23 @@ workflow:
             - id: b2e4d3f5-0001-4abc-8def-job-match-sys
               role: system
               text:
-                '你是一个求职匹配叙事分析器。输入是候选人 Profile（JSON）、结构化职位描述（JSON）和代码规则计算出的匹配结果（JSON，含分数、等级和命中/缺失技能明细）。
+                '你是一个求职匹配评估器。输入是候选人 Profile（JSON）和结构化职位描述（JSON）。
 
 
-                你的职责是解释和展开规则匹配结果，不是重新评分。绝对禁止输出任何数字分数、百分比或等级标签；分数永远以规则结果为准。
+                你的职责是基于语义理解评估候选人与该职位的匹配程度，并解释判断依据。要看懂技术写法差异（如 React 18 等同 React、K8s 等同 Kubernetes）、技能范围与层级（如「数据库优化经验」可支撑「PostgreSQL」要求）、年限与职责的实际契合度，而不是做字面字符串比对。
 
 
-                输出四类叙事，全部使用中文：
+                输出一个匹配度和四类叙事，全部使用中文：
 
-                1. evidence（命中证据）：从 Profile 的工作经历、项目、技能中找出能支撑该职位要求的具体事实。每条必须能追溯到 Profile 中的真实内容，不得虚构。最多 5 条，每条不超过 80 字。
+                1. match_score（匹配度）：0 到 100 的整数,综合必备技能覆盖、加分技能、年限、职责契合和远程/地点偏好后的整体判断。打分要克制诚实——证据充分才给高分，证据不足或需要美化才能成立的不要给高分。
 
-                2. gaps（能力缺口）：结合规则结果中的缺失技能和 JD 要求，指出 Profile 缺少或证据不足的部分，并给出可执行的补救方向（如何在简历中补证据、如何如实表述相近经验）。最多 5 条，每条不超过 80 字。
+                2. evidence（命中证据）：从 Profile 的工作经历、项目、技能中找出能支撑该职位要求的具体事实。每条必须能追溯到 Profile 中的真实内容，不得虚构。最多 5 条，每条不超过 80 字。
 
-                3. risks（风险表达）：投递或简历表述中需要注意的风险，例如容易被夸大的经验、年限差距、远程协作或语言要求。表达要诚实，不鼓励美化。最多 4 条，每条不超过 80 字。
+                3. gaps（能力缺口）：指出 Profile 相对 JD 要求缺少或证据不足的部分，并给出可执行的补救方向（如何在简历中补证据、如何如实表述相近经验）。最多 5 条，每条不超过 80 字。
 
-                4. ai_note（总评叙事）：围绕规则匹配等级展开的整体判断和投递建议，不超过 120 字，不出现具体分数。
+                4. risks（风险表达）：投递或简历表述中需要注意的风险，例如容易被夸大的经验、年限差距、远程协作或语言要求。表达要诚实，不鼓励美化。最多 4 条，每条不超过 80 字。
+
+                5. ai_note（总评叙事）：解释 match_score 背后的整体判断和投递建议，不超过 120 字。
 
 
                 输出要求：
@@ -174,12 +167,6 @@ workflow:
 
                 {{#1786000000001.job_json#}}
 
-
-                代码规则匹配结果（JSON，分数与等级以此为准）：
-
-
-                {{#1786000000001.rule_match_json#}}
-
                 "
           selected: false
           structured_output:
@@ -195,6 +182,10 @@ workflow:
                   items:
                     type: string
                   type: array
+                match_score:
+                  maximum: 100
+                  minimum: 0
+                  type: integer
                 risks:
                   items:
                     type: string
@@ -205,6 +196,7 @@ workflow:
                   type: string
               required:
                 - schema_version
+                - match_score
                 - evidence
                 - gaps
                 - risks
@@ -252,9 +244,18 @@ workflow:
                   .map((item) => item.trim());
               }
 
+              function toScore(value) {
+                const raw = typeof value === "number" ? value : parseFloat(value);
+                if (!isFinite(raw)) {
+                  return 0;
+                }
+                return Math.round(Math.min(100, Math.max(0, raw)));
+              }
+
               return {
                 normalized_json: JSON.stringify({
                   schema_version: "job.match.v1",
+                  match_score: toScore(parsed.match_score),
                   evidence: toStringList(parsed.evidence),
                   gaps: toStringList(parsed.gaps),
                   risks: toStringList(parsed.risks),
