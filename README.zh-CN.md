@@ -8,6 +8,10 @@
 
 <img src="./docs/assets/readme-hero.png" alt="Career Workbench 产品界面组合图" width="860">
 
+<video src="./apps/web/public/landing/career-workbench-hero-demo.mp4" controls muted loop playsinline poster="./docs/assets/readme-hero.png" width="860">
+  观看 12 秒产品演示：https://career-workbench.vercel.app/landing/career-workbench-hero-demo.mp4
+</video>
+
 ---
 
 ## 这是什么

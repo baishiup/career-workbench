@@ -17,6 +17,10 @@ English · [中文](./README.zh-CN.md)
 
 <img src="./docs/assets/readme-hero.png" alt="Career Workbench product screens" width="860">
 
+<video src="./apps/web/public/landing/career-workbench-hero-demo.mp4" controls muted loop playsinline poster="./docs/assets/readme-hero.png" width="860">
+  Watch the 12s product demo: https://career-workbench.vercel.app/landing/career-workbench-hero-demo.mp4
+</video>
+
 </div>
 
 ---
