@@ -174,8 +174,7 @@ SUPABASE_FUNCTIONS_HEALTH_URL=http://127.0.0.1:54321/functions/v1/job-match pnpm
 
 ## 部署
 
-部署分三块:静态 SPA、Supabase 项目(Postgres + Auth)、Edge Functions。成本和架构取舍见
-[`docs/architecture.md`](./docs/architecture.md#decisions) 的设计决策 #6。
+部署分三块:静态 SPA、Supabase 项目(Postgres + Auth)、Edge Functions。
 
 ### Mock Vercel 部署
 

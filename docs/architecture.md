@@ -155,14 +155,13 @@ erDiagram
 
 **`resumes` —— 内容与样式分离。** `document_json`(简历说了什么)与 `style_json`(它长什么样)
 分开存储,这样编辑器可在不动内容的前提下换模板,AI 也能在不动排版的前提下改写内容。
-`ai_parsed_draft_json` 缓存上传时的原始 AI 解析,因此确认进 profile 时不需要第二次 AI 调用
-(见 [设计决策 #2](#decisions))。`source_type` 区分来源:`manual_created` · `manual_upload`
+`ai_parsed_draft_json` 缓存上传时的原始 AI 解析,因此确认进 profile 时不需要第二次 AI 调用。`source_type` 区分来源:`manual_created` · `manual_upload`
 · `ai_generated` · `target_job`。
 
 **`match_reports` —— 每对一行,upsert。** 每 `(user_id, job_id)` **恰好一行**,重新分析就
 upsert 覆盖、不留历史。匹配分数和叙事都存在 `report_json`(由 AI 产出);两个 `*_snapshot_at`
 列记录分析时 profile 与 job 的 `updated_at`,任一输入自快照以来变化即视为过期——这就是全部的
-缓存失效策略(见 [设计决策 #3](#decisions),纯规则
+缓存失效策略,纯规则
 [`isMatchReportStale`](../packages/domain/src/job/match-report.ts))。
 
 **`job_descriptions` —— admin 导入,从不爬取。** JD 是结构化的(技能/职责/要求都是数组),因此

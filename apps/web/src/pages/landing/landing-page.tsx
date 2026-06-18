@@ -1,122 +1,100 @@
-import { ArrowRight, ChevronDown, Menu } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
+import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
 
+import flowOnboardingImage from "@/assets/landing/flow-onboarding.png";
+import flowResumeEditorImage from "@/assets/landing/flow-resume-editor.png";
+import heroJobMatchImage from "@/assets/landing/hero-job-match.png";
+import trustResumeEditorImage from "@/assets/landing/trust-resume-editor.png";
 import { CareerLogo } from "@/components/brand/career-logo";
 import { useAuthStore } from "@/lib/auth-store";
 import { navigateTo } from "@/lib/router";
 
 import "./landing-page.css";
 
+const heroDemoVideo = "/landing/career-workbench-hero-demo.mp4";
+
 type Feature = {
   body: string;
   eyebrow: string;
   media: string;
-  mediaType: "image" | "video";
-  poster?: string;
   title: string;
 };
 
-const placeholderVideo =
-  "https://plugin-assets.open-design.ai/plugins/evergreen-finance/hf_20260517_070729_32a7eb4e-d6e2-4571-badc-91b4dab1ecbe-2db9b1.mp4";
-
-const placeholderImages = {
-  hero: "https://placehold.co/1440x760/eaf0ff/16336f.png?text=Career+Workbench+Loop",
-  profile:
-    "https://placehold.co/1200x760/f5f7ff/0033ff.png?text=Profile+Fact+Library",
-  jd: "https://placehold.co/1200x760/edf2ff/274690.png?text=JD+Parsing+Signals",
-  match:
-    "https://placehold.co/1200x760/eaf8f2/047857.png?text=Evidence+Match+Report",
-  resume:
-    "https://placehold.co/1200x760/fff7ed/c2410c.png?text=Editable+Target+Resume",
-  enterprise:
-    "https://placehold.co/960x720/f8fafc/1e3a8a.png?text=Traceable+AI+Workflow",
+type WorkflowStep = {
+  description: string;
+  title: string;
 };
 
 const buildFeatures: Feature[] = [
   {
-    body: "把原始简历、项目、技能和经历沉淀成 Profile 事实库，后续所有 AI 输出都回到真实材料。",
+    body: "把简历里的经历、技能和项目沉淀成事实库，后续匹配、生成和改写都从真实材料出发。",
     eyebrow: "01",
-    media: placeholderImages.profile,
-    mediaType: "image",
-    title: "建立个人事实库",
+    media: flowOnboardingImage,
+    title: "建立事实库",
   },
   {
-    body: "将目标 JD 拆成职责、硬性要求、偏好信号和风险点，先判断这次申请是否值得投入。",
+    body: "目标 JD 被拆成职责、要求和偏好信号，匹配报告给出命中证据、能力缺口和风险提示。",
     eyebrow: "02",
-    media: placeholderVideo,
-    mediaType: "video",
-    poster: placeholderImages.jd,
-    title: "解析目标 JD",
+    media: heroJobMatchImage,
+    title: "生成匹配报告",
   },
   {
-    body: "匹配报告解释优势、缺口、风险和证据来源，而不是只给一个不可复核的分数。",
+    body: "基于匹配报告生成目标简历草稿，再通过编辑器和 AI patch 继续迭代。",
     eyebrow: "03",
-    media: placeholderImages.match,
-    mediaType: "image",
-    title: "生成证据化匹配报告",
+    media: flowResumeEditorImage,
+    title: "生成目标简历",
   },
   {
-    body: "生成针对目标岗位的简历草稿，再通过 AI patch、编辑器和修改日志持续迭代。",
+    body: "匹配、生成、改写和人工采纳都会沉淀成可回看的过程，让每次申请不是一次性聊天记录。",
     eyebrow: "04",
-    media: placeholderImages.resume,
-    mediaType: "image",
-    title: "定制并编辑目标简历",
+    media: heroJobMatchImage,
+    title: "保留 AI Trace",
+  },
+];
+
+const workflowSteps: WorkflowStep[] = [
+  {
+    description: "导入原始简历",
+    title: "上传简历",
+  },
+  {
+    description: "沉淀经历技能",
+    title: "形成事实库",
+  },
+  {
+    description: "拆解职责要求",
+    title: "解析职位",
+  },
+  {
+    description: "查看命中缺口",
+    title: "证据匹配",
+  },
+  {
+    description: "生成目标版本",
+    title: "定制简历",
+  },
+  {
+    description: "采纳或继续改",
+    title: "确认修改",
   },
 ];
 
 const trustCards = [
   {
-    body: "每段生成内容都应能回到 Profile、JD 或用户确认过的修改记录。",
+    body: "每段生成内容都应能回到事实库、目标 JD 或用户确认过的修改记录。",
     number: "01",
     title: "Traceable",
   },
   {
-    body: "AI 只提出 patch，用户决定采纳、拒绝或继续改写。",
+    body: "AI 只提出 patch 和草稿，用户决定采纳、拒绝或继续改写。",
     number: "02",
     title: "Editable",
   },
   {
-    body: "解析、匹配和生成按需触发，缓存输入快照，避免重复花费。",
+    body: "匹配、生成和编辑围绕同一套事实与目标快照展开，减少重复整理。",
     number: "03",
-    title: "Cost-aware",
-  },
-];
-
-const footerColumns = [
-  {
-    links: [
-      ["首页", "#product"],
-      ["工作流", "#solutions"],
-      ["可信机制", "#trust"],
-    ],
-    title: "Product",
-  },
-  {
-    links: [
-      ["Profile 事实库", "#solutions"],
-      ["JD 解析", "#solutions"],
-      ["匹配报告", "#solutions"],
-      ["目标简历", "#solutions"],
-    ],
-    title: "Workflow",
-  },
-  {
-    links: [
-      ["产品边界", "#trust"],
-      ["AI Trace", "#trust"],
-      ["修改日志", "#trust"],
-      ["本地 fixture", "#footer"],
-    ],
-    title: "Resources",
-  },
-  {
-    links: [
-      ["不自动投递", "#trust"],
-      ["不绕过反爬", "#trust"],
-      ["不编造经历", "#trust"],
-      ["用户控制最终内容", "#trust"],
-    ],
-    title: "Trust",
+    title: "Reusable",
   },
 ];
 
@@ -175,9 +153,6 @@ function Header({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: string }) {
             <span>{ctaLabel}</span>
             <ArrowRight size={22} />
           </button>
-          <button className="cw-home-mobile-menu" aria-label="打开导航">
-            <Menu size={20} />
-          </button>
         </div>
       </div>
     </header>
@@ -200,21 +175,38 @@ function Hero() {
         </div>
         <div className="cw-home-hero-description">
           <p>
-            Career Workbench 将个人事实库、目标
-            JD、匹配叙事和可编辑简历放进同一个闭环，让 AI
+            Career Workbench 将个人事实库、目标职位、匹配叙事、AI
+            修改建议和可编辑简历放进同一个闭环，让 AI
             建议有来源、可复核、能继续迭代。
           </p>
         </div>
         <div className="cw-home-customer-strip" aria-label="核心流程">
-          <span>Profile</span>
-          <span>JD Parse</span>
-          <span>Match</span>
-          <span>Resume</span>
-          <span>AI Patch</span>
-          <span>Trace</span>
+          {workflowSteps.map((step, index) => (
+            <article className="cw-home-workflow-step-card" key={step.title}>
+              <span className="cw-home-workflow-step-index">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <strong>{step.title}</strong>
+              <small>{step.description}</small>
+            </article>
+          ))}
         </div>
         <div className="cw-home-hero-media-shell">
-          <img src={placeholderImages.hero} alt="" loading="eager" />
+          <video
+            aria-label="Career Workbench 演示视频：展示职位列表、AI 匹配报告、证据缺口和资料事实库"
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster={heroJobMatchImage}
+            preload="metadata"
+            src={heroDemoVideo}
+          >
+            <img
+              src={heroJobMatchImage}
+              alt="职位详情页展示匹配度、命中证据、能力缺口和风险提示"
+            />
+          </video>
         </div>
       </div>
     </section>
@@ -224,7 +216,7 @@ function Hero() {
 function BuildScrollSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const activeFeature = buildFeatures[activeIndex] ?? buildFeatures[0];
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -240,13 +232,13 @@ function BuildScrollSection() {
         0.999,
         Math.max(0, (window.scrollY - sectionTop) / scrollRange),
       );
-
-      setActiveIndex(
-        Math.min(
-          buildFeatures.length - 1,
-          Math.max(0, Math.floor(progress * buildFeatures.length)),
-        ),
+      const nextActiveIndex = Math.min(
+        buildFeatures.length - 1,
+        Math.max(0, Math.floor(progress * buildFeatures.length)),
       );
+
+      setScrollProgress(progress);
+      setActiveIndex(nextActiveIndex);
     };
 
     handleScroll();
@@ -272,7 +264,7 @@ function BuildScrollSection() {
               <h2>从岗位判断到简历生成，把每次申请做成可追踪流程。</h2>
               <p>
                 不把 AI
-                当成一次性聊天窗口，而是让事实、目标、建议和修改记录在产品里连接起来。
+                当成一次性聊天窗口，而是让事实、目标、建议、修改记录和人工决策在产品里连接起来。
               </p>
             </div>
             <div className="cw-home-build-step-list">
@@ -293,9 +285,29 @@ function BuildScrollSection() {
           </div>
           <div className="cw-home-build-visual">
             <div className="cw-home-build-visual-bg" />
-            <div className="cw-home-build-media-card" key={activeFeature.title}>
-              <MediaFrame feature={activeFeature} />
-            </div>
+            {buildFeatures.map((feature, index) => {
+              const cardProgress = Math.min(
+                1,
+                Math.max(0, scrollProgress * buildFeatures.length - index),
+              );
+
+              return (
+                <div
+                  aria-hidden={index !== activeIndex}
+                  className="cw-home-build-media-card"
+                  key={feature.title}
+                  style={
+                    {
+                      "--cw-card-offset-y": `${(1 - cardProgress) * 44}vh`,
+                      "--cw-card-progress": cardProgress,
+                      "--cw-card-stack": index,
+                    } as CSSProperties
+                  }
+                >
+                  <MediaFrame feature={feature} />
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -306,21 +318,7 @@ function BuildScrollSection() {
 function MediaFrame({ feature }: { feature: Feature }) {
   return (
     <div className="cw-home-media-frame">
-      {feature.mediaType === "video" ? (
-        <div className="cw-home-video-placeholder">
-          <img src={feature.poster} alt="" loading="lazy" />
-          <video
-            aria-hidden="true"
-            src={feature.media}
-            muted
-            loop
-            playsInline
-            preload="metadata"
-          />
-        </div>
-      ) : (
-        <img src={feature.media} alt="" loading="lazy" />
-      )}
+      <img src={feature.media} alt="" loading="lazy" />
     </div>
   );
 }
@@ -362,23 +360,28 @@ function TrustSection({ ctaHref }: { ctaHref: string }) {
           </p>
           <div className="cw-home-enterprise-actions">
             <button
-              className="cw-home-text-link"
+              className="cw-home-enterprise-primary"
               onClick={() => navigateTo(ctaHref)}
               type="button"
             >
               打开工作台
             </button>
-            <a className="cw-home-primary-pill" href="#solutions">
-              查看流程
+            <a className="cw-home-enterprise-secondary" href="#solutions">
+              <span>查看流程</span>
+              <ArrowRight size={18} />
             </a>
           </div>
         </div>
         <div className="cw-home-enterprise-visual">
-          <img src={placeholderImages.enterprise} alt="" loading="lazy" />
+          <img
+            src={trustResumeEditorImage}
+            alt="简历编辑器展示可编辑的目标简历"
+            loading="lazy"
+          />
           <div className="cw-home-impact-card">
             <span>THE LOOP</span>
-            <strong>4</strong>
-            <p>Profile、JD、Match、Resume 形成可追踪闭环</p>
+            <strong>4 步闭环</strong>
+            <p>事实库、目标职位、匹配报告和定制简历互相连接。</p>
           </div>
         </div>
       </div>
@@ -417,37 +420,6 @@ function Footer({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: string }) {
           <ArrowRight size={76} strokeWidth={1.25} />
         </span>
       </button>
-      <div className="cw-home-footer-main">
-        <div className="cw-home-footer-links">
-          {footerColumns.map((column) => (
-            <nav key={column.title} aria-label={column.title}>
-              <h3>{column.title}</h3>
-              {column.links.map(([label, href]) => (
-                <a href={href} key={label}>
-                  {label}
-                </a>
-              ))}
-            </nav>
-          ))}
-        </div>
-        <aside className="cw-home-footer-about" aria-label="产品说明">
-          <div className="cw-home-footer-socials">
-            <span>Profile</span>
-            <span>JD</span>
-            <span>AI</span>
-            <span>Trace</span>
-          </div>
-          <p>
-            面向开发者求职的 AI 工作台：用个人事实库和目标 JD
-            生成可信、可追溯、可编辑的定制简历。
-          </p>
-          <div className="cw-home-footer-badges" aria-label="产品边界">
-            <span>No auto apply</span>
-            <span>No fake facts</span>
-            <span>User control</span>
-          </div>
-        </aside>
-      </div>
       <div className="cw-home-footer-bottom">
         <span>Copyright © 2026 Career Workbench.</span>
         <span>{ctaLabel}</span>

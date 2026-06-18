@@ -24,7 +24,7 @@ _状态:✅ 已实现_
 2. `complete-onboarding-with-resume` Edge Function 受控中转 PDF 给 Dify 简历解析 Workflow,
    不长期保存文件。
 3. Dify 返回 `AIParsedResumeDraft` 后,系统归一化:`AIParsedResumeDraft → ProfileDraft →
-   ResumeDocument`。
+ResumeDocument`。
 4. Onboarding 场景解析成功后直接写入 `profiles.profile_data`,并创建一份 base resume。
 5. 简历列表上传场景用 `upload-resume`,只创建 resume 和 profile candidate;用户确认后再调
    `apply-resume-to-profile` 覆盖 Profile。
@@ -79,5 +79,4 @@ Profile 字段:
 ## 相关
 
 - [Supabase持久化](./Supabase持久化.md) · [简历列表](./简历列表.md) · [工作机会](./工作机会.md)
-- 后端流程见 [backend.md](../docs/architecture.md#backend);AI 成本与幂等取舍见
-  [ARCHITECTURE 设计决策](../docs/architecture.md#decisions)。
+- 后端流程见 [backend.md](../docs/architecture.md#backend)

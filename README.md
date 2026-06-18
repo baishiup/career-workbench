@@ -13,9 +13,9 @@ tailored résumé — one that's traceable, not hallucinated.**
 
 English · [中文](./README.zh-CN.md)
 
-### 🔗 [Live Demo](https://career-workbench.vercel.app) · [Architecture](./docs/architecture.md) · [Decisions (ADRs)](docs/architecture.md#decisions)
+### 🔗 [Live Demo](https://career-workbench.vercel.app) · [Architecture](./docs/architecture.md)
 
-<img src="./docs/assets/hero.png" alt="Career Workbench landing page" width="860">
+<img src="./docs/assets/readme-hero.png" alt="Career Workbench product screens" width="860">
 
 </div>
 
@@ -59,8 +59,8 @@ cross-user goes through an Edge Function. **Full tour →
 
 ## 📸 Screenshots
 
-| Onboarding | Job match report | Résumé editor |
-| ---------- | ---------------- | ------------- |
+| Onboarding                                                                            | Job match report                                                                      | Résumé editor                                                                          |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | <img src="./docs/assets/screenshot-onboarding.png" alt="Onboarding flow" width="280"> | <img src="./docs/assets/screenshot-job-match.png" alt="Job match report" width="280"> | <img src="./docs/assets/screenshot-resume-editor.png" alt="Résumé editor" width="280"> |
 
 ## 🚀 Quickstart
@@ -97,7 +97,6 @@ feature-spec/         Per-feature specs and collaboration workflow
 ## 📚 Documentation
 
 - [Architecture](./docs/architecture.md) — the 5-minute engineering tour
-- [Architecture Decisions (ADRs)](docs/architecture.md#decisions) — the _why_ behind the design
 - [Data Model](./docs/architecture.md#data-model) · [Backend](./docs/architecture.md#backend)
 - [Product Overview](./docs/product-overview.md) — what it does and what it deliberately doesn't
 - [Development](./development.md) — run the full stack locally & deploy

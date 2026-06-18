@@ -132,13 +132,13 @@ eventId / runId / eventType / sequence / stepKey / title / summary / payload / c
 
 ### Dify Workflow / Chatflow 映射
 
-| 业务任务 | taskType | Dify 类型 | workflow key | 主要输出 | 写入 |
-| --- | --- | --- | --- | --- | --- |
-| 简历解析 | `resume_parse` | Workflow + Document Extractor | `resume.profile.normalize.v1` | profile draft、证据 | `ProfileVersion` draft、`AiRun`、`AiRunEvent`、`ExternalAiRun` |
-| JD 解析 | `match_analysis` 前置 | Workflow | `job.jd.parse.v1` | 结构化 JD | `JobDescription` 字段、`AiRunEvent` |
-| 匹配分析 | `match_analysis` | Workflow | `match.report.generate.v1` | 分数、缺口、风险、证据 | `MatchReport`、`AiRun`、`AiRunEvent`、`ExternalAiRun` |
-| 定制简历生成 | `resume_generation` | Workflow | `resume.tailor.generate.v1` | target resume draft、理由 | `ResumeVersion`、`ResumeChangeLog`、`AiRun`、`AiRunEvent`、`ExternalAiRun` |
-| 简历修改建议 | `resume_chat` | Chatflow | `resume.suggestion.review.v1` | 自然语言回复、patch | `ResumeConversation`、`ResumePatch`、`AiRun`、`AiRunEvent`、`ExternalAiRun` |
+| 业务任务     | taskType              | Dify 类型                     | workflow key                  | 主要输出                  | 写入                                                                        |
+| ------------ | --------------------- | ----------------------------- | ----------------------------- | ------------------------- | --------------------------------------------------------------------------- |
+| 简历解析     | `resume_parse`        | Workflow + Document Extractor | `resume.profile.normalize.v1` | profile draft、证据       | `ProfileVersion` draft、`AiRun`、`AiRunEvent`、`ExternalAiRun`              |
+| JD 解析      | `match_analysis` 前置 | Workflow                      | `job.jd.parse.v1`             | 结构化 JD                 | `JobDescription` 字段、`AiRunEvent`                                         |
+| 匹配分析     | `match_analysis`      | Workflow                      | `match.report.generate.v1`    | 分数、缺口、风险、证据    | `MatchReport`、`AiRun`、`AiRunEvent`、`ExternalAiRun`                       |
+| 定制简历生成 | `resume_generation`   | Workflow                      | `resume.tailor.generate.v1`   | target resume draft、理由 | `ResumeVersion`、`ResumeChangeLog`、`AiRun`、`AiRunEvent`、`ExternalAiRun`  |
+| 简历修改建议 | `resume_chat`         | Chatflow                      | `resume.suggestion.review.v1` | 自然语言回复、patch       | `ResumeConversation`、`ResumePatch`、`AiRun`、`AiRunEvent`、`ExternalAiRun` |
 
 Dify 输出要求:优先 JSON schema 输出;每个输出含业务对象类型、摘要、风险提示和证据引用;
 Chatflow 可返回自然语言回复,但 patch 必须结构化;Dify 返回的外部 ID 必须写入
@@ -153,7 +153,7 @@ Chatflow 可返回自然语言回复,但 patch 必须结构化;Dify 返回的外
   `job_description_id`、`resume_id`、`resume_version_id`、`input_summary`、`result_summary`、
   `error_code`、`error_summary`、`started_at`、`completed_at`、`created_at`、`updated_at`。
   索引:`(user_id, created_at desc)`、`(task_type, status)`、`(resume_version_id, created_at
-  desc)`、`(job_description_id, created_at desc)`。
+desc)`、`(job_description_id, created_at desc)`。
 - **`ai_run_events`**(事件时间线):`id`、`ai_run_id`、`sequence`、`event_type`、`step_key`、
   `title`、`summary`、`payload_json`、`created_at`。索引:`(ai_run_id, sequence)`。
 - **`external_ai_runs`**(外部运行引用):`id`、`ai_run_id`、`orchestrator`、`provider`、
@@ -263,5 +263,4 @@ Dify 或 fallback provider 失败时:`AiRun.status` 更新为 `failed`;写 `AiRu
 
 - [AI对话与修改日志](./AI对话与修改日志.md) · [工作机会](./工作机会.md) ·
   [Supabase持久化](./Supabase持久化.md)
-- AI 编排与 Dify 边界的取舍见 [ARCHITECTURE 设计决策](../docs/architecture.md#decisions);后端
-  函数现状见 [backend.md](../docs/architecture.md#backend)。
+- 后端函数现状见 [backend.md](../docs/architecture.md#backend)。

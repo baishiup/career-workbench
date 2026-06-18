@@ -4,9 +4,9 @@
 
 [English](./README.md) · 中文
 
-### 🔗 [在线体验](https://career-workbench.vercel.app) · [架构文档](./docs/architecture.md) · [架构决策 (ADR)](docs/architecture.md#decisions)
+### 🔗 [在线体验](https://career-workbench.vercel.app) · [架构文档](./docs/architecture.md)
 
-<img src="./docs/assets/hero.png" alt="Career Workbench 首页截图" width="860">
+<img src="./docs/assets/readme-hero.png" alt="Career Workbench 产品界面组合图" width="860">
 
 ---
 
@@ -44,8 +44,8 @@ flowchart LR
 
 ## 📸 截图
 
-| Onboarding | 职位匹配报告 | 简历编辑器 |
-| ---------- | ------------ | ---------- |
+| Onboarding                                                                            | 职位匹配报告                                                                      | 简历编辑器                                                                          |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | <img src="./docs/assets/screenshot-onboarding.png" alt="Onboarding 流程" width="280"> | <img src="./docs/assets/screenshot-job-match.png" alt="职位匹配报告" width="280"> | <img src="./docs/assets/screenshot-resume-editor.png" alt="简历编辑器" width="280"> |
 
 ## 🚀 快速开始
@@ -66,7 +66,6 @@ pnpm check && pnpm test && pnpm build   # 验证
 ## 📚 文档
 
 - [架构总览](./docs/architecture.md) —— 5 分钟工程视角导览
-- [架构决策 ADR](docs/architecture.md#decisions) —— 设计背后的「为什么」
 - [数据模型](./docs/architecture.md#data-model) · [后端架构](./docs/architecture.md#backend)
 - [产品概览](./docs/product-overview.md) —— 做什么、刻意不做什么
 - [本地开发与部署](./development.md)
