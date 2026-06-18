@@ -4,7 +4,9 @@
 
 [English](./README.md) · 中文
 
-### 🔗 [在线体验](https://career-workbench.example.com) · [架构文档](./docs/architecture.md) · [架构决策 (ADR)](docs/architecture.md#decisions)
+### 🔗 [在线体验](https://career-workbench.vercel.app) · [架构文档](./docs/architecture.md) · [架构决策 (ADR)](docs/architecture.md#decisions)
+
+<img src="./docs/assets/hero.png" alt="Career Workbench 首页截图" width="860">
 
 ---
 
@@ -39,6 +41,12 @@ flowchart LR
 | 后端   | Supabase —— Auth、Postgres + RLS、Edge Functions(Deno)                                       |
 | AI     | Dify workflow/chatflow(解析 · job-parse · 匹配 · 生成 · 对话),统一藏在 Edge Functions 之后   |
 | 工具链 | pnpm workspace(monorepo)、Vitest、Prettier、Deno 工具链                                      |
+
+## 📸 截图
+
+| Onboarding | 职位匹配报告 | 简历编辑器 |
+| ---------- | ------------ | ---------- |
+| <img src="./docs/assets/screenshot-onboarding.png" alt="Onboarding 流程" width="280"> | <img src="./docs/assets/screenshot-job-match.png" alt="职位匹配报告" width="280"> | <img src="./docs/assets/screenshot-resume-editor.png" alt="简历编辑器" width="280"> |
 
 ## 🚀 快速开始
 

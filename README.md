@@ -13,12 +13,9 @@ tailored résumé — one that's traceable, not hallucinated.**
 
 English · [中文](./README.zh-CN.md)
 
-<!-- TODO: replace with the deployed URL once live -->
+### 🔗 [Live Demo](https://career-workbench.vercel.app) · [Architecture](./docs/architecture.md) · [Decisions (ADRs)](docs/architecture.md#decisions)
 
-### 🔗 [Live Demo](https://career-workbench.example.com) · [Architecture](./docs/architecture.md) · [Decisions (ADRs)](docs/architecture.md#decisions)
-
-<!-- TODO(P4): replace docs/assets/hero.svg with a real screenshot/gif of the match→generate flow -->
-<img src="./docs/assets/hero.svg" alt="Career Workbench" width="860">
+<img src="./docs/assets/hero.png" alt="Career Workbench landing page" width="860">
 
 </div>
 
@@ -62,11 +59,9 @@ cross-user goes through an Edge Function. **Full tour →
 
 ## 📸 Screenshots
 
-<!-- TODO(P4): drop real screenshots into docs/assets/ and reference them here -->
-
 | Onboarding | Job match report | Résumé editor |
 | ---------- | ---------------- | ------------- |
-| _coming_   | _coming_         | _coming_      |
+| <img src="./docs/assets/screenshot-onboarding.png" alt="Onboarding flow" width="280"> | <img src="./docs/assets/screenshot-job-match.png" alt="Job match report" width="280"> | <img src="./docs/assets/screenshot-resume-editor.png" alt="Résumé editor" width="280"> |
 
 ## 🚀 Quickstart
 

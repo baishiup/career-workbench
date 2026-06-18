@@ -5,6 +5,7 @@ dist
 coverage
 *.tsbuildinfo
 .cache
+.playwright-cli
 .vercel
 supabase/.temp
 
