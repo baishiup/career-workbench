@@ -2,7 +2,7 @@
  * 纯 mock 模式的种子数据。
  *
  * 目标是「一打开就有完整可玩的内容」：一个已完成 onboarding 的 admin 用户、
- * 一份从 Profile 派生的简历、几条职位、以及一条 demo 匹配报告。
+ * 一份从 Profile 派生的简历和几条职位。
  * 所有 id、时间戳都是写死的常量，保证每次启动可复现（不依赖 Date.now）。
  */
 
@@ -171,21 +171,6 @@ const jobs: JobDescriptionRow[] = [
   },
 ];
 
-const demoMatchReport = {
-  match_score: 92,
-  evidence: [
-    "Profile 中有 React/Next.js、组件库和复杂 B2B 工作台经验，与岗位高度吻合。",
-    "主导过设计系统从 0 到 1，正对应 JD 的 Design System 要求。",
-    "有增长实验与转化优化经历，可改写成 checkout / 漏斗相关证据。",
-  ],
-  gaps: [
-    "缺少明确的 checkout / payment funnel 案例。",
-    "A/B Testing 可补成产品实验经验，避免夸大为主导增长策略。",
-  ],
-  risks: ["岗位偏远程异步协作，简历摘要里应补足跨时区交付与英语沟通信号。"],
-  aiNote: "整体强匹配，建议优先突出设计系统主导经历和可量化的转化提升。",
-};
-
 /** 生成一份全新的种子数据；每次 reset 都返回深拷贝，避免运行期被改脏。 */
 export function createSeedDatabase(): Database {
   const seed: Database = {
@@ -223,21 +208,7 @@ export function createSeedDatabase(): Database {
       },
     ],
     job_descriptions: jobs,
-    match_reports: [
-      {
-        id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
-        user_id: MOCK_USER_ID,
-        job_id: jobs[0].id,
-        status: "succeeded",
-        report_json: demoMatchReport,
-        profile_snapshot_at: NOW,
-        job_snapshot_at: EARLIER,
-        external_run_id: "mock-job-match-thrivecart-001",
-        error_message: null,
-        created_at: NOW,
-        updated_at: NOW,
-      },
-    ],
+    match_reports: [],
   };
 
   return structuredClone(seed);
