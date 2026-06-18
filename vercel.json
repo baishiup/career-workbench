@@ -2,5 +2,11 @@
   "buildCommand": "pnpm --filter @career-workbench/web build:mock",
   "framework": "vite",
   "installCommand": "pnpm install --frozen-lockfile",
-  "outputDirectory": "apps/web/dist"
+  "outputDirectory": "apps/web/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
