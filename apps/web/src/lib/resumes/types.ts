@@ -1,6 +1,7 @@
 import type {
   ProfileDraft,
   ResumeDocument,
+  ResumePatch,
   ResumeStyleConfig,
 } from "@career-workbench/domain";
 
@@ -59,9 +60,21 @@ type ResumeGenerateResponse = {
   degraded_reason?: string | null;
 };
 
+type ResumeChatResponse = {
+  status: "ok";
+  provider: "dify";
+  message: string;
+  patch: ResumePatch | null;
+  conversation_id: string | null;
+  message_id: string | null;
+  task_id: string | null;
+  workflow_run_id: string | null;
+};
+
 export type {
   ApplyResumeToProfileResponse,
   CompleteOnboardingWithResumeResponse,
+  ResumeChatResponse,
   ResumeGenerateResponse,
   ResumeFunctionFile,
   ResumeFunctionRow,

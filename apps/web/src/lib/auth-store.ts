@@ -52,6 +52,7 @@ type AuthState = {
 };
 
 let hasInitializedAuth = false;
+const authServiceUnavailableMessage = "当前无法连接登录服务，请稍后重试。";
 const localTestUserEmail = "admin@career-workbench.dev";
 const localTestUserPassword = "123456";
 
@@ -233,7 +234,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
 
     if (!supabase) {
       set({
-        error: "登录服务未连接，无法继续。",
+        error: authServiceUnavailableMessage,
         isLoading: false,
         isProfileLoading: false,
       });
@@ -363,7 +364,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
 
     if (!supabase) {
       set({
-        error: "请先配置 VITE_SUPABASE_URL 和 VITE_SUPABASE_PUBLISHABLE_KEY。",
+        error: authServiceUnavailableMessage,
       });
       return;
     }
@@ -386,7 +387,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
 
     if (!supabase) {
       set({
-        error: "请先配置 VITE_SUPABASE_URL 和 VITE_SUPABASE_PUBLISHABLE_KEY。",
+        error: authServiceUnavailableMessage,
       });
       return;
     }
@@ -410,7 +411,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
 
     if (!supabase) {
       set({
-        error: "请先配置 VITE_SUPABASE_URL 和 VITE_SUPABASE_PUBLISHABLE_KEY。",
+        error: authServiceUnavailableMessage,
       });
       return;
     }
@@ -473,7 +474,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
 
     if (!supabase) {
       set({
-        error: "请先配置 VITE_SUPABASE_URL 和 VITE_SUPABASE_PUBLISHABLE_KEY。",
+        error: authServiceUnavailableMessage,
       });
       return { needsEmailConfirmation: false };
     }

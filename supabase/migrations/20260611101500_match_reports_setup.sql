@@ -1,5 +1,5 @@
 -- Career Workbench match reports (工作机会 任务 5).
--- Run after profiles_auth_setup.sql and jobs_setup.sql. Stores on-demand AI
+-- Historical follow-up migration after the baseline schema. Stores on-demand AI
 -- narrative analysis (evidence / gaps / risks / aiNote) per (user, job).
 -- Scores stay rule-computed and are never persisted here. One row per
 -- (user_id, job_id); re-running analysis upserts in place, no history kept.

@@ -5,6 +5,9 @@ import { Button, Input } from "@heroui/react";
 import { OnboardingAside } from "@/components/onboarding/onboarding-aside";
 import { useAuthStore } from "@/lib/auth-store";
 
+const demoUserEmail = "admin@career-workbench.dev";
+const demoUserPassword = "123456";
+
 function LoginPage() {
   const clearError = useAuthStore((state) => state.clearError);
   const error = useAuthStore((state) => state.error);
@@ -22,6 +25,7 @@ function LoginPage() {
   const isLocalSupabase =
     import.meta.env.DEV &&
     import.meta.env.VITE_SUPABASE_URL?.startsWith("http://127.0.0.1:54321");
+  const isMockMode = import.meta.env.VITE_APP_MODE === "mock";
 
   async function handleSignIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,6 +52,13 @@ function LoginPage() {
     clearError();
     setMessage(null);
     setPassword(value);
+  }
+
+  async function handleMockSignIn() {
+    setMessage(null);
+    setEmail(demoUserEmail);
+    setPassword(demoUserPassword);
+    await signInWithPassword(demoUserEmail, demoUserPassword);
   }
 
   return (
@@ -147,6 +158,20 @@ function LoginPage() {
             >
               <UserRoundCheck className="size-4" />
               使用测试账号 admin / 123456
+            </Button>
+          ) : null}
+
+          {isMockMode ? (
+            <Button
+              className="mt-4 self-center text-slate-500"
+              isDisabled={!isConfigured || isLoading}
+              onPress={() => void handleMockSignIn()}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              <UserRoundCheck className="size-4" />
+              使用 mock 演示账号
             </Button>
           ) : null}
 

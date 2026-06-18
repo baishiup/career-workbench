@@ -1,0 +1,623 @@
+app:
+  description: 简历编辑器 AI 对话。根据当前 ResumeDocument、用户修改要求和可选模块上下文生成待采纳 ResumePatch。
+  icon: 💬
+  icon_background: "#DBEAFE"
+  icon_type: emoji
+  mode: advanced-chat
+  name: resume_chat
+  use_icon_as_answer_icon: false
+dependencies:
+  - current_identifier: null
+    type: marketplace
+    value:
+      marketplace_plugin_unique_identifier: langgenius/gemini:0.8.4@23aed1fa4d2c8015337bd18efa28b3dccf5b7309a83b1501541fb7358518faec
+      version: null
+kind: app
+version: 0.6.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ""
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ""
+      voice: ""
+  graph:
+    edges:
+      - data:
+          isInLoop: false
+          sourceType: start
+          targetType: llm
+        id: 1801000000001-source-1801000000002-target
+        selected: false
+        source: "1801000000001"
+        sourceHandle: source
+        target: "1801000000002"
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInLoop: false
+          sourceType: llm
+          targetType: code
+        id: 1801000000002-source-1801000000003-target
+        selected: false
+        source: "1801000000002"
+        sourceHandle: source
+        target: "1801000000003"
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInLoop: false
+          sourceType: code
+          targetType: answer
+        id: 1801000000003-source-answer-target
+        selected: false
+        source: "1801000000003"
+        sourceHandle: source
+        target: answer
+        targetHandle: target
+        type: custom
+        zIndex: 0
+    nodes:
+      - data:
+          desc: Edge Function 传入当前简历、简历 ID 和可选模块上下文；用户本轮要求来自 sys.query。
+          selected: false
+          title: 用户输入
+          type: start
+          variables:
+            - hide: false
+              hint: 当前 ResumeDocument JSON 字符串。
+              label: current_resume_json
+              max_length: 96000
+              options: []
+              placeholder: ""
+              required: true
+              type: paragraph
+              variable: current_resume_json
+            - hide: false
+              hint: 当前简历 ID。
+              label: resume_id
+              max_length: 128
+              options: []
+              placeholder: ""
+              required: true
+              type: text-input
+              variable: resume_id
+            - hide: false
+              hint: 可选。用户从预览区添加到输入框的模块 ID。
+              label: selected_module_id
+              max_length: 128
+              options: []
+              placeholder: ""
+              required: false
+              type: text-input
+              variable: selected_module_id
+            - hide: false
+              hint: 可选。selected_module_id 对应模块 JSON 字符串；没有上下文时为 null。
+              label: selected_module_json
+              max_length: 48000
+              options: []
+              placeholder: ""
+              required: false
+              type: paragraph
+              variable: selected_module_json
+        height: 166
+        id: "1801000000001"
+        position:
+          x: -280
+          y: 240
+        positionAbsolute:
+          x: -280
+          y: 240
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 根据用户要求生成模块级 ResumePatch changes；不输出 original，不改简历名称。
+          model:
+            completion_params:
+              temperature: 0.2
+              thinking_mode: false
+            mode: chat
+            name: gemini-2.5-flash
+            provider: langgenius/gemini/google
+          prompt_template:
+            - id: 1801000000002-system
+              role: system
+              text:
+                '你是一个严格的简历编辑助手。输入是当前 ResumeDocument、用户本轮修改要求，以及可选的 selected module 上下文。你的任务是生成一份待用户审阅的 ResumePatch，而不是直接修改简历。
+
+
+                关键规则：
+
+                1. 只允许修改 ResumeDocument.modules 里的模块内容，禁止修改 ResumeDocument.title、target、模块顺序、模块 id、模块 kind。
+
+                2. 输出只包含实际需要修改的模块。每个 change 必须是 { moduleId, data }，其中 data 可以只包含被修改的字段；Code 节点会与原模块合并成完整模块。
+
+                3. data.id 必须等于 moduleId；data.kind 必须与原模块 kind 一致；data.visible 必须保留布尔值。
+
+                4. 如果用户提供 selected module 上下文，优先围绕该模块修改；如果用户要求跨模块（例如移除无关技能），可以修改多个相关模块。
+
+                5. 个人信息模块只能修改字段内容，不能虚构邮箱、电话、链接、城市。
+
+                6. 技能模块可以按用户要求筛选、排序、补充当前简历已有经历能支撑的技能；不能凭空添加无证据技能。
+
+                7. work/projects/education/custom 中的 description 或 content 输出纯文本，可用换行表示多条要点；不要输出 HTML 或富文本 Delta。
+
+                8. 可以优化表达、压缩、换动作动词、弱化夸张风险，但不能虚构公司、项目、学校、时间、职位、指标、人数、金额或证书。
+
+                9. 如果用户要求没有足够事实支撑，应在 riskNotes 说明，不要硬改成虚假事实。
+
+                10. 如果用户只是寒暄、测试、问候，或没有提出明确可执行的简历修改要求，不要编造修改。此时输出 shouldCreatePatch=false、changes=[]，message 引导用户说明想改哪里。
+
+                11. 输出必须是 JSON 对象，不要 markdown，不要 code fence。
+
+
+                输出 JSON 结构：
+
+                {
+
+                "shouldCreatePatch": true,
+
+                "message": "给用户看的简短说明",
+
+                "title": "patch 标题",
+
+                "description": "patch 描述，说明改了哪些模块和为什么",
+
+                "changes": [
+
+                { "moduleId": "模块 id", "data": { "id": "模块 id", "kind": "原模块 kind", "visible": true, "personal": { "city": "杭州" } } }
+
+                ],
+
+                "evidenceRefs": ["依据 1", "依据 2"],
+
+                "riskNotes": ["风险 1"]
+
+                }
+
+
+                字段要求：
+
+                - message 不超过 80 字。
+
+                - title 不超过 28 字。
+
+                - description 不超过 120 字。
+
+                - evidenceRefs 至少包含“当前简历正文中的原始模块内容”和“用户本次输入的修改要求”。
+
+                - riskNotes 可以为空数组，但涉及量化成果、职责范围、技能真实性时必须给出提示。
+
+                - shouldCreatePatch=false 时，changes 必须是 []。
+
+                - shouldCreatePatch=true 时，changes 至少 1 条。
+
+                - data.id 必须等于 moduleId；data.kind 必须等于原模块 kind。
+
+                - data 可以只返回发生变化的字段。例如修改城市时，只需要返回 personal.city；不要为了完整而重写未修改字段。
+
+                - 如果修改数组型字段（skills、items），返回完整的新数组。
+
+                '
+            - id: 1801000000002-user
+              role: user
+              text: "用户本轮修改要求：
+
+
+                {{#sys.query#}}
+
+
+                当前简历 ID：
+
+
+                {{#1801000000001.resume_id#}}
+
+
+                当前 ResumeDocument（JSON）：
+
+
+                {{#1801000000001.current_resume_json#}}
+
+
+                selected_module_id（可能为空）：
+
+
+                {{#1801000000001.selected_module_id#}}
+
+
+                selected_module_json（可能为 null）：
+
+
+                {{#1801000000001.selected_module_json#}}
+
+                "
+          selected: false
+          structured_output:
+            schema:
+              type: object
+              required:
+                - message
+                - shouldCreatePatch
+                - title
+                - description
+                - changes
+                - evidenceRefs
+                - riskNotes
+              properties:
+                message:
+                  type: string
+                shouldCreatePatch:
+                  type: boolean
+                title:
+                  type: string
+                description:
+                  type: string
+                evidenceRefs:
+                  type: array
+                  items:
+                    type: string
+                riskNotes:
+                  type: array
+                  items:
+                    type: string
+                changes:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - moduleId
+                      - data
+                    properties:
+                      moduleId:
+                        type: string
+                      data:
+                        type: object
+                        required:
+                          - id
+                          - kind
+                          - visible
+                        properties:
+                          id:
+                            type: string
+                          kind:
+                            type: string
+                            enum:
+                              - personal
+                              - preferences
+                              - skills
+                              - work
+                              - projects
+                              - education
+                              - custom
+                          visible:
+                            type: boolean
+                          personal:
+                            type: object
+                            properties:
+                              fullName:
+                                type: string
+                              headline:
+                                type: string
+                              email:
+                                type: string
+                              phone:
+                                type: string
+                              city:
+                                type: string
+                              linkedin:
+                                type: string
+                              github:
+                                type: string
+                              portfolio:
+                                type: string
+                              customFields:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                          preferences:
+                            type: object
+                            properties:
+                              jobFunction:
+                                type: string
+                              jobTypes:
+                                type: array
+                                items:
+                                  type: string
+                              openToRemote:
+                                type: boolean
+                              targetCity:
+                                type: string
+                              salaryExpectation:
+                                type: string
+                              customFields:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                          skills:
+                            type: array
+                            items:
+                              type: string
+                          items:
+                            type: array
+                            items:
+                              type: object
+                              required:
+                                - id
+                              properties:
+                                id:
+                                  type: string
+                                company:
+                                  type: string
+                                title:
+                                  type: string
+                                name:
+                                  type: string
+                                role:
+                                  type: string
+                                school:
+                                  type: string
+                                degree:
+                                  type: string
+                                major:
+                                  type: string
+                                startDate:
+                                  type: string
+                                endDate:
+                                  type: string
+                                current:
+                                  type: boolean
+                                description:
+                                  type: string
+                                skills:
+                                  type: array
+                                  items:
+                                    type: string
+                          module:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              name:
+                                type: string
+                              content:
+                                type: string
+          structured_output_enabled: true
+          title: LLM 生成 Patch
+          type: llm
+          vision:
+            enabled: false
+        height: 148
+        id: "1801000000002"
+        position:
+          x: 60
+          y: 240
+        positionAbsolute:
+          x: 60
+          y: 240
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+      - data:
+          code: |
+            function main({ llm_output, current_resume_json }) {
+              function parseJson(value, label) {
+                if (typeof value !== "string") {
+                  return value;
+                }
+                const text = value.trim()
+                  .replace(/^```(?:json)?\s*/i, "")
+                  .replace(/\s*```$/i, "");
+                try {
+                  return JSON.parse(text);
+                } catch (error) {
+                  throw new Error(label + " is not valid JSON");
+                }
+              }
+
+              function asString(value, fallback) {
+                return typeof value === "string" && value.trim()
+                  ? value.trim()
+                  : fallback;
+              }
+
+              function asStringArray(value) {
+                if (!Array.isArray(value)) {
+                  return [];
+                }
+                return value
+                  .filter((item) => typeof item === "string" && item.trim())
+                  .map((item) => item.trim());
+              }
+
+              function isObject(value) {
+                return value && typeof value === "object" && !Array.isArray(value);
+              }
+
+              function mergeModule(original, data, moduleId) {
+                if (!isObject(data)) {
+                  throw new Error("Patch data must be an object: " + moduleId);
+                }
+                if (data.id !== moduleId) {
+                  throw new Error("Patch data.id must equal moduleId: " + moduleId);
+                }
+                if (typeof data.kind !== "string") {
+                  throw new Error("Patch data.kind is required: " + moduleId);
+                }
+                if (data.kind !== original.kind) {
+                  throw new Error("Patch data.kind must keep original kind: " + moduleId);
+                }
+
+                const merged = { ...original, ...data, id: original.id, kind: original.kind };
+                if (typeof data.visible !== "boolean") {
+                  merged.visible = Boolean(original.visible);
+                }
+
+                if (original.kind === "personal") {
+                  merged.personal = { ...(original.personal || {}), ...(isObject(data.personal) ? data.personal : {}) };
+                }
+                if (original.kind === "preferences") {
+                  merged.preferences = { ...(original.preferences || {}), ...(isObject(data.preferences) ? data.preferences : {}) };
+                }
+                if (original.kind === "skills") {
+                  merged.skills = Array.isArray(data.skills) ? data.skills.filter((item) => typeof item === "string") : original.skills;
+                }
+                if (original.kind === "work" || original.kind === "projects" || original.kind === "education") {
+                  merged.items = Array.isArray(data.items) ? data.items : original.items;
+                }
+                if (original.kind === "custom") {
+                  merged.module = { ...(original.module || {}), ...(isObject(data.module) ? data.module : {}) };
+                }
+
+                return merged;
+              }
+
+              const document = parseJson(current_resume_json, "current_resume_json");
+              const parsed = parseJson(llm_output, "llm_output");
+
+              if (!isObject(document) || !Array.isArray(document.modules)) {
+                throw new Error("current_resume_json must be a ResumeDocument");
+              }
+              if (!isObject(parsed) || !Array.isArray(parsed.changes)) {
+                throw new Error("LLM output must contain changes[]");
+              }
+
+              const shouldCreatePatch = parsed.shouldCreatePatch !== false;
+
+              const modulesById = new Map(
+                document.modules
+                  .filter((module) => isObject(module) && typeof module.id === "string")
+                  .map((module) => [module.id, module])
+              );
+
+              const changes = [];
+              for (const change of parsed.changes) {
+                if (!isObject(change) || !isObject(change.data)) {
+                  continue;
+                }
+                const moduleId = asString(change.moduleId || change.module_id, "");
+                const original = modulesById.get(moduleId);
+                const data = change.data;
+
+                if (!moduleId || !original) {
+                  continue;
+                }
+                changes.push({ moduleId, data: mergeModule(original, data, moduleId) });
+              }
+
+              const resolvedShouldCreatePatch = shouldCreatePatch && changes.length > 0;
+
+              return {
+                text: JSON.stringify({
+                  message: asString(
+                    parsed.message,
+                    resolvedShouldCreatePatch
+                      ? `我生成了 ${changes.length} 个模块的修改建议。请先查看预览高亮和 Diff，再决定采纳或拒绝。`
+                      : "请告诉我你希望修改简历的具体方向。"
+                  ),
+                  shouldCreatePatch: resolvedShouldCreatePatch,
+                  title: asString(parsed.title, "AI 修改建议"),
+                  description: asString(
+                    parsed.description,
+                    resolvedShouldCreatePatch
+                      ? "根据用户要求生成 AI 修改建议，只修改模块内容，不修改简历名称。"
+                      : "本轮没有生成简历修改建议。"
+                  ),
+                  changes,
+                  evidenceRefs: asStringArray(parsed.evidenceRefs || parsed.evidence_refs),
+                  riskNotes: asStringArray(parsed.riskNotes || parsed.risk_notes)
+                })
+              };
+            }
+          code_language: javascript
+          desc: 校验并归一化 LLM 输出。最终 text 是后端可解析的 ResumePatch JSON。
+          outputs:
+            text:
+              children: null
+              type: string
+          selected: false
+          title: 输出归一化
+          type: code
+          variables:
+            - value_selector:
+                - "1801000000002"
+                - text
+              variable: llm_output
+            - value_selector:
+                - "1801000000001"
+                - current_resume_json
+              variable: current_resume_json
+        height: 96
+        id: "1801000000003"
+        position:
+          x: 400
+          y: 240
+        positionAbsolute:
+          x: 400
+          y: 240
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+      - data:
+          answer: "{{#1801000000003.text#}}"
+          desc: 返回 JSON 字符串给 /chat-messages。Edge Function 会从 answer 里解析 message 和 changes。
+          selected: false
+          title: 直接回复
+          type: answer
+          variables: []
+        height: 104
+        id: answer
+        position:
+          x: 740
+          y: 240
+        positionAbsolute:
+          x: 740
+          y: 240
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 242
+    viewport:
+      x: -360
+      y: 160
+      zoom: 0.8
+  rag_pipeline_variables: []

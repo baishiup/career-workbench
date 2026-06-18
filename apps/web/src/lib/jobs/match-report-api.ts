@@ -26,7 +26,7 @@ type MatchReportRecord = {
   narrative: MatchReportNarrative | null;
   profileSnapshotAt: string | null;
   jobSnapshotAt: string | null;
-  /** Dify workflow_run_id，仅排错展示用。 */
+  /** 外部分析任务 ID，仅排错展示用。 */
   externalRunId: string | null;
   errorMessage: string | null;
   updatedAt: string | null;
@@ -35,7 +35,7 @@ type MatchReportRecord = {
 /** 详情页一次拉取的报告上下文：报告本体 + 过期判断结果。 */
 type MatchReportContext = {
   report: MatchReportRecord | null;
-  /** Profile 或职位在报告生成后是否更新过。 */
+  /** 资料或职位在报告生成后是否更新过。 */
   isStale: boolean;
   mode: MatchReportsDataMode;
 };
@@ -87,7 +87,7 @@ async function fetchMatchReportContext(
       .select(reportSelectColumns)
       .eq("job_id", jobId)
       .maybeSingle(),
-    // RLS owner-only，select 不带 user 条件也只会返回自己的 Profile 行。
+    // RLS owner-only，select 不带 user 条件也只会返回自己的资料行。
     supabase.from("profiles").select("updated_at").maybeSingle(),
     supabase
       .from("job_descriptions")
@@ -119,7 +119,7 @@ async function fetchMatchReportContext(
   return { report, isStale, mode: "supabase" };
 }
 
-/** 触发 job-match Edge Function，由 AI 读取 Profile + JD 产出匹配度与叙事。 */
+/** 触发 job-match，由 AI 读取资料和职位描述产出匹配度与叙事。 */
 async function runJobMatchAnalysis(jobId: string): Promise<MatchReportRecord> {
   const supabase = getSupabaseClient();
 
@@ -127,7 +127,7 @@ async function runJobMatchAnalysis(jobId: string): Promise<MatchReportRecord> {
     const mockReport = buildMockContext(jobId).report;
 
     if (!mockReport) {
-      throw new MatchReportApiError("数据服务未连接，当前职位也没有演示报告。");
+      throw new MatchReportApiError("当前无法连接服务，请稍后重试。");
     }
 
     return mockReport;

@@ -11,11 +11,12 @@
     }
   },
   "scripts": {
-    "check": "echo \"@career-workbench/domain scaffold placeholder: no source checks yet\"",
+    "check": "tsc --noEmit",
     "test": "vitest run",
-    "build": "echo \"@career-workbench/domain scaffold placeholder: no build output yet\""
+    "build": "pnpm check"
   },
   "devDependencies": {
+    "typescript": "6.0.3",
     "vitest": "^4.1.8"
   }
 }

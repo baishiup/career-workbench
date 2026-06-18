@@ -35,7 +35,7 @@ export function ProfilePage() {
       setLoadError(
         isAuthConfigured
           ? "请先登录后再查看资料。"
-          : "数据服务未连接，无法读取资料。",
+          : "当前无法连接服务，请稍后重试。",
       );
       return;
     }

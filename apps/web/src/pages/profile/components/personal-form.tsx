@@ -1,12 +1,14 @@
 "use client";
 
+import { useRef, useState, type ChangeEvent } from "react";
 import { Button, Input } from "@heroui/react";
-import { Plus, X } from "lucide-react";
+import { Loader2, Plus, Trash2, Upload, UserRound, X } from "lucide-react";
 
 import type {
   PersonalCustomField,
   PersonalInfo,
 } from "@career-workbench/domain";
+import { uploadProfileAvatar } from "@/lib/profile/api";
 import { createId } from "@/pages/profile/utils";
 import { TextField } from "./profile-fields";
 
@@ -21,6 +23,9 @@ function PersonalForm({
   personal: PersonalInfo;
 }) {
   const customFields = personal.customFields ?? [];
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const avatarUrl = personal.avatarUrl.trim();
 
   function updateCustomField(id: string, patch: Partial<PersonalCustomField>) {
     onPersonalChange(
@@ -31,8 +36,83 @@ function PersonalForm({
     );
   }
 
+  async function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file || isUploadingAvatar) {
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+
+    try {
+      const uploadedUrl = await uploadProfileAvatar(file);
+      onPersonalChange("avatarUrl", uploadedUrl);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "头像上传失败。");
+    } finally {
+      event.target.value = "";
+      setIsUploadingAvatar(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+        <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+          {avatarUrl ? (
+            <img
+              alt="头像预览"
+              className="size-full object-cover"
+              src={avatarUrl}
+            />
+          ) : (
+            <UserRound className="size-8 text-slate-400" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-slate-900">头像</p>
+          <p className="mt-1 text-xs text-slate-500">
+            可选。支持 JPG、PNG、WebP，最大 2MB。
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button
+              isDisabled={isUploadingAvatar}
+              onPress={() => avatarInputRef.current?.click()}
+              size="sm"
+              type="button"
+              variant="secondary"
+            >
+              {isUploadingAvatar ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Upload className="size-4" />
+              )}
+              {avatarUrl ? "更换头像" : "上传头像"}
+            </Button>
+            {avatarUrl ? (
+              <Button
+                isDisabled={isUploadingAvatar}
+                onPress={() => onPersonalChange("avatarUrl", "")}
+                size="sm"
+                type="button"
+                variant="danger-soft"
+              >
+                <Trash2 className="size-4" />
+                移除
+              </Button>
+            ) : null}
+          </div>
+          <input
+            ref={avatarInputRef}
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleAvatarChange}
+            type="file"
+          />
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
         <TextField
           className="md:col-span-2"

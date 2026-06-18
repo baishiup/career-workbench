@@ -33,6 +33,8 @@ type PersonalCustomField = CustomField;
 type PersonalInfo = {
   fullName: string;
   headline: string;
+  /** 头像公开 URL，用户可选上传。 */
+  avatarUrl: string;
   email: string;
   phone: string;
   city: string;

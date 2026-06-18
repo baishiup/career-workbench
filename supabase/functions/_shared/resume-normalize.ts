@@ -23,6 +23,7 @@ export type {
 
 export type {
   ResumeDocument,
+  ResumeModule,
 } from "../../../packages/domain/src/resume/types.ts";
 
 export {

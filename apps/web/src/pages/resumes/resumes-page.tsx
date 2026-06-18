@@ -75,6 +75,9 @@ export function ResumesPage({ initialOpenResumeId }: ResumesPageProps) {
     useState<ResumeListRow | null>(null);
   const [profileDialogSource, setProfileDialogSource] =
     useState<ProfileDialogSource>("manual");
+  const [deleteDialogRow, setDeleteDialogRow] = useState<ResumeListRow | null>(
+    null,
+  );
   const [applyingProfileResumeId, setApplyingProfileResumeId] = useState<
     string | null
   >(null);
@@ -83,7 +86,7 @@ export function ResumesPage({ initialOpenResumeId }: ResumesPageProps) {
   useEffect(() => {
     if (!isSupabaseConfigured) {
       setIsLoading(false);
-      setLoadError("数据服务未连接，无法读取简历列表。");
+      setLoadError("当前无法连接服务，请稍后重试。");
       return;
     }
 
@@ -203,7 +206,12 @@ export function ResumesPage({ initialOpenResumeId }: ResumesPageProps) {
     }
 
     if (nextAction === "delete") {
-      void handleDeleteResume(row);
+      if (rows.length <= 1) {
+        Toast.toast.danger("至少保留一份简历。");
+        return;
+      }
+
+      setDeleteDialogRow(row);
     }
   }
 
@@ -278,6 +286,7 @@ export function ResumesPage({ initialOpenResumeId }: ResumesPageProps) {
       setRows((currentRows) =>
         currentRows.filter((currentRow) => currentRow.id !== row.id),
       );
+      setDeleteDialogRow(null);
       Toast.toast.success("简历已删除。");
     } catch (error) {
       Toast.toast.danger(getErrorMessage(error, "简历删除失败。"));
@@ -291,6 +300,9 @@ export function ResumesPage({ initialOpenResumeId }: ResumesPageProps) {
   );
   const isProfileApplying = Boolean(
     profileDialogRow && applyingProfileResumeId === profileDialogRow.id,
+  );
+  const isDeleteRunning = Boolean(
+    deleteDialogRow && deletingResumeId === deleteDialogRow.id,
   );
   const isRenameTitleValid = renameTitle.trim().length > 0;
   const profileDialogTitle =
@@ -575,6 +587,44 @@ export function ResumesPage({ initialOpenResumeId }: ResumesPageProps) {
                   <UserRoundCheck className="size-4" />
                 )}
                 {isProfileApplying ? "更新中..." : "确认更新"}
+              </Button>
+            </div>
+          </div>
+        </DialogShell>
+      ) : null}
+
+      {deleteDialogRow ? (
+        <DialogShell
+          closeLabel="关闭删除确认弹窗"
+          isCloseDisabled={isDeleteRunning}
+          onClose={() => setDeleteDialogRow(null)}
+          title="删除这份简历？"
+        >
+          <div className="flex flex-col gap-4">
+            <p className="text-sm leading-6 text-slate-600">
+              确认后会删除「{deleteDialogRow.title}」。这个操作不可撤销。
+            </p>
+            <div className="flex justify-end gap-2 border-t border-slate-200 pt-4">
+              <Button
+                isDisabled={isDeleteRunning}
+                onPress={() => setDeleteDialogRow(null)}
+                type="button"
+                variant="tertiary"
+              >
+                取消
+              </Button>
+              <Button
+                isDisabled={isDeleteRunning}
+                onPress={() => void handleDeleteResume(deleteDialogRow)}
+                type="button"
+                variant="danger-soft"
+              >
+                {isDeleteRunning ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
+                {isDeleteRunning ? "删除中..." : "确认删除"}
               </Button>
             </div>
           </div>

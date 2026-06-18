@@ -1,0 +1,4 @@
+-- Remote history marker.
+-- The original remote migration added profiles.profile_data/source before the
+-- schema was squashed. The final profiles shape now lives in the baseline
+-- migration, so this version stays intentionally empty to preserve history.

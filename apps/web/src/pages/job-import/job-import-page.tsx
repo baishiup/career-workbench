@@ -136,7 +136,7 @@ export function JobImportPage({ jobId }: { jobId?: string }) {
     return (
       <ImportShell title="职位导入不可用">
         <p className="mt-2 text-sm text-slate-500">
-          当前是本地演示模式，职位导入需要连接数据服务。
+          职位导入需要连接数据服务后才能使用。
         </p>
       </ImportShell>
     );

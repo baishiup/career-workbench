@@ -8,6 +8,7 @@
 | `DIFY_JOB_PARSE_API_KEY`       | job_parse       | `job-parse`（仅 admin）                            |
 | `DIFY_JOB_MATCH_API_KEY`       | job_match       | `job-match`（登录用户）                            |
 | `DIFY_RESUME_GENERATE_API_KEY` | resume_generate | `resume-generate`（登录用户）                      |
+| `DIFY_RESUME_CHAT_API_KEY`     | resume_chat     | `resume-chat`（登录用户）                          |
 | `DIFY_BASE_URL`                | —               | 所有 Dify 调用共用，默认 `https://api.dify.ai/v1`  |
 | `DIFY_USER`                    | —               | Dify API 的 `user` 字段，本地调试标识              |
 | `DIFY_RESUME_INPUT_NAME`       | 简历附件解析    | workflow 开始节点文件输入名，默认 `resume_file`    |
@@ -119,3 +120,67 @@
 - 对 1-2 页简历，主要减少 LLM 输入和无用 reasoning 等待。
 - 对提取文本很脏或很长的 PDF，收益更明显。
 - 如果 Dify 的耗时主要卡在文件上传或 Document Extractor，优化幅度会有限，需要再看 Dify 单次运行详情里的节点耗时。
+
+## resume_chat Chatflow
+
+简历编辑器 AI 对话使用 Dify Chatflow，通过 `supabase/functions/resume-chat` 调用，不从前端直接访问 Dify。
+
+配置文件：[`dify/resume_chat.yml`](./resume_chat.yml)。
+
+输入约定：
+
+- `query`：用户本轮修改要求。
+- `inputs.current_resume_json`：当前 `ResumeDocument` JSON 字符串。
+- `inputs.resume_id`：当前简历 ID。
+- `inputs.selected_module_id`：可选的模块上下文 ID。
+- `inputs.selected_module_json`：可选的模块上下文 JSON 字符串。
+
+输出约定：Chatflow 的 `answer` 需要包含可解析 JSON，推荐形状：
+
+```json
+{
+  "shouldCreatePatch": true,
+  "message": "我生成了 1 个模块的修改建议。请先查看预览高亮和 Diff，再决定采纳或拒绝。",
+  "title": "压缩表达并保留关键信息",
+  "description": "根据用户要求调整工作经历，只修改模块内容，不修改简历名称。",
+  "changes": [
+    {
+      "moduleId": "module-personal",
+      "data": {
+        "id": "module-personal",
+        "kind": "personal",
+        "visible": true,
+        "personal": {
+          "city": "杭州"
+        }
+      }
+    }
+  ],
+  "evidenceRefs": ["当前简历正文中的原始模块内容", "用户本次输入的修改要求"],
+  "riskNotes": ["采纳前建议人工确认表达没有超出真实经历边界。"]
+}
+```
+
+`data` 可以只包含被修改的字段。Dify Code 节点和 Edge Function 都会用当前简历里的原模块合并成完整 `ResumeModule`，所以模型不需要重写头像、联系方式等未修改字段。后端会忽略 Dify 返回的 `original`，始终用当前简历里的模块快照补齐 `ResumePatch.original`，并校验 `changes[].moduleId`、`data.id`、`data.kind` 与原模块一致。
+
+如果用户只是寒暄、测试或没有提出明确可执行的简历修改要求，Chatflow 应返回：
+
+```json
+{
+  "shouldCreatePatch": false,
+  "message": "请告诉我你希望修改简历的具体方向，例如压缩某段经历或移除无关技能。",
+  "title": "需要补充修改要求",
+  "description": "本轮没有生成简历修改建议。",
+  "changes": [],
+  "evidenceRefs": ["用户本次输入的修改要求"],
+  "riskNotes": []
+}
+```
+
+此时 Edge Function 返回 `patch: null`，前端只展示 assistant 文本，不锁定内容 tab，也不创建修改日志。
+
+接入方式：
+
+1. 在 Dify 导入 `dify/resume_chat.yml`，发布后拿到该 app 的 API Key。
+2. 在 Supabase Edge Functions 配置 `DIFY_RESUME_CHAT_API_KEY`。
+3. 前端入口是简历编辑器 AI 助手；未配置 key 时本地开发会回退到 mock provider。

@@ -86,6 +86,24 @@ export {
   resumeStyleTemplates,
 } from "./resume/style";
 export type {
+  ApplyResumePatchResult,
+  ResumeChangeLogEntry,
+  ResumePatch,
+  ResumePatchDiff,
+  ResumePatchFieldDiff,
+  ResumePatchModuleChange,
+  ResumePatchModuleSnapshot,
+  ResumePatchStatus,
+} from "./resume/patch";
+export {
+  acceptResumePatch,
+  applyResumePatch,
+  createResumeChangeLogFromPatchDecision,
+  deriveResumePatchDiff,
+  rejectResumePatch,
+  summarizeResumeModule,
+} from "./resume/patch";
+export type {
   JobDescription,
   JobEmploymentType,
   JobRemoteStatus,

@@ -32,6 +32,7 @@ function ProfileDisplay({
   profile: ProfileDraft;
 }) {
   const fullName = profile.personal.fullName.trim();
+  const avatarUrl = profile.personal.avatarUrl.trim();
 
   return (
     <div className="flex min-w-0 flex-col">
@@ -44,12 +45,27 @@ function ProfileDisplay({
           title={sectionMeta.personal.label}
         >
           <div>
-            <h2 className="text-3xl font-semibold tracking-tight">
-              {fullName || "未命名资料"}
-            </h2>
-            <p className="mt-1 text-sm font-medium text-slate-500">
-              {profile.personal.headline || "还没有填写职业标题"}
-            </p>
+            <div className="flex flex-wrap items-start gap-4">
+              <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                {avatarUrl ? (
+                  <img
+                    alt={fullName ? `${fullName} 头像` : "头像"}
+                    className="size-full object-cover"
+                    src={avatarUrl}
+                  />
+                ) : (
+                  <UserRound className="size-8 text-slate-400" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-3xl font-semibold tracking-tight">
+                  {fullName || "未命名资料"}
+                </h2>
+                <p className="mt-1 text-sm font-medium text-slate-500">
+                  {profile.personal.headline || "还没有填写职业标题"}
+                </p>
+              </div>
+            </div>
             <PersonalFieldGrid profile={profile} />
           </div>
         </ProfileSectionBlock>

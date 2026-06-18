@@ -4,9 +4,14 @@ import type { ComponentType, SVGProps } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Button, Tabs } from "@heroui/react";
 import {
+  acceptResumePatch,
+  applyResumePatch,
   coerceRichText,
   createDefaultResumeStyleConfig,
   createResumeStyleFromTemplate,
+  createResumeChangeLogFromPatchDecision,
+  rejectResumePatch,
+  type ResumeChangeLogEntry,
   type CustomModule,
   type EducationItem,
   type JobPreferences,
@@ -14,6 +19,7 @@ import {
   type ProjectItem,
   type ResumeDocument,
   type ResumeModule,
+  type ResumePatch,
   type ResumeStyleConfig,
   type WorkItem,
 } from "@career-workbench/domain";
@@ -27,9 +33,14 @@ import {
 } from "lucide-react";
 
 import { saveResumeContent } from "@/lib/resumes/api";
+import { generateResumePatch } from "@/lib/resumes/resume-ai-provider";
 import type { ResumeFunctionRow } from "@/lib/resumes/types";
 import { cn } from "@/lib/utils";
-
+import {
+  ResumeAiChatPanel,
+  type ResumeAiComposerContext,
+  type ResumeChatMessage,
+} from "@/components/resume-ai-chat";
 import { ResumeCanvasPreview } from "./resume-canvas-preview";
 import { ResumeFormEditor } from "./resume-form-editor";
 import { ResumeStyleEditor } from "./resume-style-editor";
@@ -85,6 +96,17 @@ function ResumeEditorWorkspace({
     initialDocument?.modules[0]?.id ?? null,
   );
   const [sectionFocusSignal, setSectionFocusSignal] = useState(0);
+  const [showAiDiff, setShowAiDiff] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ResumeChatMessage[]>([]);
+  const [patches, setPatches] = useState<ResumePatch[]>([]);
+  const [changeLogs, setChangeLogs] = useState<ResumeChangeLogEntry[]>([]);
+  const [isAiRunning, setIsAiRunning] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiConversationId, setAiConversationId] = useState<string | null>(null);
+  const [aiComposerContext, setAiComposerContext] =
+    useState<ResumeAiComposerContext | null>(null);
+  const [acceptedUnsavedPatch, setAcceptedUnsavedPatch] =
+    useState<ResumePatch | null>(null);
   const editorScrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -95,6 +117,15 @@ function ResumeEditorWorkspace({
     setIsSaving(false);
     setSaveError(null);
     setSelectedSectionId(initialDocument?.modules[0]?.id ?? null);
+    setShowAiDiff(false);
+    setChatMessages([]);
+    setPatches([]);
+    setChangeLogs([]);
+    setIsAiRunning(false);
+    setAiError(null);
+    setAiConversationId(null);
+    setAiComposerContext(null);
+    setAcceptedUnsavedPatch(null);
   }, [initialDocument, initialStyle, resume.id]);
 
   const isDirty = useMemo(
@@ -136,6 +167,7 @@ function ResumeEditorWorkspace({
 
       setSavedDocument(draftDocument);
       setSavedStyle(draftStyle);
+      setAcceptedUnsavedPatch(null);
       onSaved?.(savedRow);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "简历保存失败。");
@@ -153,6 +185,9 @@ function ResumeEditorWorkspace({
     setDraftStyle(savedStyle);
     setSaveError(null);
     setSelectedSectionId(savedDocument?.modules[0]?.id ?? null);
+    setAiConversationId(null);
+    setAiComposerContext(null);
+    setAcceptedUnsavedPatch(null);
   }
 
   useEffect(() => {
@@ -171,7 +206,17 @@ function ResumeEditorWorkspace({
   }, [draftDocument, selectedSectionId]);
 
   function handleEditWithAi(sectionId: string) {
+    const module = draftDocument?.modules.find((item) => item.id === sectionId);
+
     setSelectedSectionId(sectionId);
+    setAiComposerContext(
+      module
+        ? {
+            label: getResumeModuleContextLabel(module),
+            moduleId: module.id,
+          }
+        : null,
+    );
     setSectionFocusSignal((current) => current + 1);
     setActiveTab("ai");
   }
@@ -180,6 +225,144 @@ function ResumeEditorWorkspace({
     setActiveTab("editor");
     setSelectedSectionId(sectionId);
     setSectionFocusSignal((current) => current + 1);
+  }
+
+  const pendingPatch = useMemo(
+    () => patches.find((patch) => patch.status === "pending") ?? null,
+    [patches],
+  );
+  const previewPatch = pendingPatch ?? acceptedUnsavedPatch;
+
+  async function handleSendAiPrompt(prompt: string) {
+    if (!draftDocument || pendingPatch || isAiRunning) {
+      return;
+    }
+
+    const composerContext = aiComposerContext;
+    const userMessage: ResumeChatMessage = {
+      createdAt: new Date().toISOString(),
+      id: createClientId("chat-user"),
+      parts: [
+        ...(composerContext
+          ? [
+              {
+                context: composerContext,
+                type: "resume-module-context" as const,
+              },
+            ]
+          : []),
+        { text: prompt, type: "text" },
+      ],
+      role: "user",
+      status: "sent",
+    };
+
+    setChatMessages((current) => [...current, userMessage]);
+    setAiComposerContext(null);
+    setIsAiRunning(true);
+    setAiError(null);
+
+    try {
+      const result = await generateResumePatch({
+        conversationId: aiConversationId,
+        document: draftDocument,
+        prompt,
+        resumeId: resume.id,
+        selectedModuleId: composerContext?.moduleId ?? selectedSectionId,
+      });
+      const patch = result.patch;
+      const assistantMessage: ResumeChatMessage = {
+        createdAt: new Date().toISOString(),
+        id: createClientId("chat-assistant"),
+        parts: [
+          { text: result.message, type: "text" },
+          ...(patch ? [{ patch, type: "resume-patch" as const }] : []),
+        ],
+        role: "assistant",
+        status: "sent",
+      };
+
+      setAiConversationId(result.conversationId);
+      if (patch) {
+        setPatches((current) => [...current, patch]);
+        setChangeLogs((current) => [
+          createResumeChangeLogFromPatchDecision({
+            action: "suggested",
+            patch,
+            resumeId: resume.id,
+          }),
+          ...current,
+        ]);
+        setShowAiDiff(true);
+      }
+      setChatMessages((current) => [...current, assistantMessage]);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "AI 修改建议生成失败。";
+
+      setAiError(message);
+      setChatMessages((current) => [
+        ...current,
+        {
+          createdAt: new Date().toISOString(),
+          id: createClientId("chat-error"),
+          parts: [{ text: message, type: "text" }],
+          role: "assistant",
+          status: "failed",
+        },
+      ]);
+    } finally {
+      setIsAiRunning(false);
+    }
+  }
+
+  function handleAcceptPatch(patch: ResumePatch) {
+    if (!draftDocument) {
+      return;
+    }
+
+    const result = applyResumePatch(draftDocument, patch);
+
+    if (!result.ok) {
+      setAiError(result.reason);
+      return;
+    }
+
+    const accepted = acceptResumePatch(patch);
+
+    setDraftDocument(result.document);
+    setAcceptedUnsavedPatch(accepted);
+    setPatches((current) =>
+      current.map((item) => (item.id === patch.id ? accepted : item)),
+    );
+    setChatMessages((current) => replacePatchInMessages(current, accepted));
+    setChangeLogs((current) => [
+      createResumeChangeLogFromPatchDecision({
+        action: "accepted",
+        patch: accepted,
+        resumeId: resume.id,
+      }),
+      ...current,
+    ]);
+    setAiError(null);
+  }
+
+  function handleRejectPatch(patch: ResumePatch) {
+    const rejected = rejectResumePatch(patch);
+
+    setPatches((current) =>
+      current.map((item) => (item.id === patch.id ? rejected : item)),
+    );
+    setChatMessages((current) => replacePatchInMessages(current, rejected));
+    setChangeLogs((current) => [
+      createResumeChangeLogFromPatchDecision({
+        action: "rejected",
+        patch: rejected,
+        resumeId: resume.id,
+      }),
+      ...current,
+    ]);
+    setAiError(null);
   }
 
   return (
@@ -192,8 +375,11 @@ function ResumeEditorWorkspace({
       <div className="min-h-0 overflow-hidden">
         <ResumeCanvasPreview
           document={draftDocument}
+          onDiffModeChange={setShowAiDiff}
           onEditWithAi={handleEditWithAi}
           onSectionSelect={handleSectionSelect}
+          patch={previewPatch}
+          showDiff={showAiDiff}
           surface={previewSurface}
           style={draftStyle}
         />
@@ -275,14 +461,34 @@ function ResumeEditorWorkspace({
             )}
           >
             {draftDocument ? (
-              <ResumeFormEditor
-                document={draftDocument}
-                onDocumentChange={setDraftDocument}
-                sectionFocusSignal={sectionFocusSignal}
-                onSectionFocus={handleSectionSelect}
-                selectedSectionId={selectedSectionId}
-                scrollContainerRef={editorScrollRef}
-              />
+              <>
+                {pendingPatch ? (
+                  <Alert className="mb-3" status="warning">
+                    <Alert.Content>
+                      <Alert.Title>内容暂时只读</Alert.Title>
+                      <Alert.Description>
+                        当前有 AI
+                        修改建议待处理。请先采纳或拒绝，再继续手动编辑简历内容。
+                      </Alert.Description>
+                    </Alert.Content>
+                  </Alert>
+                ) : null}
+                <div
+                  className={cn(
+                    pendingPatch &&
+                      "pointer-events-none select-text opacity-70",
+                  )}
+                >
+                  <ResumeFormEditor
+                    document={draftDocument}
+                    onDocumentChange={setDraftDocument}
+                    sectionFocusSignal={sectionFocusSignal}
+                    onSectionFocus={handleSectionSelect}
+                    selectedSectionId={selectedSectionId}
+                    scrollContainerRef={editorScrollRef}
+                  />
+                </div>
+              </>
             ) : (
               <InvalidDocumentAlert />
             )}
@@ -302,26 +508,82 @@ function ResumeEditorWorkspace({
 
           <div
             className={cn(
-              "h-full overflow-y-auto p-4",
+              "h-full overflow-hidden p-4",
               activeTab !== "ai" && "hidden",
             )}
           >
-            <div className="flex min-h-[420px] flex-col items-center justify-center px-10 text-center">
-              <div className="mb-4 flex size-12 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-600">
-                <MessageSquareText className="size-6" />
-              </div>
-              <p className="text-sm font-semibold text-slate-900">
-                AI 助手即将上线
-              </p>
-              <p className="mt-1.5 max-w-[240px] text-xs leading-5 text-slate-400">
-                选中任意章节即可呼出 AI 帮你润色、改写与扩写。
-              </p>
-            </div>
+            {draftDocument ? (
+              <ResumeAiChatPanel
+                changeLogs={changeLogs}
+                composerContext={aiComposerContext}
+                error={aiError}
+                isRunning={isAiRunning}
+                messages={chatMessages}
+                onAcceptPatch={handleAcceptPatch}
+                onClearComposerContext={() => setAiComposerContext(null)}
+                onRejectPatch={handleRejectPatch}
+                onSendPrompt={(prompt) => void handleSendAiPrompt(prompt)}
+                pendingPatch={pendingPatch}
+              />
+            ) : (
+              <InvalidDocumentAlert />
+            )}
           </div>
         </div>
       </aside>
     </div>
   );
+}
+
+function createClientId(prefix: string) {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function getResumeModuleContextLabel(module: ResumeModule) {
+  switch (module.kind) {
+    case "personal":
+      return ["个人信息", module.personal.fullName, module.personal.headline]
+        .filter(Boolean)
+        .join(" · ");
+    case "skills":
+      return "技能";
+    case "work": {
+      const first = module.items[0];
+      return ["工作经历", first?.company, first?.title]
+        .filter(Boolean)
+        .join(" · ");
+    }
+    case "projects": {
+      const first = module.items[0];
+      return ["项目经历", first?.name, first?.role].filter(Boolean).join(" · ");
+    }
+    case "education": {
+      const first = module.items[0];
+      return ["教育背景", first?.school, first?.degree]
+        .filter(Boolean)
+        .join(" · ");
+    }
+    case "preferences":
+      return "求职方向";
+    case "custom":
+      return ["自定义模块", module.module.name].filter(Boolean).join(" · ");
+    default:
+      return "简历模块";
+  }
+}
+
+function replacePatchInMessages(
+  messages: ResumeChatMessage[],
+  patch: ResumePatch,
+): ResumeChatMessage[] {
+  return messages.map((message) => ({
+    ...message,
+    parts: message.parts.map((part) =>
+      part.type === "resume-patch" && part.patch.id === patch.id
+        ? { patch, type: "resume-patch" as const }
+        : part,
+    ),
+  }));
 }
 
 function InvalidDocumentAlert() {
@@ -425,6 +687,7 @@ function migrateLegacySections(sections: unknown[]): ResumeModule[] {
 
 function legacyPersonal(blocks: unknown[]): PersonalInfo {
   const personal: PersonalInfo = {
+    avatarUrl: "",
     city: "",
     customFields: [],
     email: "",
@@ -622,6 +885,7 @@ function normalizePersonal(value: unknown): PersonalInfo {
   const record = asRecord(value) ?? {};
 
   return {
+    avatarUrl: getStringValue(record.avatarUrl),
     city: getStringValue(record.city),
     customFields: toCustomFields(record.customFields),
     email: getStringValue(record.email),

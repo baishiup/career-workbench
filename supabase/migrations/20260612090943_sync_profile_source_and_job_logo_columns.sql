@@ -3,7 +3,7 @@
 --   2) job_descriptions: add logo_url/company_info, drop company_stage/seniority/
 --      import_method (feat: job).
 --   3) company-logos storage bucket + RLS (depends on private.is_current_user_admin()).
--- Safe to re-run; mirrors supabase/sql setup scripts.
+-- Safe to re-run; now covered by the baseline schema for fresh databases.
 
 -- 1) profiles
 alter table public.profiles

@@ -8,6 +8,7 @@ import type {
 import type {
   ApplyResumeToProfileResponse,
   CompleteOnboardingWithResumeResponse,
+  ResumeChatResponse,
   ResumeGenerateResponse,
   ResumeFunctionRow,
   ResumeListRow,
@@ -16,6 +17,7 @@ import type {
 
 // 历史命名保留：resumes feature 内沿用 ResumeFunctionError 这个名字。
 const ResumeFunctionError = EdgeFunctionError;
+const serviceUnavailableMessage = "当前无法连接服务，请稍后重试。";
 
 async function uploadResume(file: File) {
   const formData = new FormData();
@@ -28,7 +30,7 @@ async function listResumes() {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new ResumeFunctionError("数据服务未连接，无法读取简历列表。");
+    throw new ResumeFunctionError(serviceUnavailableMessage);
   }
 
   const { data, error } = await supabase
@@ -48,7 +50,7 @@ async function renameResume(resumeId: string, title: string) {
   const nextTitle = title.trim();
 
   if (!supabase) {
-    throw new ResumeFunctionError("数据服务未连接，无法修改简历名称。");
+    throw new ResumeFunctionError(serviceUnavailableMessage);
   }
 
   if (!nextTitle) {
@@ -80,7 +82,7 @@ async function deleteResume(resumeId: string) {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new ResumeFunctionError("数据服务未连接，无法删除简历。");
+    throw new ResumeFunctionError(serviceUnavailableMessage);
   }
 
   const { count, error: countError } = await supabase
@@ -122,7 +124,7 @@ async function saveResumeContent(
   const title = input.document.title.trim();
 
   if (!supabase) {
-    throw new ResumeFunctionError("数据服务未连接，无法保存简历修改。");
+    throw new ResumeFunctionError(serviceUnavailableMessage);
   }
 
   if (!title) {
@@ -158,7 +160,7 @@ async function getResume(resumeId: string) {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new ResumeFunctionError("数据服务未连接，无法读取简历详情。");
+    throw new ResumeFunctionError(serviceUnavailableMessage);
   }
 
   const { data, error } = await supabase
@@ -184,7 +186,7 @@ async function getLatestTargetJobResume(jobId: string) {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new ResumeFunctionError("数据服务未连接，无法读取职位定制简历。");
+    throw new ResumeFunctionError(serviceUnavailableMessage);
   }
 
   const { data, error } = await supabase
@@ -234,10 +236,27 @@ async function generateTargetJobResume(jobId: string) {
   });
 }
 
+async function generateResumeChatPatch(input: {
+  conversationId?: string | null;
+  document: ResumeDocument;
+  prompt: string;
+  resumeId: string;
+  selectedModuleId?: string | null;
+}) {
+  return invokeEdgeFunction<ResumeChatResponse>("resume-chat", {
+    conversation_id: input.conversationId ?? null,
+    document: input.document,
+    prompt: input.prompt,
+    resume_id: input.resumeId,
+    selected_module_id: input.selectedModuleId ?? null,
+  });
+}
+
 export {
   applyResumeToProfile,
   completeOnboardingWithResume,
   deleteResume,
+  generateResumeChatPatch,
   generateTargetJobResume,
   getLatestTargetJobResume,
   getResume,

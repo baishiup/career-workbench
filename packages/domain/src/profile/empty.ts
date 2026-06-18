@@ -6,6 +6,7 @@ import type { ProfileDraft } from "./types.ts";
  */
 const emptyProfile: ProfileDraft = {
   personal: {
+    avatarUrl: "",
     fullName: "",
     headline: "",
     email: "",

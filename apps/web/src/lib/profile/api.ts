@@ -26,6 +26,15 @@ type UserDataRow = {
   full_name: string | null;
 };
 
+const profileAvatarBucket = "profile-avatars";
+const maxProfileAvatarBytes = 2 * 1024 * 1024;
+const serviceUnavailableMessage = "当前无法连接服务，请稍后重试。";
+const profileAvatarMimeTypes = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -46,6 +55,32 @@ function strArray(value: unknown): string[] {
 
 function bool(value: unknown): boolean {
   return typeof value === "boolean" ? value : false;
+}
+
+function getProfileAvatarExtension(file: File): string {
+  if (file.type === "image/jpeg") {
+    return "jpg";
+  }
+
+  if (file.type === "image/png") {
+    return "png";
+  }
+
+  if (file.type === "image/webp") {
+    return "webp";
+  }
+
+  return "png";
+}
+
+function assertProfileAvatarFile(file: File) {
+  if (file.size > maxProfileAvatarBytes) {
+    throw new Error("头像图片不能超过 2MB。");
+  }
+
+  if (!profileAvatarMimeTypes.has(file.type)) {
+    throw new Error("头像只支持 JPG、PNG 或 WebP。");
+  }
 }
 
 function toCustomFields(value: unknown): CustomField[] {
@@ -144,6 +179,7 @@ function normalizeProfileData(value: unknown): ProfileDraft {
   return {
     personal: {
       ...emptyProfile.personal,
+      avatarUrl: str(personal.avatarUrl),
       city: str(personal.city) || emptyProfile.personal.city,
       customFields: toCustomFields(personal.customFields),
       email: str(personal.email),
@@ -203,11 +239,53 @@ function applyProfileRowFallback(
   return nextProfile;
 }
 
+async function uploadProfileAvatar(file: File): Promise<string> {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    throw new Error(serviceUnavailableMessage);
+  }
+
+  assertProfileAvatarFile(file);
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+
+  if (userError) {
+    throw userError;
+  }
+
+  const userId = userData.user?.id;
+
+  if (!userId) {
+    throw new Error("请先登录后再上传头像。");
+  }
+
+  const extension = getProfileAvatarExtension(file);
+  const filePath = `${userId}/${crypto.randomUUID()}.${extension}`;
+  const { error: uploadError } = await supabase.storage
+    .from(profileAvatarBucket)
+    .upload(filePath, file, {
+      cacheControl: "31536000",
+      contentType: file.type,
+      upsert: false,
+    });
+
+  if (uploadError) {
+    throw uploadError;
+  }
+
+  const { data } = supabase.storage
+    .from(profileAvatarBucket)
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+}
+
 async function fetchProfileFromSupabase(userId: string) {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new Error("数据服务未连接，无法读取资料。");
+    throw new Error(serviceUnavailableMessage);
   }
 
   const { data: userRow, error: userError } = await supabase
@@ -240,7 +318,7 @@ async function saveProfileToSupabase(userId: string, profile: ProfileDraft) {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new Error("数据服务未连接，无法保存资料。");
+    throw new Error(serviceUnavailableMessage);
   }
 
   const { error } = await supabase.from("profiles").upsert(
@@ -257,4 +335,4 @@ async function saveProfileToSupabase(userId: string, profile: ProfileDraft) {
   }
 }
 
-export { fetchProfileFromSupabase, saveProfileToSupabase };
+export { fetchProfileFromSupabase, saveProfileToSupabase, uploadProfileAvatar };

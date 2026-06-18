@@ -17,68 +17,28 @@
 
 - 始终使用中文回复用户
 
-## 文档事实源
+## 事实源:先看对应文档
 
-- `README.md`：项目定位、当前状态、启动命令、验证命令、演示路径。
-- `docs/product.md`：用户、MVP 闭环、暂不做、产品风险。
-- `docs/tech-stack.md`：技术选型、运行模式、前后端边界。
-- `docs/project-structure.md`：目录归属、抽组件规则、代码放置边界。
-- `docs/local-operations.md`：本地运维与固定操作命令。
-- `dify/README.md`：Dify workflow 清单、API Key 约定、接入与验证方式。
-- `docs/feature-spec/*.md`：单个功能的行为、状态、失败、验收。
-- `docs/feature-spec/AI-Trace全流程设计.md`：AI Run Trace、prompt/workflow key、事件协议、外部运行引用。
+具体规则不写在本文,改哪类东西就看对应事实源:
 
-不要在多个文档维护同一段长说明。需要改产品边界时改 `docs/product.md`；需要改技术边界时改 `docs/tech-stack.md`；需要改目录规则时改 `docs/project-structure.md`。
+| 要做什么                                       | 看哪里                                                             |
+| ---------------------------------------------- | ------------------------------------------------------------------ |
+| 了解架构、设计决策、**工程规范**               | [docs/architecture.md](docs/architecture.md)                       |
+| 代码放哪、目录归属                             | [docs/project-structure.md](docs/project-structure.md)             |
+| 数据表、列、RLS                                | [docs/architecture.md#data-model](docs/architecture.md#data-model) |
+| 后端 Edge Functions、Dify、流程                | [docs/architecture.md#backend](docs/architecture.md#backend)       |
+| 产品边界、闭环、风险                           | [docs/product-overview.md](docs/product-overview.md)               |
+| 运行、验证、运维、部署                         | [development.md](development.md)                                   |
+| 单个功能的行为/状态/验收,以及**spec 协作流程** | [feature-spec/](feature-spec/)                                     |
+| Dify workflow 清单与 key 约定                  | [dify/README.md](dify/README.md)                                   |
 
-## 代码归属规则
+原则:不要在多个文档维护同一段长说明;改某类边界就改它对应的唯一事实源。
 
-完整规则见 `docs/project-structure.md`。
+## 工作方式
 
-## Spec 工作流
-
-每轮开发只选择一个主 spec 或一个明确治理目标。跨 spec 依赖只记录为前置条件，不顺手实现。
-
-任务拆分格式：
-
-```txt
-目标：
-边界：
-输入：
-实现：
-验收：
-```
-
-功能实现必须能回答：
-
-- 用户可见行为是什么。
-- 状态和数据边界在哪里。
-- 失败状态怎么展示。
-- 如何验证。
-
-## 提交前检查
-
-至少运行：
-
-```bash
-pnpm check
-pnpm test
-pnpm build
-```
-
-如果某个命令暂不可用，在交付说明里写清楚原因。
-
-## 固定操作入口
-
-- 前端格式化统一使用 `pnpm format:check` / `pnpm format`。
-- Edge Functions 格式化继续使用 `pnpm functions:fmt:check`，不要用 Prettier 处理 `supabase/functions`。
-- 本地 Supabase Edge Functions 统一使用 `pnpm functions:serve:local`、`pnpm functions:restart:local`、`pnpm functions:status:local`，不要临时手写 `pkill supabase...` 或 `nohup supabase functions serve...`。
-- 线上 `resume-generate` 部署统一使用 `pnpm functions:deploy:resume-generate`。
-- 更多说明见 `docs/local-operations.md`。
-
-## Review Checklist
-
-- 是否只处理当前目标。
-- 是否符合对应 docs 的事实源。
-- 是否避免真实隐私数据和密钥。
-- 是否有失败状态或清楚的后续边界。
-- 是否提供可运行验证命令。
+- **一次一个 spec。** 每轮开发只选一个主 spec 或一个明确治理目标;跨 spec 依赖只记为前置条件,
+  不顺手实现。spec 的标准结构与协作流程见 [feature-spec/README.md](feature-spec/README.md)。
+- **提交前**至少跑 `pnpm check && pnpm test && pnpm build`;命令不可用时在交付说明里写清原因。
+  完整运维/验证命令见 [development.md](development.md)。
+- **Review 自检:** 是否只处理当前目标 · 是否符合对应 docs 的事实源 · 是否避免真实隐私数据和
+  密钥 · 是否有失败状态或清楚的后续边界 · 是否提供可运行的验证方式。

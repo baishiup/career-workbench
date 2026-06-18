@@ -1,0 +1,31 @@
+{
+  "name": "@career-workbench/mock",
+  "version": "0.1.0",
+  "description": "纯 mock 运行/部署能力：用 MSW 在网络层拦截 Supabase REST / Auth / Functions / Storage，配一套内存数据库，让 web 应用无后端即可完整跑起来。",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./node": {
+      "types": "./src/node.ts",
+      "default": "./src/node.ts"
+    }
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "echo \"@career-workbench/mock scaffold placeholder: no tests yet\"",
+    "build": "pnpm check"
+  },
+  "dependencies": {
+    "@career-workbench/domain": "workspace:*",
+    "msw": "^2.14.6"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
+}

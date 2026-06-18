@@ -15,7 +15,7 @@ type ProfileDraftState = {
 
 /**
  * 读取当前用户的 ProfileDraft，供职位列表/详情计算规则匹配分。
- * 无 Supabase env 的本地演示模式降级为 mock Profile。
+ * 无 Supabase env 时降级为 mock Profile。
  */
 function useProfileDraft(): ProfileDraftState {
   const user = useAuthStore((state) => state.user);

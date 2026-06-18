@@ -295,7 +295,7 @@ function ResumeStep({
         支持 PDF 格式，文件大小不超过 15MB。
       </p>
       <p className="mt-5 max-w-sm rounded-lg bg-emerald-600/10 px-4 py-3 text-xs font-medium leading-5 text-slate-500">
-        当前调试模式只会调用简历解析接口，结果输出到浏览器控制台。
+        上传后会提取简历中的经历、技能和教育信息，生成前你仍可以检查和调整。
       </p>
 
       {isParsing ? (

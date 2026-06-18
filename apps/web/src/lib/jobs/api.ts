@@ -19,7 +19,7 @@ class JobsApiError extends Error {
   }
 }
 
-/** job-parse Edge Function 返回的结构化职位草稿（snake_case 对齐 Dify 输出）。 */
+/** job-parse 返回的结构化职位草稿（snake_case 对齐后端输出）。 */
 type JobParseDraft = {
   schema_version: "job.parse.v1";
   source_platform: string | null;
@@ -224,7 +224,7 @@ async function setJobActive(
   return mapJobRow(data as JobDescriptionRow);
 }
 
-/** 调 job-parse Edge Function 解析 JD 文本和/或截图，仅 admin 可用。 */
+/** 调 job-parse 解析职位文本和/或截图，仅 admin 可用。 */
 async function parseJobDescription(input: {
   jdText?: string;
   screenshots?: File[];
@@ -279,7 +279,7 @@ function requireSupabase(action: string) {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new JobsApiError(`数据服务未连接，无法${action}。`);
+    throw new JobsApiError("当前无法连接服务，请稍后重试。");
   }
 
   return supabase;

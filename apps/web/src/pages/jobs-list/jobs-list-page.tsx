@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Chip, Input, Table } from "@heroui/react";
-import { ArrowRight, Import, Loader2, RefreshCw, Search } from "lucide-react";
+import { Import, Loader2, RefreshCw, Search } from "lucide-react";
 
 import Link from "@/components/router-link";
 import { useAuthStore } from "@/lib/auth-store";
@@ -142,12 +142,18 @@ export function JobsListPage() {
       ) : filteredJobs.length > 0 ? (
         <Table>
           <Table.ScrollContainer>
-            <Table.Content aria-label="职位列表">
+            <Table.Content
+              aria-label="职位列表"
+              className="min-w-[960px] table-fixed"
+            >
               <Table.Header>
-                <Table.Column isRowHeader>职位</Table.Column>
-                <Table.Column>地点 / 方式</Table.Column>
-                <Table.Column>类型</Table.Column>
-                <Table.Column>操作</Table.Column>
+                <Table.Column className="w-[42%]" isRowHeader>
+                  职位
+                </Table.Column>
+                <Table.Column className="w-[44%]">地点 / 方式</Table.Column>
+                <Table.Column className="w-24 whitespace-nowrap">
+                  类型
+                </Table.Column>
               </Table.Header>
               <Table.Body items={filteredJobs}>
                 {(job) => <JobRow job={job} />}
@@ -191,10 +197,16 @@ export function JobsListPage() {
 
 function JobRow({ job }: { job: JobRecord }) {
   const logo = getJobLogo(job.company);
+  const detailHref = `/jobs/${job.id}`;
+  const openDetail = () => navigateTo(detailHref);
 
   return (
-    <Table.Row id={job.id}>
-      <Table.Cell>
+    <Table.Row
+      aria-label={`查看 ${job.title}，${job.company} 的职位详情`}
+      className="cursor-pointer transition hover:bg-blue-50/60"
+      id={job.id}
+    >
+      <Table.Cell onClick={openDetail}>
         <div className="flex min-w-0 items-center gap-3">
           {job.logoUrl ? (
             <img
@@ -214,7 +226,14 @@ function JobRow({ job }: { job: JobRecord }) {
           )}
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <p className="truncate font-medium text-slate-900">{job.title}</p>
+              <Link
+                aria-label={`查看 ${job.title}，${job.company} 的职位详情`}
+                className="truncate font-medium text-slate-900 hover:text-blue-700 focus-visible:rounded focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-400/35"
+                href={detailHref}
+                onClick={(event) => event.stopPropagation()}
+              >
+                {job.title}
+              </Link>
               {!job.isActive ? (
                 <Chip color="default" size="sm" variant="soft">
                   已停用
@@ -225,7 +244,7 @@ function JobRow({ job }: { job: JobRecord }) {
           </div>
         </div>
       </Table.Cell>
-      <Table.Cell>
+      <Table.Cell onClick={openDetail}>
         <div className="min-w-0">
           <p className="text-sm text-slate-900">
             {remoteStatusLabels[job.remoteStatus]}
@@ -235,15 +254,8 @@ function JobRow({ job }: { job: JobRecord }) {
           </p>
         </div>
       </Table.Cell>
-      <Table.Cell>{jobTypeLabels[job.jobType]}</Table.Cell>
-      <Table.Cell>
-        <Link
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-400/35"
-          href={`/jobs/${job.id}`}
-        >
-          查看详情
-          <ArrowRight aria-hidden="true" className="size-4" />
-        </Link>
+      <Table.Cell className="whitespace-nowrap" onClick={openDetail}>
+        {jobTypeLabels[job.jobType]}
       </Table.Cell>
     </Table.Row>
   );

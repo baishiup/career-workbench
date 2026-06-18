@@ -7,6 +7,8 @@
  */
 import { getSupabaseClient } from "@/lib/supabase";
 
+const serviceUnavailableMessage = "当前无法连接服务，请稍后重试。";
+
 type EdgeFunctionErrorDetails = {
   details?: unknown;
   status?: number;
@@ -31,7 +33,7 @@ async function invokeEdgeFunction<TResponse>(
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    throw new EdgeFunctionError(`服务未连接，无法完成 ${functionName} 操作。`);
+    throw new EdgeFunctionError(serviceUnavailableMessage);
   }
 
   const { data, error } = await supabase.functions.invoke<TResponse>(
@@ -50,7 +52,7 @@ async function invokeEdgeFunction<TResponse>(
   }
 
   if (!data) {
-    throw new EdgeFunctionError(`${functionName} Edge Function 返回为空。`);
+    throw new EdgeFunctionError("服务暂时没有返回结果，请稍后重试。");
   }
 
   return data;
