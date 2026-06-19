@@ -12,7 +12,7 @@ import { navigateTo } from "@/lib/router";
 
 import "./landing-page.css";
 
-const heroDemoVideo = "/landing/career-workbench-hero-demo.mp4";
+const heroDemoVideo = "/landing/career-workbench-hero-demo2.mp4";
 
 type Feature = {
   body: string;

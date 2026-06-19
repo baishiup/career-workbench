@@ -6,11 +6,11 @@
 
 ### 🔗 [在线体验](https://career-workbench.vercel.app) · [架构文档](./docs/architecture.md)
 
-<img src="./docs/assets/readme-hero.png" alt="Career Workbench 产品界面组合图" width="860">
+<img src="./docs/assets/job-match.png" alt="AI 职位匹配分析" width="860">
 
-<video src="./apps/web/public/landing/career-workbench-hero-demo.mp4" controls muted loop playsinline poster="./docs/assets/readme-hero.png" width="860">
-  观看 12 秒产品演示：https://career-workbench.vercel.app/landing/career-workbench-hero-demo.mp4
-</video>
+<img src="./docs/assets/resume-editor.png" alt="AI 简历助手与 Diff 审核" width="860">
+
+<img src="./docs/assets/resume-ai.png" alt="结构化简历编辑器" width="860">
 
 ---
 
@@ -39,18 +39,30 @@ flowchart LR
 
 ## 🧩 技术栈
 
-| 层     | 选型                                                                                         |
-| ------ | -------------------------------------------------------------------------------------------- |
-| 前端   | React 19、TypeScript(strict)、Vite、Tailwind CSS v4、HeroUI v3、Zustand、assistant-ui、Quill |
-| 后端   | Supabase —— Auth、Postgres + RLS、Edge Functions(Deno)                                       |
-| AI     | Dify workflow/chatflow(解析 · job-parse · 匹配 · 生成 · 对话),统一藏在 Edge Functions 之后   |
-| 工具链 | pnpm workspace(monorepo)、Vitest、Prettier、Deno 工具链                                      |
+**前端**
 
-## 📸 截图
+![React 19](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)
+![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-SPA-646cff?logo=vite&logoColor=white)
+![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8?logo=tailwindcss&logoColor=white)
+![HeroUI v3](https://img.shields.io/badge/HeroUI-v3-111827)
+![Zustand](https://img.shields.io/badge/Zustand-state-443e38)
+![assistant-ui](https://img.shields.io/badge/assistant--ui-chat-2563eb)
+![Quill](https://img.shields.io/badge/Quill-editor-06c)
 
-| Onboarding                                                                            | 职位匹配报告                                                                      | 简历编辑器                                                                          |
-| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| <img src="./docs/assets/screenshot-onboarding.png" alt="Onboarding 流程" width="280"> | <img src="./docs/assets/screenshot-job-match.png" alt="职位匹配报告" width="280"> | <img src="./docs/assets/screenshot-resume-editor.png" alt="简历编辑器" width="280"> |
+**后端 / AI**
+
+![Supabase](https://img.shields.io/badge/Supabase-Auth%20%2B%20Postgres%20%2B%20RLS-3ecf8e?logo=supabase&logoColor=white)
+![Edge Functions](https://img.shields.io/badge/Edge_Functions-Deno-000000?logo=deno&logoColor=white)
+![Dify](https://img.shields.io/badge/Dify-workflows%20%2B%20chatflow-155EEF)
+![Postgres](https://img.shields.io/badge/Postgres-RLS-4169e1?logo=postgresql&logoColor=white)
+
+**工具链**
+
+![pnpm workspace](https://img.shields.io/badge/pnpm-workspace-f69220?logo=pnpm&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-tests-6e9f18?logo=vitest&logoColor=white)
+![Prettier](https://img.shields.io/badge/Prettier-format-f7b93e?logo=prettier&logoColor=black)
+![Deno](https://img.shields.io/badge/Deno-toolchain-000000?logo=deno&logoColor=white)
 
 ## 🚀 快速开始
 

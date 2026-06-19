@@ -15,13 +15,13 @@ English · [中文](./README.zh-CN.md)
 
 ### 🔗 [Live Demo](https://career-workbench.vercel.app) · [Architecture](./docs/architecture.md)
 
-<img src="./docs/assets/readme-hero.png" alt="Career Workbench product screens" width="860">
-
-<video src="./apps/web/public/landing/career-workbench-hero-demo.mp4" controls muted loop playsinline poster="./docs/assets/readme-hero.png" width="860">
-  Watch the 12s product demo: https://career-workbench.vercel.app/landing/career-workbench-hero-demo.mp4
-</video>
-
 </div>
+
+<img src="./docs/assets/job-match.png" alt="AI job match analysis" width="860">
+
+<img src="./docs/assets/resume-editor.png" alt="AI resume assistant with diff review" width="860">
+
+<img src="./docs/assets/resume-ai.png" alt="Structured resume editor" width="860">
 
 ---
 
@@ -60,12 +60,6 @@ cross-user goes through an Edge Function. **Full tour →
 | Backend  | Supabase — Auth, Postgres + RLS, Edge Functions (Deno)                                        |
 | AI       | Dify workflows/chatflow (parse · job-parse · match · generate · chat) behind Edge Functions   |
 | Tooling  | pnpm workspace (monorepo), Vitest, Prettier, Deno toolchain                                   |
-
-## 📸 Screenshots
-
-| Onboarding                                                                            | Job match report                                                                      | Résumé editor                                                                          |
-| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| <img src="./docs/assets/screenshot-onboarding.png" alt="Onboarding flow" width="280"> | <img src="./docs/assets/screenshot-job-match.png" alt="Job match report" width="280"> | <img src="./docs/assets/screenshot-resume-editor.png" alt="Résumé editor" width="280"> |
 
 ## 🚀 Quickstart
 
