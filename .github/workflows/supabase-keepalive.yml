@@ -12,17 +12,24 @@ jobs:
     timeout-minutes: 2
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
     steps:
-      - name: Check required secret
+      - name: Check required secrets
         run: |
           if [ -z "$SUPABASE_URL" ]; then
             echo "Missing GitHub Actions secret: SUPABASE_URL" >&2
             exit 1
           fi
 
+          if [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "Missing GitHub Actions secret: SUPABASE_ANON_KEY" >&2
+            exit 1
+          fi
+
       - name: Ping Supabase Auth health endpoint
         run: |
           curl --fail --silent --show-error \
+            --header "apikey: $SUPABASE_ANON_KEY" \
             --retry 2 \
             --retry-delay 5 \
             --max-time 20 \

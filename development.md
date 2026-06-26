@@ -215,12 +215,13 @@ https://<project-ref>.supabase.co/auth/v1/health
 配置方式:
 
 1. GitHub repo -> Settings -> Secrets and variables -> Actions。
-2. 新增 repository secret: `SUPABASE_URL=https://<project-ref>.supabase.co`。
+2. 新增 repository secrets:
+   `SUPABASE_URL=https://<project-ref>.supabase.co` 和 `SUPABASE_ANON_KEY=<anon-or-publishable-key>`。
 3. Actions -> `Supabase Keepalive` -> `Run workflow` 手动跑一次,确认通过。
 
 注意事项:
 
-- 不要把 `service_role` key 放进 keepalive workflow;当前请求不需要任何 Supabase key。
+- 不要把 `service_role` key 放进 keepalive workflow;只使用浏览器侧本来可公开的 anon/publishable key。
 - GitHub schedule 不是准点 SLA,只适合低成本保活;公开仓库长期无活动时也要留意 Actions 是否被停用。
 - 如果项目已经被 Supabase 暂停,先在 Supabase Dashboard 恢复项目,再手动跑一次 workflow。
 - 如果后续换成 ping PostgREST 表,必须先确认目标表没有真实隐私数据,并且 RLS/GRANT 明确允许这类只读探活。
