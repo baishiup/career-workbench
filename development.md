@@ -202,6 +202,29 @@ migration 已包含业务表、RLS policy、admin helper、Storage bucket policy
 
 然后按上文配置 Google 登录和正式域名 Redirect URLs。
 
+### Supabase keepalive
+
+Supabase Free Plan 项目长期没有 API 请求时可能被暂停。仓库用
+[`.github/workflows/supabase-keepalive.yml`](./.github/workflows/supabase-keepalive.yml) 每 3 天从
+GitHub Actions 请求一次 Supabase Auth health endpoint:
+
+```text
+https://<project-ref>.supabase.co/auth/v1/health
+```
+
+配置方式:
+
+1. GitHub repo -> Settings -> Secrets and variables -> Actions。
+2. 新增 repository secret: `SUPABASE_URL=https://<project-ref>.supabase.co`。
+3. Actions -> `Supabase Keepalive` -> `Run workflow` 手动跑一次,确认通过。
+
+注意事项:
+
+- 不要把 `service_role` key 放进 keepalive workflow;当前请求不需要任何 Supabase key。
+- GitHub schedule 不是准点 SLA,只适合低成本保活;公开仓库长期无活动时也要留意 Actions 是否被停用。
+- 如果项目已经被 Supabase 暂停,先在 Supabase Dashboard 恢复项目,再手动跑一次 workflow。
+- 如果后续换成 ping PostgREST 表,必须先确认目标表没有真实隐私数据,并且 RLS/GRANT 明确允许这类只读探活。
+
 ### Edge Functions
 
 仓库脚本要求显式传入目标项目,避免误部署到写死的个人 project:

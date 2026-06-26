@@ -1,0 +1,29 @@
+name: Supabase Keepalive
+
+on:
+  schedule:
+    - cron: "17 3 */3 * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping Supabase project
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+    steps:
+      - name: Check required secret
+        run: |
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "Missing GitHub Actions secret: SUPABASE_URL" >&2
+            exit 1
+          fi
+
+      - name: Ping Supabase Auth health endpoint
+        run: |
+          curl --fail --silent --show-error \
+            --retry 2 \
+            --retry-delay 5 \
+            --max-time 20 \
+            "${SUPABASE_URL%/}/auth/v1/health" >/dev/null
